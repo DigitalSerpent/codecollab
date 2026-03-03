@@ -1,7 +1,11 @@
+using CodeCollabFrontend.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddHttpClient<ApiService>();
+builder.Services.AddScoped<ApiService>();
 
 var app = builder.Build();
 
@@ -23,4 +27,5 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
+app.MapControllers();
 app.Run();
