@@ -22,7 +22,6 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\rjsmcsh
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\scopedcss\Pages\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\scopedcss\bundle\CodeCollabFrontend.styles.css
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\scopedcss\projectbundle\CodeCollabFrontend.bundle.scp.css
-C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\jyn4guo27g-{0}-b9sayid5wm-b9sayid5wm.gz
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\nus8irrkix-{0}-61n19gt1b8-61n19gt1b8.gz
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\1jad100w8o-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\z6dy3kng0l-{0}-bqjiyaj88i-bqjiyaj88i.gz
@@ -96,3 +95,4 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\refint\
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\CodeCollabFrontend.pdb
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\CodeCollabFrontend.genruntimeconfig.cache
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\ref\CodeCollabFrontend.dll
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\jyn4guo27g-{0}-cf203er6bu-cf203er6bu.gz

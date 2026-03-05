@@ -1,0 +1,132 @@
+@page
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h2 style="color: white; margin-bottom: 30px;">Доступные комнаты</h2>
+
+<script>
+    const text = "Доступные комнаты";
+    const title = document.getElementById('terminalTitle');
+    let i = 0;
+    
+    function typeWriter() {
+        if (i < text.length) {
+            title.style.width = (i + 1) + 'ch';
+            title.innerHTML = text.substring(0, i + 1);
+            i++;
+            setTimeout(typeWriter, 100);
+        }
+    }
+    
+    window.addEventListener('load', typeWriter);
+</script>
+
+<div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; max-width: 1300px; margin: 0 auto; position: relative; z-index: 2;">
+
+
+    <!-- Карточка 1 -->
+    <div style="background-color: #121628; border-radius: 20px; width: 240px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #00aaff; cursor: pointer;"
+         onclick="openRoomModal('Мой проект', '05.03.2026', '2/5', 
+                   [{name:'Alice', online:true, avatar:'👩‍💻', cursor:'✨'},
+                    {name:'Bob', online:false, avatar:'👨‍💻', cursor:'🔷'}])">
+        <div style="background-color: #0d0d1a; padding: 15px; font-family: 'Courier New', monospace; font-size: 8px; line-height: 1.2; color: #88c0d0; height: 120px; overflow: hidden;">
+            def hello():<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;print("Hello, world!")<br>
+            x = 5<br>
+            if x > 0:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return True<br>
+            <span style="color: #5e81ac;"># это просто пример</span>
+        </div>
+        <div style="padding: 15px;">
+            <h4 style="color: white; margin: 0 0 10px 0; font-weight: bold; font-size: 1.1rem;">Мой проект</h4>
+            <button style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px 15px; width: 100%; transition: 0.3s;"
+                    onmouseover="this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 0 20px #00aaff';"
+                    onmouseout="this.style.backgroundColor='#00aaff'; this.style.boxShadow='none';">
+                Войти
+            </button>
+        </div>
+    </div>
+
+    <!-- Карточка 2 -->
+    <div style="background-color: #121628; border-radius: 20px; width: 240px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #00aaff; cursor: pointer;"
+         onclick="openRoomModal('Тестовая комната', '04.03.2026', '3/5', 
+                   [{name:'Charlie', online:false, avatar:'🧑‍🔧', cursor:'🔶'},
+                    {name:'Diana', online:true, avatar:'👩‍🎨', cursor:'💫'},
+                    {name:'Eve', online:true, avatar:'🧑‍🚀', cursor:'⚡'}])">
+        <div style="background-color: #0d0d1a; padding: 15px; font-family: 'Courier New', monospace; font-size: 8px; line-height: 1.2; color: #88c0d0; height: 120px; overflow: hidden;">
+            function test() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.log("hi");<br>
+            }<br>
+            let a = 10;<br>
+            <span style="color: #5e81ac;">// js example</span>
+        </div>
+        <div style="padding: 15px;">
+            <h4 style="color: white; margin: 0 0 10px 0; font-weight: bold; font-size: 1.1rem;">Тестовая комната</h4>
+            <button style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px 15px; width: 100%; transition: 0.3s;"
+                    onmouseover="this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 0 20px #00aaff';"
+                    onmouseout="this.style.backgroundColor='#00aaff'; this.style.boxShadow='none';">
+                Войти
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Модальное окно информации о комнате -->
+<div id="roomInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 600px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; display: flex; gap: 30px;">
+        
+        <!-- Левая часть: список участников (прокручиваемый) -->
+        <div style="flex: 1; max-height: 300px; overflow-y: auto; padding-right: 10px;">
+            <h4 style="color: white; margin-bottom: 15px;">Участники</h4>
+            <div id="participantList" style="color: white;">
+                <!-- Сюда будут подставляться участники -->
+            </div>
+        </div>
+
+        <!-- Правая часть: информация о комнате -->
+        <div style="flex: 1;">
+            <h4 id="roomName" style="color: white; margin-bottom: 15px;"></h4>
+            <p id="roomDate" style="color: #a0a0a0; font-size: 0.9rem;"></p>
+            <p id="roomParticipants" style="color: #a0a0a0; font-size: 0.9rem;"></p>
+            <button onclick="enterRoom()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; width: 100%; margin-top: 20px;">Войти в комнату</button>
+            <button onclick="closeRoomModal()" style="background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; width: 100%; margin-top: 10px;">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openRoomModal(name, date, participants, users) {
+        document.getElementById('roomName').innerText = name;
+        document.getElementById('roomDate').innerText = 'Создана: ' + date;
+        document.getElementById('roomParticipants').innerText = 'Участников: ' + participants;
+
+        // Заполняем список участников
+        let listHtml = '';
+        users.forEach(user => {
+            listHtml += '<div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">';
+            listHtml += '<span style="font-size: 1.2rem;">' + user.avatar + '</span>';
+            listHtml += '<span style="color: white; font-size: 0.9rem; cursor: pointer;" onclick="goToProfile(\'' + user.name + '\')">' + user.name + '</span>';
+            listHtml += '<span style="margin-left: auto; font-size: 1rem;" title="Курсор пользователя">' + user.cursor + '</span>';
+            listHtml += '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + (user.online ? '#00ff00' : '#888') + ';"></span>';
+            listHtml += '</div>';
+        });
+        document.getElementById('participantList').innerHTML = listHtml;
+
+        document.getElementById('roomInfoModal').style.display = 'flex';
+    }
+
+    function closeRoomModal() {
+        document.getElementById('roomInfoModal').style.display = 'none';
+    }
+
+    function enterRoom() {
+        alert('Вход в комнату (пока заглушка)');
+        closeRoomModal();
+    }
+
+    function goToProfile(name) {
+        alert('Переход к профилю пользователя ' + name + ' (заглушка)');
+    }
+</script>

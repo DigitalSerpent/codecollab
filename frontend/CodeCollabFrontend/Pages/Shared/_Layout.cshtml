@@ -3,50 +3,113 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CodeCollabFrontend</title>
+    <title>@ViewData["Title"] - Coco Hub</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CodeCollabFrontend.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">CodeCollabFrontend</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+    <header style="background-color: #05070f; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; z-index: 1003; position: relative;">
+        <div style="font-size: 2rem; font-weight: bold; color: white;">Code Collab</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span style="color: white;">@User.Identity?.Name ?? "Гость"</span>
+            <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #00aaff; display: flex; align-items: center; justify-content: center; color: #0a0e1c; font-weight: bold;">
+                👤
             </div>
-        </nav>
+        </div>
     </header>
-    <div class="container">
+    <div style="height: 2px; background: linear-gradient(to bottom, #00aaff, transparent); width: 100vw; position: relative; left: 0; z-index: 1002;"></div>
+        <div style="margin-top: 20px; width: 100%; padding-left: 30px; padding-right: 30px;">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CodeCollabFrontend - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+<!-- Правая панель -->
+<div id="rightPanel" style="position: fixed; top: 0; right: 0; width: 50px; height: 100vh; background-color: #05070f; border-left: 1px solid #1e1e3a; transition: 0.3s; overflow: hidden; z-index: 999; color: #a0a0a0; font-size: 1rem; display: flex; flex-direction: column; align-items: center;"
+     onmouseover="this.style.width='180px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='1');"
+     onmouseout="this.style.width='50px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='0');">
+
+    <!-- Верхняя группа (основные пункты) -->
+    <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
+        
+        <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+             onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+             onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+            Профиль
+        </div>
+
+        <button onclick="openCreateRoomModal()" style="background: none; border: none; color: inherit; width: 100%;">
+            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+                Создать комнату
+            </div>
+        </button>
+
+        <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+             onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+             onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+            Настройки
+        </div>
+    </div>
+
+    <!-- Нижняя группа (выход) -->
+    <div style="margin-bottom: 30px;">
+        <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+             onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+             onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+            Выйти
+        </div>
+    </div>
+
+</div>
+
+<!-- Окно создания комнаты -->
+<div id="createRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
+        <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создание комнаты</h3>
+
+        <input type="text" placeholder="Название комнаты" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
+
+       <input type="number" placeholder="Макс. участников" min="1" value="2" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
+
+        <div style="margin-bottom: 20px;">
+            <label style="color: white; display: block; margin-bottom: 5px;">Права:</label>
+            <select style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
+                <option>Один админ</option>
+                <option>Все админы</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="closeCreateRoomModal()" style="background-color: #1e1e3a; color: white; border: none; padding: 10px; border-radius: 8px; flex: 1;">Отмена</button>
+            <button onclick="createRoom()" style="background-color: #00aaff; color: #0a0e1c; border: none; padding: 10px; border-radius: 8px; flex: 1;">Создать</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openCreateRoomModal() {
+        document.getElementById('createRoomModal').style.display = 'flex';
+    }
+
+    function closeCreateRoomModal() {
+        document.getElementById('createRoomModal').style.display = 'none';
+    }
+
+    function createRoom() {
+        alert('Комната создаётся (заглушка)');
+        closeCreateRoomModal();
+    }
+</script>
+
 </body>
 </html>
