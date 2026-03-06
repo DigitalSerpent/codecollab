@@ -1,13 +1,26 @@
+using Microsoft.EntityFrameworkCore;
+using CodeCollabFrontend.Models;
+
 using CodeCollabFrontend.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite("Data Source=codecollab.db"));
 builder.Services.AddControllers();
 builder.Services.AddHttpClient<ApiService>();
 builder.Services.AddScoped<ApiService>();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    DbInitializer.Initialize(context);
+}
+
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

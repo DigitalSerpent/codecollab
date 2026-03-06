@@ -1,0 +1,70 @@
+@page "/room/{id}"
+@using Microsoft.EntityFrameworkCore
+@using CodeCollabFrontend.Models
+@inject AppDbContext _context
+
+@{
+    if (!int.TryParse((string?)RouteData.Values["id"], out int roomId))
+    {
+        <h2 style="color: white;">Неверный ID комнаты</h2>
+        return;
+    }
+
+    var room = _context.Rooms
+        .Include(r => r.RoomParticipants)
+            .ThenInclude(rp => rp.User)
+        .FirstOrDefault(r => r.Id == roomId);
+}
+
+@if (room == null)
+{
+    <h2 style="color: white;">Комната не найдена</h2>
+}
+else
+{
+    ViewData["Title"] = room.Name;
+
+    <div style="display: flex; height: calc(100vh - 150px); gap: 10px;">
+        <!-- Левая панель с участниками -->
+        <div style="width: 200px; background-color: #121628; border-radius: 10px; padding: 15px; border: 1px solid #00aaff;">
+            <h4 style="color: white; margin-bottom: 15px;">Участники</h4>
+            @if (room.RoomParticipants != null)
+            {
+                @foreach (var participant in room.RoomParticipants)
+                {
+                    <div style="display: flex; align-items: center; margin-bottom: 10px; gap: 8px;">
+                        <span style="font-size: 1.2rem;">@participant.User?.Avatar</span>
+                        <span style="color: white; font-size: 0.9rem;">@participant.User?.Name</span>
+                        <span style="margin-left: auto; font-size: 1rem;">@participant.User?.Cursor</span>
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: @(participant.IsOnline ? "#00ff00" : "#888");"></span>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Центральная часть с редактором -->
+        <div style="flex: 1; background-color: #0d0d1a; border-radius: 10px; border: 1px solid #00aaff; overflow: hidden;">
+            <div id="editor" style="height: 100%; width: 100%;"></div>
+        </div>
+    </div>
+
+    <!-- Подключаем Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+    <script>
+        let editor;
+
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+
+        require(['vs/editor/editor.main'], function () {
+            var initialCode = '@(Html.Raw(room.PreviewCode?.Replace("\n", "\\n").Replace("\r", "") ?? ""))';
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: initialCode,
+                language: 'python',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 14,
+                minimap: { enabled: false }
+            });
+        });
+    </script>
+}

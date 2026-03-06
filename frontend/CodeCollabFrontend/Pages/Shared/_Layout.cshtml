@@ -77,13 +77,13 @@
     <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
         <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создание комнаты</h3>
 
-        <input type="text" placeholder="Название комнаты" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
+        <input type="text" id="roomName" placeholder="Название комнаты" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
 
-       <input type="number" placeholder="Макс. участников" min="1" value="2" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
+       <input type="number" id="roomMaxParticipants" placeholder="Макс. участников" min="1" value="2" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
 
         <div style="margin-bottom: 20px;">
             <label style="color: white; display: block; margin-bottom: 5px;">Права:</label>
-            <select style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
+            <select id="roomRights" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
                 <option>Один админ</option>
                 <option>Все админы</option>
             </select>
@@ -106,8 +106,38 @@
     }
 
     function createRoom() {
-        alert('Комната создаётся (заглушка)');
-        closeCreateRoomModal();
+        const name = document.getElementById('roomName').value;
+        const maxParticipants = document.getElementById('roomMaxParticipants').value;
+        const rights = document.getElementById('roomRights').value;
+
+        if (!name) {
+            alert('Введите название комнаты');
+            return;
+        }
+
+        fetch('/CreateRoom', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                name: name, 
+                maxParticipants: parseInt(maxParticipants), 
+                rights: rights 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Комната создана!');
+                closeCreateRoomModal();
+                location.reload();
+            } else {
+                alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
+            }
+        })
+        .catch(error => {
+            alert('Ошибка при создании комнаты');
+            console.error(error);
+        });
     }
 </script>
 
