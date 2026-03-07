@@ -32,47 +32,50 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
-<!-- Правая панель -->
-<div id="rightPanel" style="position: fixed; top: 0; right: 0; width: 50px; height: 100vh; background-color: #05070f; border-left: 1px solid #1e1e3a; transition: 0.3s; overflow: hidden; z-index: 999; color: #a0a0a0; font-size: 1rem; display: flex; flex-direction: column; align-items: center;"
-     onmouseover="this.style.width='180px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='1');"
-     onmouseout="this.style.width='50px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='0');">
+@if (!ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/room") == true)
+{
+    <!-- Правая панель (только не в комнате) -->
+    <div id="rightPanel" style="position: fixed; top: 0; right: 0; width: 50px; height: 100vh; background-color: #05070f; border-left: 1px solid #1e1e3a; transition: 0.3s; overflow: hidden; z-index: 999; color: #a0a0a0; font-size: 1rem; display: flex; flex-direction: column; align-items: center;"
+         onmouseover="this.style.width='180px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='1');"
+         onmouseout="this.style.width='50px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='0');">
 
-    <!-- Верхняя группа (основные пункты) -->
-    <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
-        
-        <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-             onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-             onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
-            Профиль
-        </div>
-
-        <button onclick="openCreateRoomModal()" style="background: none; border: none; color: inherit; width: 100%;">
+        <!-- Верхняя группа (основные пункты) -->
+        <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
+            
             <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
                  onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
                  onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
-                Создать комнату
+                Профиль
             </div>
-        </button>
 
-        <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-             onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-             onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
-            Настройки
+            <button onclick="openCreateRoomModal()" style="background: none; border: none; color: inherit; width: 100%;">
+                <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+                     onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+                     onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+                    Создать комнату
+                </div>
+            </button>
+
+            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+                Настройки
+            </div>
         </div>
-    </div>
 
-    <!-- Нижняя группа (выход) -->
-    <div style="margin-bottom: 30px;">
-        <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-             onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-             onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
-            Выйти
+        <!-- Нижняя группа (выход) -->
+        <div style="margin-bottom: 30px;">
+            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+                Выйти
+            </div>
         </div>
+
     </div>
+}
 
-</div>
-
-<!-- Окно создания комнаты -->
+<!-- Окно создания комнаты (всегда доступно) -->
 <div id="createRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
     <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
         <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создание комнаты</h3>

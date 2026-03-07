@@ -1,0 +1,24 @@
+FROM ubuntu:22.04
+
+# Устанавливаем все нужные языки
+RUN apt-get update && apt-get install -y \
+    python3 \
+    nodejs \
+    npm \
+    ruby \
+    default-jdk \
+    g++ \
+    golang \
+    php \
+    dotnet-sdk-7.0 \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем TypeScript и ts-node
+RUN npm install -g ts-node typescript
+
+# Устанавливаем dotnet-script для C#
+RUN dotnet tool install -g dotnet-script
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+WORKDIR /app

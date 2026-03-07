@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CodeCollabFrontend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5113f65da163b465c6d42fa8a11417c2ebb101e0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a6f7670b1ead694d1e1cdbbc26456484108335b8")]
 [assembly: System.Reflection.AssemblyProductAttribute("CodeCollabFrontend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CodeCollabFrontend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
