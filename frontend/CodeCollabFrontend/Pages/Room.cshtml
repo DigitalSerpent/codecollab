@@ -24,6 +24,9 @@ else
 {
     ViewData["Title"] = room.Name;
 
+    <!-- Подключаем Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <!-- Основной контейнер -->
     <div style="display: flex; flex-direction: column; height: calc(100vh - 80px); padding: 10px; padding-right: 60px;">
 
@@ -33,27 +36,29 @@ else
             <!-- Левая часть: структура + код + терминал -->
             <div style="display: flex; flex: 1; flex-direction: column;">
 
-<select id="languageSelect" style="background-color: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 5px; padding: 5px; margin-right: 10px;">
-    <option value="python">Python</option>
-    <option value="javascript">JavaScript</option>
-    <option value="bash">Bash</option>
-</select>
-                <!-- Вкладки + кнопка Run -->
-                <div style="height: 40px; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; display: flex; align-items: center; justify-content: space-between; padding-left: 15px; padding-right: 15px;">
-                    <div style="display: flex; gap: 5px;">
-                        <div style="background-color: #1e1e3a; color: white; padding: 8px 20px; border-radius: 8px 8px 0 0; border: 1px solid #00aaff; border-bottom: none;">main.py</div>
-                        <div style="color: #a0a0a0; padding: 8px 20px;">utils.py</div>
-                        <div style="color: #a0a0a0; padding: 8px 20px;">README.md</div>
+                <!-- Верхняя панель: выбор языка + вкладки + Run -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 15px; background-color: #0d0d1a; border-bottom: 1px solid #00aaff;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <select id="languageSelect" style="background-color: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 5px; padding: 5px;">
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="bash">Bash</option>
+                        </select>
+                        <div style="display: flex; gap: 5px;">
+                            <div style="background-color: #1e1e3a; color: white; padding: 5px 15px; border-radius: 8px 8px 0 0; border: 1px solid #00aaff; border-bottom: none;">main.py</div>
+                            <div style="color: #a0a0a0; padding: 5px 15px;">utils.py</div>
+                            <div style="color: #a0a0a0; padding: 5px 15px;">README.md</div>
+                        </div>
                     </div>
-                    <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 5px 20px; cursor: pointer; font-weight: bold;">▶ Run</button>
+                    <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 5px 20px; cursor: pointer; font-weight: bold;">Run</button>
                 </div>
 
-                <!-- Структура + код (верхняя часть) -->
+                <!-- Структура + код (основная часть) -->
                 <div style="display: flex; flex: 1; min-height: 0; overflow: hidden;">
                     <div style="width: 200px; background-color: #0d0d1a; border-right: 1px solid #00aaff; padding: 15px; overflow-y: auto;">
-                        <div style="color: #a0a0a0; padding: 5px;">📁 main.py</div>
-                        <div style="color: #a0a0a0; padding: 5px;">📁 utils.py</div>
-                        <div style="color: #a0a0a0; padding: 5px;">📄 README.md</div>
+                        <div style="color: #a0a0a0; padding: 5px;"><i class="fas fa-file-code"></i> main.py</div>
+                        <div style="color: #a0a0a0; padding: 5px;"><i class="fas fa-file-code"></i> utils.py</div>
+                        <div style="color: #a0a0a0; padding: 5px;"><i class="fas fa-file-alt"></i> README.md</div>
                     </div>
                     <div style="flex: 1; background-color: #0d0d1a;">
                         <div id="editor" style="height: 100%; width: 100%;"></div>
@@ -68,7 +73,7 @@ else
                     <div style="height: 30px; background-color: #2d2d2d; display: flex; align-items: center; padding: 0 10px; color: white; justify-content: space-between;">
                         <span>Терминал</span>
                     </div>
-                    <div id="terminalOutput" style="flex: 1; padding: 10px; color: #cccccc; font-family: 'Courier New', monospace; overflow-y: auto; white-space: pre-wrap;"></div>
+                    <div id="terminalOutput" style="flex: 1; padding: 10px; color: #cccccc; font-family: 'Cascadia Code', 'Consolas', monospace; overflow-y: auto; white-space: pre-wrap;"></div>
                     <div style="padding: 8px; border-top: 1px solid #3c3c3c; display: flex;">
                         <span style="color: #cccccc; margin-right: 5px;">$</span>
                         <input type="text" id="terminalInput" style="flex: 1; background: none; border: none; color: #cccccc; outline: none;" placeholder="Введите команду...">
@@ -78,43 +83,90 @@ else
 
             <!-- Чат -->
             <div style="width: 280px; background-color: #0d0d1a; border-left: 1px solid #00aaff; display: flex; flex-direction: column;">
-                <div style="height: 40px; background-color: #121628; border-bottom: 1px solid #00aaff; display: flex; align-items: center; padding-left: 15px; color: white; font-weight: bold;">Чат</div>
+                <div style="height: 40px; background-color: #121628; border-bottom: 1px solid #00aaff; display: flex; align-items: center; padding-left: 15px; color: white; font-weight: bold;">
+                    <i class="fas fa-comments" style="margin-right: 8px;"></i> Чат
+                </div>
                 <div id="chatMessages" style="flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
-                <div style="padding: 10px; border-top: 1px solid #00aaff; display: flex; gap: 8px;">
-                    <input type="text" id="chatInput" placeholder="Введите сообщение..." style="flex: 1; padding: 8px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;" onkeypress="if(event.key === 'Enter') sendMessage()">
-                    <button onclick="sendMessage()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px 15px; cursor: pointer;">➤</button>
+                
+                <!-- Панель стикеров (скрыта по умолчанию) -->
+                <div id="stickersPanel" style="display: none; padding: 10px; background-color: #0a0e1c; border-top: 1px solid #00aaff; border-bottom: 1px solid #00aaff; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('😊')">😊</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('😂')">😂</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('❤️')">❤️</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🔥')">🔥</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🎉')">🎉</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🚀')">🚀</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('😎')">😎</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('👍')">👍</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('💀')">💀</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('✨')">✨</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('💡')">💡</span>
+                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🍕')">🍕</span>
+                </div>
+
+                <!-- Поле ввода + кнопки -->
+                <div style="padding: 10px; border-top: 1px solid #00aaff; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="toggleStickersPanel()" style="background-color: #0a0e1c; color: white; border: 1px solid #00aaff; border-radius: 8px; padding: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-icons"></i>
+                        </button>
+                        <textarea id="chatInput" rows="1" placeholder="Введите сообщение..." style="flex: 1; padding: 8px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px; resize: vertical; min-height: 35px; max-height: 100px;"></textarea>
+                        <button onclick="sendMessage()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px 15px; cursor: pointer;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Нижние иконки -->
+        <!-- Нижние иконки (слева и справа) -->
         <div style="margin-top: 10px; display: flex; justify-content: space-between;">
             <div style="display: flex; gap: 15px;">
-                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Участники" onclick="toggleUsersPanel()">📋</div>
+                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Участники" onclick="toggleUsersPanel()">
+                    <i class="fas fa-users"></i>
+                </div>
             </div>
-            <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Настройки комнаты" onclick="toggleSettingsPanel()">⚙️</div>
+            <div style="display: flex; gap: 15px;">
+                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Настройки комнаты" onclick="toggleSettingsPanel()">
+                    <i class="fas fa-gears"></i>
+                </div>
+                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Выйти из комнаты" onclick="openExitModal()">
+                    <i class="fas fa-arrow-right-from-bracket"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Панель участников -->
-    <div id="usersPanel" style="display: none; position: fixed; bottom: 70px; left: 20px; width: 280px; background-color: #121628; border: 1px solid #00aaff; border-radius: 15px; padding: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,170,255,0.5);">
+    <!-- Панель участников (слева) -->
+    <div id="usersPanel" style="display: none; position: fixed; bottom: 80px; left: 20px; width: 280px; background-color: #121628; border: 1px solid #00aaff; border-radius: 15px; padding: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,170,255,0.5);">
         <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <h4 style="color: white; margin: 0;">Участники</h4>
-            <span style="color: #a0a0a0; font-size: 1.2rem; cursor: pointer;" onclick="closeUsersPanel()">✖</span>
+            <h4 style="color: white; margin: 0;"><i class="fas fa-users"></i> Участники</h4>
+            <span style="color: #a0a0a0; font-size: 1.2rem; cursor: pointer;" onclick="closeUsersPanel()"><i class="fas fa-times"></i></span>
         </div>
         <div id="usersList" style="max-height: 300px; overflow-y: auto;"></div>
     </div>
 
-    <!-- Панель настроек -->
-    <div id="settingsPanel" style="display: none; position: fixed; bottom: 70px; right: 70px; width: 280px; background-color: #121628; border: 1px solid #00aaff; border-radius: 15px; padding: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,170,255,0.5);">
+    <!-- Панель настроек (справа) -->
+    <div id="settingsPanel" style="display: none; position: fixed; bottom: 80px; right: 70px; width: 280px; background-color: #121628; border: 1px solid #00aaff; border-radius: 15px; padding: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,170,255,0.5);">
         <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <h4 style="color: white; margin: 0;">Настройки</h4>
-            <span style="color: #a0a0a0; font-size: 1.2rem; cursor: pointer;" onclick="toggleSettingsPanel()">✖</span>
+            <h4 style="color: white; margin: 0;"><i class="fas fa-gears"></i> Настройки</h4>
+            <span style="color: #a0a0a0; font-size: 1.2rem; cursor: pointer;" onclick="toggleSettingsPanel()"><i class="fas fa-times"></i></span>
         </div>
         <div style="color: white;">
-            <p>⚙️ Здесь будут настройки комнаты</p>
-            <p>👥 Макс. участников: 5</p>
-            <p>📅 Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
+            <p><i class="fas fa-users"></i> Макс. участников: 5</p>
+            <p><i class="fas fa-calendar"></i> Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
+        </div>
+    </div>
+
+    <!-- Модальное окно выхода -->
+    <div id="exitModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; text-align: center;">
+            <h3 style="color: white; margin-bottom: 20px;">Выход из комнаты</h3>
+            <p style="color: #a0a0a0; margin-bottom: 30px;">Вы уверены, что хотите покинуть комнату?</p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeExitModal()" style="background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">Нет, остаться</button>
+                <button onclick="exitRoom()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">Да, выйти</button>
+            </div>
         </div>
     </div>
 
@@ -155,17 +207,11 @@ else
                         bubble.style.maxWidth = '80%';
                         bubble.style.padding = '8px 12px';
                         bubble.style.borderRadius = '15px';
-                        bubble.style.backgroundColor = msg.userName === 'Вы' ? '#00aaff' : '#2a2a4a';
+                        bubble.style.backgroundColor = msg.userName === 'Вы' ? '#b198b3' : '#86a1b5';
                         bubble.style.color = msg.userName === 'Вы' ? '#0a0e1c' : 'white';
                         bubble.style.wordWrap = 'break-word';
                         
-                        if (msg.text.startsWith('📦')) {
-                            bubble.style.backgroundColor = 'transparent';
-                            bubble.style.padding = '0';
-                            bubble.style.fontSize = '3rem';
-                        }
-                        
-                        bubble.innerHTML = msg.userName === 'Вы' ? msg.text : `<span style="color: #00aaff; font-weight: bold;">${msg.userName}:</span> ${msg.text}`;
+                        bubble.innerHTML = msg.userName === 'Вы' ? msg.text : `<span style="color: #b198b3; font-weight: bold;">${msg.userName}:</span> ${msg.text}`;
                         msgDiv.appendChild(bubble);
                         container.appendChild(msgDiv);
                     });
@@ -191,9 +237,39 @@ else
             .then(response => response.json())
             .then(() => {
                 input.value = '';
+                input.style.height = 'auto';
                 loadChatHistory();
             });
         }
+
+        function sendSticker(sticker) {
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomId: roomId,
+                    userId: 1,
+                    userName: 'Вы',
+                    text: sticker
+                })
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadChatHistory();
+            });
+        }
+
+        function toggleStickersPanel() {
+            const panel = document.getElementById('stickersPanel');
+            panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        // Авторасширение поля ввода
+        const chatInput = document.getElementById('chatInput');
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
 
         // ==================== Участники ====================
         function toggleUsersPanel() {
@@ -242,32 +318,32 @@ else
 
         // ==================== Терминал ====================
         function runCode() {
-    const output = document.getElementById('terminalOutput');
-    const code = editor.getValue();
-    const language = document.getElementById('languageSelect').value;
-    
-    output.innerHTML += `$ Запуск кода (${language})...\n`;
+            const output = document.getElementById('terminalOutput');
+            const code = editor.getValue();
+            const language = document.getElementById('languageSelect').value;
+            
+            output.innerHTML += `$ Запуск кода (${language})...\n`;
 
-    fetch('/api/terminal/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            command: JSON.stringify({
-                language: language,
-                code: code
+            fetch('/api/terminal/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    command: JSON.stringify({
+                        language: language,
+                        code: code
+                    })
+                })
             })
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.output) {
-            output.innerHTML += data.output + '\n';
-        } else if (data.error) {
-            output.innerHTML += `Ошибка: ${data.error}\n`;
+            .then(response => response.json())
+            .then(data => {
+                if (data.output) {
+                    output.innerHTML += data.output + '\n';
+                } else if (data.error) {
+                    output.innerHTML += `Ошибка: ${data.error}\n`;
+                }
+                output.scrollTop = output.scrollHeight;
+            });
         }
-        output.scrollTop = output.scrollHeight;
-    });
-}
 
         function runCommand(command) {
             const output = document.getElementById('terminalOutput');
@@ -301,40 +377,46 @@ else
             }
         });
 
-       // ==================== Разделитель ====================
-const resizer = document.getElementById('resizer');
-const terminal = document.getElementById('terminalContainer');
-const leftPart = document.querySelector('[style*="flex: 1; flex-direction: column;"]'); // левая часть
-let isResizing = false;
+        // ==================== Разделитель ====================
+        const resizer = document.getElementById('resizer');
+        const terminal = document.getElementById('terminalContainer');
+        const leftPart = document.querySelector('[style*="flex: 1; flex-direction: column;"]');
+        let isResizing = false;
 
-resizer.addEventListener('mousedown', function(e) {
-    isResizing = true;
-    document.addEventListener('mousemove', resize);
-    document.addEventListener('mouseup', stopResize);
-});
+        resizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+        });
 
-function resize(e) {
-    if (!isResizing) return;
-    
-    // Получаем высоту левой части
-    const leftRect = leftPart.getBoundingClientRect();
-    const mouseY = e.clientY;
-    const leftTop = leftRect.top;
-    const leftBottom = leftRect.bottom;
-    
-    // Новая высота терминала = расстояние от низа левой части до курсора
-    let newHeight = leftBottom - mouseY;
-    
-    // Ограничиваем высоту
-    newHeight = Math.max(100, Math.min(400, newHeight));
-    terminal.style.height = newHeight + 'px';
-}
+        function resize(e) {
+            if (!isResizing) return;
+            const leftRect = leftPart.getBoundingClientRect();
+            const mouseY = e.clientY;
+            const leftBottom = leftRect.bottom;
+            let newHeight = leftBottom - mouseY;
+            newHeight = Math.max(100, Math.min(400, newHeight));
+            terminal.style.height = newHeight + 'px';
+        }
 
-function stopResize() {
-    isResizing = false;
-    document.removeEventListener('mousemove', resize);
-    document.removeEventListener('mouseup', stopResize);
-}
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+
+        // ==================== Выход ====================
+        function openExitModal() {
+            document.getElementById('exitModal').style.display = 'flex';
+        }
+
+        function closeExitModal() {
+            document.getElementById('exitModal').style.display = 'none';
+        }
+
+        function exitRoom() {
+            window.location.href = '/dashboard';
+        }
 
         // ==================== Настройки ====================
         function toggleSettingsPanel() {
