@@ -213,3 +213,4 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Debug\net10.0\runtime
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Debug\net10.0\runtimes\win-x86\native\e_sqlite3.dll
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\CodeCollabFrontend.csproj.AssemblyReference.cache
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\CodeColl.AA53642E.Up2Date
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Debug\net10.0\BCrypt.Net-Next.dll

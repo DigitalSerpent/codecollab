@@ -1,12 +1,12 @@
 @page
 @using Microsoft.EntityFrameworkCore
 @using CodeCollabFrontend.Models
+@using Microsoft.AspNetCore.Http
 @inject AppDbContext _context
 
 @{
     ViewData["Title"] = "Dashboard";
 
-    // Получаем все комнаты с участниками
     var rooms = _context.Rooms
         .Include(r => r.RoomParticipants)
         .ThenInclude(rp => rp.User)
@@ -43,7 +43,6 @@
 
             var usersJson = System.Text.Json.JsonSerializer.Serialize(participants);
 
-            <!-- Карточка комнаты -->
             <div style="background-color: #121628; border-radius: 20px; width: 240px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #00aaff; cursor: pointer;"
                  onclick='openRoomModal("@room.Name", "@room.CreatedAt.ToString("dd.MM.yyyy")", "@room.MaxParticipants", @Html.Raw(usersJson), @room.Id)'>
                 
@@ -68,13 +67,11 @@
 <div id="roomInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
     <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 600px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; display: flex; gap: 30px;">
         
-        <!-- Левая часть: список участников (прокручиваемый) -->
         <div style="flex: 1; max-height: 300px; overflow-y: auto; padding-right: 10px;">
             <h4 style="color: white; margin-bottom: 15px;">Участники</h4>
             <div id="participantList" style="color: white;"></div>
         </div>
 
-        <!-- Правая часть: информация о комнате -->
         <div style="flex: 1;">
             <h4 id="roomName" style="color: white; margin-bottom: 15px;"></h4>
             <p id="roomDate" style="color: #a0a0a0; font-size: 0.9rem;"></p>
@@ -101,7 +98,6 @@
         document.getElementById('roomDate').innerText = 'Создана: ' + date;
         document.getElementById('roomParticipants').innerText = 'Участников: ' + participants;
 
-        // Заполняем список участников
         let listHtml = '';
         users.forEach(user => {
             listHtml += '<div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">';
@@ -122,10 +118,6 @@
 
     function goToProfile(name) {
         alert('Переход к профилю пользователя ' + name + ' (заглушка)');
-    }
-
-    function enterRoom(roomId) {
-        window.location.href = '/room/' + roomId;
     }
 
     function enterRoomFromModal() {

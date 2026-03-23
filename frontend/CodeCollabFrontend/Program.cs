@@ -6,6 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromDays(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=codecollab.db"));
 builder.Services.AddControllers();
@@ -41,4 +48,5 @@ app.MapRazorPages()
    .WithStaticAssets();
 
 app.MapControllers();
+app.UseSession();
 app.Run();

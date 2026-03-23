@@ -1,0 +1,54 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
+    <div style="background-color: #121628; border-radius: 20px; padding: 40px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
+        <h2 style="color: white; text-align: center; margin-bottom: 30px;">Регистрация</h2>
+        
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div style="background-color: #ff4444; color: white; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                @Model.ErrorMessage
+            </div>
+        }
+        
+        <form method="post">
+            <div style="margin-bottom: 20px;">
+                <label style="color: white; display: block; margin-bottom: 5px;">Имя:</label>
+                <input type="text" asp-for="Input.Name" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;">
+                <span asp-validation-for="Input.Name" style="color: #ff8888;"></span>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="color: white; display: block; margin-bottom: 5px;">Email:</label>
+                <input type="email" asp-for="Input.Email" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;">
+                <span asp-validation-for="Input.Email" style="color: #ff8888;"></span>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="color: white; display: block; margin-bottom: 5px;">Пароль:</label>
+                <input type="password" asp-for="Input.Password" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;">
+                <span asp-validation-for="Input.Password" style="color: #ff8888;"></span>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="color: white; display: block; margin-bottom: 5px;">Подтверждение пароля:</label>
+                <input type="password" asp-for="Input.ConfirmPassword" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;">
+                <span asp-validation-for="Input.ConfirmPassword" style="color: #ff8888;"></span>
+            </div>
+            
+            <button type="submit" style="width: 100%; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 12px; font-size: 16px; cursor: pointer; font-weight: bold;">Зарегистрироваться</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/Login" style="color: #00aaff;">Уже есть аккаунт? Войти</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
