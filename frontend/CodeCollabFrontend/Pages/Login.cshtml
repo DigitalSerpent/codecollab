@@ -4,39 +4,226 @@
     ViewData["Title"] = "Вход";
 }
 
-<div style="display: flex; justify-content: center; align-items: center; min-height: 80vh;">
-    <div style="background-color: #121628; border-radius: 20px; padding: 40px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
-        <h2 style="color: white; text-align: center; margin-bottom: 30px;">Вход</h2>
-        
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .glass-card {
+        position: relative;
+        z-index: 2;
+        background: rgba(30, 35, 55, 0.8);
+        backdrop-filter: blur(12px);
+        border-radius: 24px;
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 420px;
+        padding: 40px;
+        margin: 0 auto;
+    }
+
+    .glass-card:hover {
+        border-color: #00aaff;
+        box-shadow: 0 0 40px rgba(0, 170, 255, 0.4);
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(10, 14, 28, 0.8);
+        border: 1px solid #2a2a4a;
+        color: white;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        margin-bottom: 4px;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #00aaff;
+        box-shadow: 0 0 10px #00aaff;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        background: #00aaff;
+        transition: all 0.3s ease;
+        border: none;
+        margin-top: 8px;
+    }
+
+    button:hover {
+        background: #ffffff;
+        color: #0a0e1c;
+        box-shadow: 0 0 20px #00aaff;
+    }
+
+    h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 28px;
+    }
+
+    .subtitle {
+        color: #a0a0a0;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+
+    .error {
+        background-color: rgba(255, 68, 68, 0.9);
+        color: white;
+        padding: 10px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .link {
+        text-align: center;
+        margin-top: 24px;
+        color: #a0a0a0;
+        font-size: 14px;
+    }
+
+    .link a {
+        color: #00aaff;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .link a:hover {
+        text-decoration: underline;
+    }
+
+    .field-validation-error {
+        color: #ff8888;
+        font-size: 12px;
+        display: block;
+        margin-bottom: 12px;
+    }
+</style>
+
+<canvas id="rainCanvas"></canvas>
+
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
+    <div class="glass-card">
+        <h2>Добро пожаловать</h2>
+        <div class="subtitle">Войдите в свой аккаунт</div>
+
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
         {
-            <div style="background-color: #ff4444; color: white; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-                @Model.ErrorMessage
-            </div>
+            <div class="error">@Model.ErrorMessage</div>
         }
-        
+
         <form method="post">
-            <div style="margin-bottom: 20px;">
-                <label style="color: white; display: block; margin-bottom: 5px;">Email:</label>
-                <input type="email" asp-for="Input.Email" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;">
-                <span asp-validation-for="Input.Email" style="color: #ff8888;"></span>
+            <div>
+                <input type="email" asp-for="Input.Email" placeholder="Email">
+                <span asp-validation-for="Input.Email" class="field-validation-error"></span>
             </div>
-            
-            <div style="margin-bottom: 20px;">
-                <label style="color: white; display: block; margin-bottom: 5px;">Пароль:</label>
-                <input type="password" asp-for="Input.Password" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px;">
-                <span asp-validation-for="Input.Password" style="color: #ff8888;"></span>
+
+            <div>
+                <input type="password" asp-for="Input.Password" placeholder="Пароль">
+                <span asp-validation-for="Input.Password" class="field-validation-error"></span>
             </div>
-            
-            <button type="submit" style="width: 100%; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 12px; font-size: 16px; cursor: pointer; font-weight: bold;">Войти</button>
+
+            <button type="submit">Войти</button>
         </form>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="/Register" style="color: #00aaff;">Нет аккаунта? Зарегистрироваться</a>
+
+        <div class="link">
+            Нет аккаунта? <a href="/Register">Зарегистрироваться</a>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<script>
+    const canvas = document.getElementById('rainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let drops = [];
+    const DROP_COUNT = 40;
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        createDrops();
+    }
+
+    function createDrops() {
+        drops = [];
+        for (let i = 0; i < DROP_COUNT; i++) {
+            drops.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                speed: Math.random() * 0.6 + 0.3,
+                radius: Math.random() * 6 + 3,
+                opacity: Math.random() * 0.4 + 0.3
+            });
+        }
+    }
+
+    function drawRain() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let drop of drops) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(drop.x, drop.y, drop.radius * 0.7, drop.radius, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 170, 255, ${drop.opacity})`;
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(drop.x - drop.radius * 0.3, drop.y + drop.radius * 0.5);
+            ctx.quadraticCurveTo(drop.x, drop.y + drop.radius * 1.2, drop.x + drop.radius * 0.3, drop.y + drop.radius * 0.5);
+            ctx.fillStyle = `rgba(0, 170, 255, ${drop.opacity * 0.8})`;
+            ctx.fill();
+            ctx.restore();
+
+            drop.y += drop.speed;
+            drop.x += (Math.random() - 0.5) * 0.5;
+            
+            if (drop.y > canvas.height + 50) {
+                drop.y = -50;
+                drop.x = Math.random() * canvas.width;
+                drop.radius = Math.random() * 6 + 3;
+                drop.speed = Math.random() * 0.6 + 0.3;
+                drop.opacity = Math.random() * 0.4 + 0.3;
+            }
+        }
+
+        requestAnimationFrame(drawRain);
+    }
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+    });
+
+    resizeCanvas();
+    drawRain();
+</script>

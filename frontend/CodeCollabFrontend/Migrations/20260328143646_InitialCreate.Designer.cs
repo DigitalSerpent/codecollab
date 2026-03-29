@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CodeCollabFrontend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260306134126_InitialCreate")]
+    [Migration("20260328143646_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -19,6 +19,34 @@ namespace CodeCollabFrontend.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
+
+            modelBuilder.Entity("CodeCollabFrontend.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RoomId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ChatMessages");
+                });
 
             modelBuilder.Entity("CodeCollabFrontend.Models.Room", b =>
                 {
@@ -34,7 +62,11 @@ namespace CodeCollabFrontend.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PreviewCode")
                         .HasColumnType("TEXT");
@@ -56,14 +88,24 @@ namespace CodeCollabFrontend.Migrations
                     b.Property<int>("RoomId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("RoomId1")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("UserId1")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RoomId");
 
+                    b.HasIndex("RoomId1");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("RoomParticipants");
                 });
@@ -80,8 +122,18 @@ namespace CodeCollabFrontend.Migrations
                     b.Property<string>("Cursor")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -97,11 +149,33 @@ namespace CodeCollabFrontend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CodeCollabFrontend.Models.Room", "Room")
+                        .WithMany("RoomParticipants")
+                        .HasForeignKey("RoomId1");
+
                     b.HasOne("CodeCollabFrontend.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("CodeCollabFrontend.Models.User", "User")
+                        .WithMany("RoomParticipants")
+                        .HasForeignKey("UserId1");
+
+                    b.Navigation("Room");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CodeCollabFrontend.Models.Room", b =>
+                {
+                    b.Navigation("RoomParticipants");
+                });
+
+            modelBuilder.Entity("CodeCollabFrontend.Models.User", b =>
+                {
+                    b.Navigation("RoomParticipants");
                 });
 #pragma warning restore 612, 618
         }

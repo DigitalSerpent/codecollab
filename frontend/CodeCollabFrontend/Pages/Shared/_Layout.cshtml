@@ -34,9 +34,14 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
-@if (!ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/room") == true)
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+    bool isAuthPage = currentPage?.StartsWith("/Login") == true || currentPage?.StartsWith("/Register") == true;
+    bool isRoom = currentPage?.StartsWith("/room") == true;
+}
+@if (!isRoom && !isAuthPage)
 {
-    <!-- Правая панель (только не в комнате) -->
+    <!-- Правая панель (только не в комнате и не на страницах входа/регистрации) -->
     <div id="rightPanel" style="position: fixed; top: 0; right: 0; width: 50px; height: 100vh; background-color: #05070f; border-left: 1px solid #1e1e3a; transition: 0.3s; overflow: hidden; z-index: 999; color: #a0a0a0; font-size: 1rem; display: flex; flex-direction: column; align-items: center;"
          onmouseover="this.style.width='180px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='1');"
          onmouseout="this.style.width='50px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='0');">
@@ -44,19 +49,17 @@
         <!-- Верхняя группа (основные пункты) -->
         <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
             
-            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
-                Профиль
-            </div>
+            <a href="/Profile" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
+   onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+   onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+    Профиль
+</a>
 
-            <button onclick="openCreateRoomModal()" style="background: none; border: none; color: inherit; width: 100%;">
-                <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-                     onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                     onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
-                    Создать комнату
-                </div>
-            </button>
+            <a href="/CreateRoomPage" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
+               onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+               onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">
+                Создать комнату
+            </a>
 
             <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
                  onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
@@ -77,74 +80,53 @@
     </div>
 }
 
-<!-- Окно создания комнаты (всегда доступно) -->
-<div id="createRoomModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
-        <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создание комнаты</h3>
 
-        <input type="text" id="roomName" placeholder="Название комнаты" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
 
-       <input type="number" id="roomMaxParticipants" placeholder="Макс. участников" min="1" value="2" style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
 
-        <div style="margin-bottom: 20px;">
-            <label style="color: white; display: block; margin-bottom: 5px;">Права:</label>
-            <select id="roomRights" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px;">
-                <option>Один админ</option>
-                <option>Все админы</option>
-            </select>
-        </div>
-
-        <div style="display: flex; gap: 10px;">
-            <button onclick="closeCreateRoomModal()" style="background-color: #1e1e3a; color: white; border: none; padding: 10px; border-radius: 8px; flex: 1;">Отмена</button>
-            <button onclick="createRoom()" style="background-color: #00aaff; color: #0a0e1c; border: none; padding: 10px; border-radius: 8px; flex: 1;">Создать</button>
-        </div>
-    </div>
-</div>
+<!-- Глобальные уведомления -->
+<div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
 <script>
-    function openCreateRoomModal() {
-        document.getElementById('createRoomModal').style.display = 'flex';
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.style.backgroundColor = type === 'error' ? '#ff4444' : (type === 'success' ? '#00aaff' : '#1e1e3a');
+        toast.style.color = 'white';
+        toast.style.padding = '12px 20px';
+        toast.style.borderRadius = '12px';
+        toast.style.border = '1px solid #00aaff';
+        toast.style.boxShadow = '0 0 20px rgba(0,170,255,0.3)';
+        toast.style.backdropFilter = 'blur(8px)';
+        toast.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        toast.style.fontSize = '14px';
+        toast.style.maxWidth = '300px';
+        toast.style.wordWrap = 'break-word';
+        toast.innerText = message;
+        toast.style.animation = 'slideIn 0.3s ease';
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 
-    function closeCreateRoomModal() {
-        document.getElementById('createRoomModal').style.display = 'none';
-    }
-
-    function createRoom() {
-        const name = document.getElementById('roomName').value;
-        const maxParticipants = document.getElementById('roomMaxParticipants').value;
-        const rights = document.getElementById('roomRights').value;
-
-        if (!name) {
-            alert('Введите название комнаты');
-            return;
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-
-        fetch('/CreateRoom', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                name: name, 
-                maxParticipants: parseInt(maxParticipants), 
-                rights: rights 
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Комната создана!');
-                closeCreateRoomModal();
-                location.reload();
-            } else {
-                alert('Ошибка: ' + (data.message || 'Неизвестная ошибка'));
-            }
-        })
-        .catch(error => {
-            alert('Ошибка при создании комнаты');
-            console.error(error);
-        });
-    }
+        @@keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
 </script>
+
+
 
 </body>
 </html>

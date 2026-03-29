@@ -1,84 +1,206 @@
 @page
 @using Microsoft.EntityFrameworkCore
 @using CodeCollabFrontend.Models
-@using Microsoft.AspNetCore.Http
 @inject AppDbContext _context
+@using Microsoft.AspNetCore.Http
 
 @{
     ViewData["Title"] = "Dashboard";
 
+    var userId = HttpContext.Session.GetInt32("UserId");
+    
+    // Лог для проверки
+    Console.WriteLine($"📌 Dashboard: UserId из сессии = {userId}");
+    Console.WriteLine($"   Session ID: {HttpContext.Session.Id}");
+
+    if (userId == null)
+    {
+        HttpContext.Response.Redirect("/Login");
+        return;
+    }
+
     var rooms = _context.Rooms
+        .Where(r => r.OwnerId == userId)
         .Include(r => r.RoomParticipants)
         .ThenInclude(rp => rp.User)
         .ToList();
 }
 
-<h2 style="color: white; margin-bottom: 30px;">Доступные комнаты</h2>
-
-<div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; max-width: 1300px; margin: 0 auto; position: relative; z-index: 2;">
-
-    @if (!rooms.Any())
-    {
-        <div style="text-align: center; color: white; margin-top: 50px; width: 100%;">
-            <p style="font-size: 1.5rem; margin-bottom: 20px;">Создайте первую комнату</p>
-            <span style="display: inline-block; width: 10px; height: 20px; background-color: #00aaff; animation: blink 1s infinite;"></span>
-            <div style="margin-top: 30px;">
-                <button onclick="openCreateRoomModal()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 12px 30px; font-size: 1rem; cursor: pointer;">
-                    ➕ Создать комнату
-                </button>
-            </div>
-        </div>
+<style>
+    body {
+        background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
     }
-    else
-    {
-        @foreach (var room in rooms)
+
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h2 {
+        color: white;
+        margin-bottom: 30px;
+        font-size: 28px;
+        font-weight: 500;
+    }
+
+    .rooms-grid {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .room-card {
+        background: rgba(18, 22, 40, 0.7);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        transition: all 0.3s ease;
+        width: 240px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .room-card:hover {
+        border-color: #00aaff;
+        box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .preview {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 15px;
+        font-family: 'Courier New', monospace;
+        font-size: 8px;
+        line-height: 1.2;
+        color: #88c0d0;
+        height: 120px;
+        overflow: hidden;
+    }
+
+    .card-content {
+        padding: 15px;
+    }
+
+    .card-content h4 {
+        color: white;
+        margin: 0 0 10px 0;
+        font-weight: bold;
+        font-size: 1.1rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+
+    .enter-button {
+        width: 100%;
+        background-color: #00aaff;
+        color: #0a0e1c;
+        border: none;
+        border-radius: 8px;
+        padding: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .enter-button:hover {
+        background-color: #ffffff;
+        box-shadow: 0 0 20px #00aaff;
+    }
+
+    .empty-state {
+        text-align: center;
+        color: white;
+        margin-top: 50px;
+        width: 100%;
+    }
+
+    .empty-state p {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+
+    .empty-button {
+        background-color: #00aaff;
+        color: #0a0e1c;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 30px;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    .marquee {
+        display: inline-block;
+        animation: marquee 40s linear infinite;
+        white-space: nowrap;
+        padding-left: 100%;
+    }
+
+    .marquee:hover {
+        animation-play-state: paused;
+    }
+
+    @@keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+    }
+</style>
+
+<div class="dashboard-container">
+    <h2>Доступные комнаты</h2>
+
+    <div class="rooms-grid">
+        @if (!rooms.Any())
         {
-            var participants = room.RoomParticipants?.Select(rp => new
-            {
-                Name = rp.User?.Name ?? "Unknown",
-                Online = rp.IsOnline,
-                Avatar = rp.User?.Avatar ?? "👤",
-                Cursor = rp.User?.Cursor ?? "⬤"
-            }).ToList();
-
-            var usersJson = System.Text.Json.JsonSerializer.Serialize(participants);
-
-            <div style="background-color: #121628; border-radius: 20px; width: 240px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #00aaff; cursor: pointer;"
-                 onclick='openRoomModal("@room.Name", "@room.CreatedAt.ToString("dd.MM.yyyy")", "@room.MaxParticipants", @Html.Raw(usersJson), @room.Id)'>
-                
-                <div style="background-color: #0d0d1a; padding: 15px; font-family: 'Courier New', monospace; font-size: 8px; line-height: 1.2; color: #88c0d0; height: 120px; overflow: hidden;">
-                    @(string.IsNullOrEmpty(room.PreviewCode) ? "// код не загружен" : room.PreviewCode)
-                </div>
-                
-                <div style="padding: 15px;">
-                    <h4 style="color: white; margin: 0 0 10px 0; font-weight: bold; font-size: 1.1rem;">@room.Name</h4>
-                    <button style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px 15px; width: 100%; transition: 0.3s;"
-                            onmouseover="this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 0 20px #00aaff';"
-                            onmouseout="this.style.backgroundColor='#00aaff'; this.style.boxShadow='none';">
-                        Подробнее
-                    </button>
+            <div class="empty-state">
+                <p>Создайте первую комнату</p>
+                <span style="display: inline-block; width: 10px; height: 20px; background-color: #00aaff; animation: blink 1s infinite;"></span>
+                <div>
+                    <button class="empty-button" onclick="openCreateRoomModal()">➕ Создать комнату</button>
                 </div>
             </div>
         }
-    }
-</div>
+        else
+        {
+            @foreach (var room in rooms)
+            {
+                var participants = room.RoomParticipants?.Select(rp => new
+                {
+                    Name = rp.User?.Name ?? "Unknown",
+                    Online = rp.IsOnline,
+                    Avatar = rp.User?.Avatar ?? "👤",
+                    Cursor = rp.User?.Cursor ?? "⬤"
+                }).ToList();
 
-<!-- Модальное окно информации о комнате -->
-<div id="roomInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 600px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; display: flex; gap: 30px;">
-        
-        <div style="flex: 1; max-height: 300px; overflow-y: auto; padding-right: 10px;">
-            <h4 style="color: white; margin-bottom: 15px;">Участники</h4>
-            <div id="participantList" style="color: white;"></div>
-        </div>
+                var usersJson = System.Text.Json.JsonSerializer.Serialize(participants);
+                bool isLongName = room.Name.Length > 20;
+                bool isOwner = userId == room.OwnerId;
 
-        <div style="flex: 1;">
-            <h4 id="roomName" style="color: white; margin-bottom: 15px;"></h4>
-            <p id="roomDate" style="color: #a0a0a0; font-size: 0.9rem;"></p>
-            <p id="roomParticipants" style="color: #a0a0a0; font-size: 0.9rem;"></p>
-            <button onclick="enterRoomFromModal()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; width: 100%; margin-top: 20px;">Войти в комнату</button>
-            <button onclick="closeRoomModal()" style="background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; width: 100%; margin-top: 10px;">Закрыть</button>
-        </div>
+                <div class="room-card" onclick='openRoomModal("@room.Name", "@room.CreatedAt.ToString("dd.MM.yyyy")", "@room.MaxParticipants", @Html.Raw(usersJson), @room.Id, @isOwner.ToString().ToLower())'>
+                    <div class="preview">
+                        @(string.IsNullOrEmpty(room.PreviewCode) ? "// код не загружен" : room.PreviewCode)
+                    </div>
+                    <div class="card-content">
+                        @if (isLongName)
+                        {
+                            <h4><span class="marquee">@room.Name</span></h4>
+                        }
+                        else
+                        {
+                            <h4>@room.Name</h4>
+                        }
+                        <button class="enter-button" onclick='event.stopPropagation(); openRoomModal("@room.Name", "@room.CreatedAt.ToString("dd.MM.yyyy")", "@room.MaxParticipants", @Html.Raw(usersJson), @room.Id, @isOwner.ToString().ToLower())'>Подробнее</button>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 
@@ -87,26 +209,109 @@
         0%, 50% { opacity: 1; }
         51%, 100% { opacity: 0; }
     }
+
+    /* Стили для модального окна */
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    #roomName {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        word-break: break-word;
+        max-width: calc(100% - 40px);
+        font-size: 1.2rem;
+        line-height: 1.3;
+        margin: 0;
+    }
+
+    .delete-icon {
+        color: #a0a0a0;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: 0.2s;
+        background: none;
+        border: none;
+        padding: 0;
+        flex-shrink: 0;
+    }
+
+    .delete-icon:hover {
+        color: #ff8888;
+        transform: scale(1.1);
+    }
+
+    .modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+        width: 100%;
+    }
+
+    .modal-actions button {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
 </style>
+
+<!-- Модальное окно информации о комнате -->
+<div id="roomInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 600px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; display: flex; gap: 30px;">
+        <div style="flex: 1;">
+            <h4 style="color: white;">Участники</h4>
+            <div id="participantList" style="color: white;"></div>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h4 id="roomName" style="color: white; margin: 0;"></h4>
+                <button id="deleteIconBtn" class="delete-icon" style="display: none;" onclick="confirmDelete()">🗑</button>
+            </div>
+            <p id="roomDate" style="color: #a0a0a0;"></p>
+            <p id="roomParticipants" style="color: #a0a0a0;"></p>
+            <div class="modal-actions">
+                <button onclick="enterRoomFromModal()" style="background-color: #00aaff; color: #0a0e1c; border: none;">Войти в комнату</button>
+                <button onclick="closeRoomModal()" style="background-color: #1e1e3a; color: white; border: none;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     let currentRoomId = 0;
+    let currentIsOwner = false;
 
-    function openRoomModal(name, date, participants, users, roomId) {
+    function openRoomModal(name, date, participants, users, roomId, isOwner) {
         currentRoomId = roomId;
+        currentIsOwner = isOwner;
         document.getElementById('roomName').innerText = name;
         document.getElementById('roomDate').innerText = 'Создана: ' + date;
         document.getElementById('roomParticipants').innerText = 'Участников: ' + participants;
 
+        const deleteIcon = document.getElementById('deleteIconBtn');
+        deleteIcon.style.display = isOwner ? 'block' : 'none';
+
         let listHtml = '';
-        users.forEach(user => {
-            listHtml += '<div style="display: flex; align-items: center; margin-bottom: 12px; gap: 8px;">';
-            listHtml += '<span style="font-size: 1.2rem;">' + user.avatar + '</span>';
-            listHtml += '<span style="color: white; font-size: 0.9rem; cursor: pointer;" onclick="goToProfile(\'' + user.name + '\')">' + user.name + '</span>';
-            listHtml += '<span style="margin-left: auto; font-size: 1rem;" title="Курсор пользователя">' + user.cursor + '</span>';
-            listHtml += '<span style="width: 8px; height: 8px; border-radius: 50%; background-color: ' + (user.online ? '#00ff00' : '#888') + ';"></span>';
-            listHtml += '</div>';
-        });
+        if (users && users.length) {
+            users.forEach(user => {
+                listHtml += `<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span>${user.avatar}</span>
+                    <span>${user.name}</span>
+                    <span>${user.cursor}</span>
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
+                </div>`;
+            });
+        } else {
+            listHtml = '<div style="color: #a0a0a0;">Нет участников</div>';
+        }
         document.getElementById('participantList').innerHTML = listHtml;
 
         document.getElementById('roomInfoModal').style.display = 'flex';
@@ -116,15 +321,58 @@
         document.getElementById('roomInfoModal').style.display = 'none';
     }
 
-    function goToProfile(name) {
-        alert('Переход к профилю пользователя ' + name + ' (заглушка)');
-    }
-
     function enterRoomFromModal() {
         if (currentRoomId) {
             window.location.href = '/room/' + currentRoomId;
-        } else {
-            alert('Ошибка: комната не выбрана');
+        }
+    }
+
+    function confirmDelete() {
+        showConfirmModal(
+            '⚠️ Удаление комнаты',
+            'Вы уверены, что хотите удалить эту комнату? Это действие необратимо.',
+            () => {
+                showConfirmModal(
+                    '🗑 Последнее подтверждение',
+                    'Удалить комнату навсегда?',
+                    () => deleteRoom(currentRoomId),
+                    'Да, удалить',
+                    'Отмена'
+                );
+            },
+            'Удалить',
+            'Отмена'
+        );
+    }
+
+    function showConfirmModal(title, message, onConfirm, confirmText = 'Удалить', cancelText = 'Отмена') {
+        const modalHtml = `
+            <div id="customConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 3000; display: flex; align-items: center; justify-content: center;">
+                <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; text-align: center;">
+                    <h3 style="color: white; margin-bottom: 15px;">${title}</h3>
+                    <p style="color: #a0a0a0; margin-bottom: 25px;">${message}</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="confirmCancelBtn" style="background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">${cancelText}</button>
+                        <button id="confirmOkBtn" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">${confirmText}</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        document.getElementById('confirmOkBtn').onclick = () => {
+            document.getElementById('customConfirmModal').remove();
+            onConfirm();
+        };
+        document.getElementById('confirmCancelBtn').onclick = () => {
+            document.getElementById('customConfirmModal').remove();
+        };
+    }
+
+    function deleteRoom(roomId) {
+        if (confirm('Удалить комнату?')) {
+            window.location.href = '/DeleteRoom?id=' + roomId;
         }
     }
 </script>

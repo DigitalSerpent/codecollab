@@ -59,7 +59,11 @@ namespace CodeCollabFrontend.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PreviewCode")
                         .HasColumnType("TEXT");

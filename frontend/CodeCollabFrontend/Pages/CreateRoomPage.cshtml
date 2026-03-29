@@ -1,0 +1,137 @@
+@page
+@model CreateRoomPageModel
+@{
+    ViewData["Title"] = "Создание комнаты";
+    Layout = null;
+}
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .glass-card {
+        background: rgba(30, 35, 55, 0.8);
+        backdrop-filter: blur(12px);
+        border-radius: 24px;
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
+        transition: all 0.3s ease;
+        width: 100%;
+        max-width: 420px;
+        padding: 40px;
+    }
+
+    .glass-card:hover {
+        border-color: #00aaff;
+        box-shadow: 0 0 40px rgba(0, 170, 255, 0.4);
+    }
+
+    h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 28px;
+    }
+
+    .subtitle {
+        color: #a0a0a0;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(10, 14, 28, 0.8);
+        border: 1px solid #2a2a4a;
+        color: white;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        border-color: #00aaff;
+        box-shadow: 0 0 10px #00aaff;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        background: #00aaff;
+        transition: all 0.3s ease;
+        border: none;
+        margin-top: 8px;
+    }
+
+    button:hover {
+        background: #ffffff;
+        color: #0a0e1c;
+        box-shadow: 0 0 20px #00aaff;
+    }
+
+    .error {
+        background-color: rgba(255, 68, 68, 0.9);
+        color: white;
+        padding: 10px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .link {
+        text-align: center;
+        margin-top: 24px;
+        color: #a0a0a0;
+        font-size: 14px;
+    }
+
+    .link a {
+        color: #00aaff;
+        text-decoration: none;
+        font-weight: 500;
+    }
+</style>
+
+<div class="glass-card">
+    <h2>Создать комнату</h2>
+    <div class="subtitle">Дайте название и настройте параметры</div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="error">@Model.ErrorMessage</div>
+    }
+
+    <form method="post">
+        <input type="text" asp-for="Input.Name" placeholder="Название комнаты" maxlength="50">
+        <input type="number" asp-for="Input.MaxParticipants" placeholder="Макс. участников" min="1" value="2">
+
+        <label style="color: white; display: block; margin-bottom: 8px;">Права:</label>
+        <select asp-for="Input.Rights">
+            <option value="Один админ">Один админ</option>
+            <option value="Все админы">Все админы</option>
+        </select>
+
+        <button type="submit">Создать</button>
+    </form>
+
+    <div class="link">
+        <a href="/Dashboard">← Вернуться к комнатам</a>
+    </div>
+</div>

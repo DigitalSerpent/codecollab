@@ -1,0 +1,30 @@
+@page
+@using CodeCollabFrontend.Models
+@using Microsoft.EntityFrameworkCore
+@{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (userId == null)
+    {
+        Response.Redirect("/Login");
+        return;
+    }
+
+    if (!int.TryParse(Request.Query["id"], out int roomId))
+    {
+        Response.Redirect("/Dashboard");
+        return;
+    }
+
+    var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+    optionsBuilder.UseSqlite("Data Source=codecollab.db");
+    using var context = new AppDbContext(optionsBuilder.Options);
+    
+    var room = context.Rooms.Find(roomId);
+    if (room != null && room.OwnerId == userId)
+    {
+        context.Rooms.Remove(room);
+        context.SaveChanges();
+    }
+
+    Response.Redirect("/Dashboard");
+}

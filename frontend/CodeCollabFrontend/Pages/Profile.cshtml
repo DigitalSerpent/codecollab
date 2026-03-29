@@ -1,0 +1,181 @@
+@page
+@using CodeCollabFrontend.Models
+@inject AppDbContext _context
+@using Microsoft.AspNetCore.Http
+@{
+    ViewData["Title"] = "Профиль";
+
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (userId == null)
+    {
+        HttpContext.Response.Redirect("/Login");
+        return;
+    }
+
+    var user = _context.Users.Find(userId);
+    if (user == null)
+    {
+        HttpContext.Response.Redirect("/Login");
+        return;
+    }
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .glass-card {
+        background: rgba(18, 22, 40, 0.7);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        border: 1px solid rgba(0, 170, 255, 0.3);
+        box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
+        padding: 40px;
+        width: 100%;
+        max-width: 500px;
+    }
+
+    h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .avatar-section {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .avatar {
+        font-size: 4rem;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .avatar:hover {
+        transform: scale(1.05);
+    }
+
+    .info-section {
+        margin-bottom: 20px;
+    }
+
+    label {
+        color: white;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(10, 14, 28, 0.8);
+        border: 1px solid #2a2a4a;
+        color: white;
+        margin-bottom: 15px;
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #00aaff;
+        box-shadow: 0 0 10px #00aaff;
+    }
+
+    button {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        background-color: #00aaff;
+        color: #0a0e1c;
+        border: none;
+        cursor: pointer;
+        margin-bottom: 10px;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background-color: #ffffff;
+        box-shadow: 0 0 20px #00aaff;
+    }
+
+    .back-btn {
+        background-color: #1e1e3a;
+        color: white;
+    }
+
+    .back-btn:hover {
+        background-color: #2a2a4a;
+        box-shadow: none;
+    }
+</style>
+
+<div class="glass-card">
+    <h2>Профиль</h2>
+    
+    <div class="avatar-section">
+        <div class="avatar" onclick="changeAvatar()">@user.Avatar</div>
+        <small style="color: #a0a0a0;">👆 Нажми на аватар, чтобы изменить</small>
+    </div>
+
+    <div class="info-section">
+        <label>Имя:</label>
+        <input type="text" id="userName" value="@user.Name" />
+        
+        <label>Курсор (эмодзи):</label>
+        <input type="text" id="userCursor" value="@user.Cursor" maxlength="2" />
+        
+        <label>Email:</label>
+        <input type="email" id="userEmail" value="@user.Email" disabled />
+    </div>
+
+    <button onclick="saveProfile()">Сохранить</button>
+    <button class="back-btn" onclick="window.location.href='/Dashboard'">Назад</button>
+</div>
+
+<script>
+    function changeAvatar() {
+        const newAvatar = prompt('Введите новый аватар (эмодзи):', document.querySelector('.avatar').innerText);
+        if (newAvatar && newAvatar.length <= 2) {
+            document.querySelector('.avatar').innerText = newAvatar;
+        } else if (newAvatar) {
+            alert('Аватар должен быть 1-2 символа (например, 👩‍💻 или 🐍)');
+        }
+    }
+
+    function saveProfile() {
+        const name = document.getElementById('userName').value;
+        const cursor = document.getElementById('userCursor').value;
+        const avatar = document.querySelector('.avatar').innerText;
+
+        if (!name.trim()) {
+            alert('Имя не может быть пустым');
+            return;
+        }
+
+        fetch('/Profile/Update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, cursor, avatar })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('✅ Профиль сохранён', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showNotification('❌ Ошибка: ' + data.message, 'error');
+            }
+        })
+        .catch(() => showNotification('❌ Ошибка при сохранении', 'error'));
+    }
+</script>
