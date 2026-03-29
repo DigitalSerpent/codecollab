@@ -214,3 +214,10 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Debug\net10.0\runtime
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\CodeCollabFrontend.csproj.AssemblyReference.cache
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\CodeColl.AA53642E.Up2Date
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Debug\net10.0\BCrypt.Net-Next.dll
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\qfdj1nqngj-{0}-2mpl9awyf2-2mpl9awyf2.gz
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\hqse5ts3bt-{0}-rxo2xktoq8-rxo2xktoq8.gz
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\nr9iwgarpq-{0}-nxt97g72iu-nxt97g72iu.gz
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\j5vkilpzih-{0}-dcmqdi3fkj-dcmqdi3fkj.gz
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\goxt3axta9-{0}-cww2569ous-cww2569ous.gz
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\38apuo4nm9-{0}-t8ly88q6tu-t8ly88q6tu.gz
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Debug\net10.0\compressed\c0gjf1qu48-{0}-6l468y8fny-6l468y8fny.gz

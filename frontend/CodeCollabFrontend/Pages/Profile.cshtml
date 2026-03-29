@@ -1,4 +1,7 @@
 @page
+@{
+    Layout = null;
+}
 @using CodeCollabFrontend.Models
 @inject AppDbContext _context
 @using Microsoft.AspNetCore.Http
@@ -20,162 +23,496 @@
     }
 }
 
-<style>
-    body {
-        background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
-        margin: 0;
-        padding: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Профиль | Code Collab</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+            font-family: 'Segoe UI', 'Inter', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            position: relative;
+        }
+        .sphere {
+            position: fixed;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(0,170,255,0.1), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatSphere 20s infinite ease-in-out;
+            z-index: 0;
+        }
+        @@keyframes floatSphere {
+            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            20% { opacity: 0.5; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-20vh) translateX(50px); opacity: 0; }
+        }
+        .profile-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+        .profile-card {
+            background: rgba(10, 14, 28, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(0, 170, 255, 0.4);
+            box-shadow: 0 0 50px rgba(0, 170, 255, 0.2);
+            overflow: hidden;
+        }
+        .cover {
+            height: 200px;
+            background: linear-gradient(45deg, #00aaff20, #00aaff05);
+            position: relative;
+            cursor: pointer;
+        }
+        .cover-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        .avatar-wrapper {
+            position: relative;
+            margin-top: -70px;
+            text-align: center;
+        }
+        .avatar {
+            width: 140px;
+            height: 140px;
+            background: #121628;
+            border-radius: 50%;
+            border: 3px solid #00aaff;
+            box-shadow: 0 0 20px #00aaff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4.5rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .info {
+            text-align: center;
+            padding: 20px 30px 10px;
+        }
+        .name {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 8px;
+        }
+        .name input {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 32px;
+            text-align: center;
+            width: 100%;
+        }
+        .email {
+            color: #a0a0a0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .section {
+            padding: 20px 30px;
+            border-top: 1px solid rgba(0, 170, 255, 0.2);
+        }
+        .section-title {
+            color: #00aaff;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .social-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .social-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .social-row input {
+            flex: 1;
+            padding: 10px;
+            background: rgba(10, 14, 28, 0.8);
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            color: white;
+        }
+        .social-row button {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .add-social {
+            background: rgba(0, 170, 255, 0.2);
+            border: 1px dashed #00aaff;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            color: #00aaff;
+            margin-top: 10px;
+        }
+        .cursor-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 80px));
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .cursor-option {
+            background: #0a0e1c;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .cursor-option:hover, .cursor-option.selected {
+            border-color: #00aaff;
+            box-shadow: 0 0 15px #00aaff;
+            transform: scale(1.05);
+        }
+        .cursor-option img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 2px rgba(0,170,255,0.5));
+        }
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .size-control input {
+            flex: 1;
+        }
+        .lock-icon {
+            color: #ffaa00;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .premium-message {
+            color: #ffaa00;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .actions {
+            display: flex;
+            gap: 15px;
+            padding: 20px 30px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #00aaff;
+            color: #0a0e1c;
+        }
+        .btn-primary:hover {
+            background: white;
+            box-shadow: 0 0 20px #00aaff;
+        }
+        .btn-secondary {
+            background: #1e1e3a;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: #121628;
+            border-radius: 24px;
+            padding: 30px;
+            width: 90%;
+            max-width: 800px;
+            border: 1px solid #00aaff;
+            box-shadow: 0 0 30px #00aaff;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0a0;
+            font-size: 12px;
+            border-top: 1px solid rgba(0,170,255,0.2);
+        }
+    </style>
+</head>
+<body>
 
-    .glass-card {
-        background: rgba(18, 22, 40, 0.7);
-        backdrop-filter: blur(8px);
-        border-radius: 20px;
-        border: 1px solid rgba(0, 170, 255, 0.3);
-        box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
-        padding: 40px;
-        width: 100%;
-        max-width: 500px;
-    }
+<div id="spheresContainer"></div>
 
-    h2 {
-        color: white;
-        text-align: center;
-        margin-bottom: 30px;
-    }
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="cover" onclick="changeCover()">
+            <div class="cover-hint">Нажми, чтобы изменить фон</div>
+        </div>
 
-    .avatar-section {
-        text-align: center;
-        margin-bottom: 20px;
-    }
+        <div class="avatar-wrapper">
+            <div class="avatar" onclick="changeAvatar()">@user.Avatar</div>
+        </div>
 
-    .avatar {
-        font-size: 4rem;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
+        <div class="info">
+            <div class="name">
+                <input type="text" id="userName" value="@user.Name">
+            </div>
+            <div class="email">@user.Email</div>
+        </div>
 
-    .avatar:hover {
-        transform: scale(1.05);
-    }
+        <div class="section">
+            <div class="section-title">
+                <span>🌐</span> Социальные сети
+            </div>
+            <div id="socialList" class="social-list"></div>
+            <div class="add-social" onclick="addSocialField()">
+                + Добавить соцсеть
+            </div>
+        </div>
 
-    .info-section {
-        margin-bottom: 20px;
-    }
+        <div class="section">
+            <button class="btn btn-primary" onclick="openCursorModal()">🎨 Конструктор курсора</button>
+        </div>
 
-    label {
-        color: white;
-        display: block;
-        margin-bottom: 5px;
-    }
+        <div class="actions">
+            <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
+            <button class="btn btn-secondary" onclick="window.location.href='/Dashboard'">Назад</button>
+        </div>
 
-    input {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        background: rgba(10, 14, 28, 0.8);
-        border: 1px solid #2a2a4a;
-        color: white;
-        margin-bottom: 15px;
-    }
-
-    input:focus {
-        outline: none;
-        border-color: #00aaff;
-        box-shadow: 0 0 10px #00aaff;
-    }
-
-    button {
-        width: 100%;
-        padding: 10px;
-        border-radius: 8px;
-        background-color: #00aaff;
-        color: #0a0e1c;
-        border: none;
-        cursor: pointer;
-        margin-bottom: 10px;
-        transition: 0.3s;
-    }
-
-    button:hover {
-        background-color: #ffffff;
-        box-shadow: 0 0 20px #00aaff;
-    }
-
-    .back-btn {
-        background-color: #1e1e3a;
-        color: white;
-    }
-
-    .back-btn:hover {
-        background-color: #2a2a4a;
-        box-shadow: none;
-    }
-</style>
-
-<div class="glass-card">
-    <h2>Профиль</h2>
-    
-    <div class="avatar-section">
-        <div class="avatar" onclick="changeAvatar()">@user.Avatar</div>
-        <small style="color: #a0a0a0;">👆 Нажми на аватар, чтобы изменить</small>
+        <div class="footer">
+            📅 Дата регистрации: 01.03.2026
+        </div>
     </div>
+</div>
 
-    <div class="info-section">
-        <label>Имя:</label>
-        <input type="text" id="userName" value="@user.Name" />
+<div id="cursorModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: white; margin-bottom: 20px;">🎨 Конструктор курсора</h3>
         
-        <label>Курсор (эмодзи):</label>
-        <input type="text" id="userCursor" value="@user.Cursor" maxlength="2" />
-        
-        <label>Email:</label>
-        <input type="email" id="userEmail" value="@user.Email" disabled />
+        <div class="cursor-grid" id="cursorGrid"></div>
+
+        <div class="size-control">
+            <span style="color: white;">Размер</span>
+            <input type="range" id="cursorSize" min="16" max="48" value="32" step="2">
+            <i class="fas fa-lock lock-icon" id="lockIcon" onclick="togglePremium()"></i>
+        </div>
+        <div id="premiumMessage" class="premium-message">🔒 Гигантский курсор — доступен в Coco Plus</div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-primary" onclick="applyCursor()">Применить</button>
+            <button class="btn btn-secondary" onclick="closeCursorModal()">Отмена</button>
+        </div>
     </div>
-
-    <button onclick="saveProfile()">Сохранить</button>
-    <button class="back-btn" onclick="window.location.href='/Dashboard'">Назад</button>
 </div>
 
 <script>
+    let socialFields = [];
+
+    function renderSocials() {
+        const container = document.getElementById('socialList');
+        container.innerHTML = '';
+        socialFields.forEach((field, index) => {
+            const row = document.createElement('div');
+            row.className = 'social-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Название" value="${field.name || ''}" data-index="${index}" data-type="name">
+                <input type="text" placeholder="Ссылка" value="${field.url || ''}" data-index="${index}" data-type="url">
+                <button onclick="removeSocialField(${index})"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(row);
+        });
+        document.querySelectorAll('.social-row input').forEach(inp => {
+            inp.addEventListener('change', (e) => {
+                const idx = e.target.getAttribute('data-index');
+                const type = e.target.getAttribute('data-type');
+                if (type === 'name') socialFields[idx].name = e.target.value;
+                else socialFields[idx].url = e.target.value;
+            });
+        });
+    }
+
+    function addSocialField() {
+        socialFields.push({ name: '', url: '' });
+        renderSocials();
+    }
+
+    function removeSocialField(index) {
+        socialFields.splice(index, 1);
+        renderSocials();
+    }
+
+    function loadSocials() {
+        fetch('/Profile/GetSocials')
+            .then(res => res.json())
+            .then(data => {
+                if (data.socials) socialFields = data.socials;
+                renderSocials();
+            })
+            .catch(() => {});
+    }
+
+    const cursorFiles = [
+        "arrow", "arrow-down", "arrow-left", "arrow-right", "arrow-up",
+        "closedhand", "copy", "cross", "drag-copy", "drag-link",
+        "drag", "hand", "help", "ibeam", "move",
+        "not-allowed", "openhand", "point", "wait"
+    ];
+    let selectedCursorFile = "arrow";
+    let premiumCursor = false;
+
+    function renderCursors() {
+        const grid = document.getElementById('cursorGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        cursorFiles.forEach(file => {
+            const option = document.createElement('div');
+            option.className = 'cursor-option';
+            if (file === selectedCursorFile) option.classList.add('selected');
+            const imgSrc = `/cursors/${file}.svg`;
+            option.innerHTML = `<img src="${imgSrc}" alt="${file}" onerror="this.src='/cursors/arrow.svg'">`;
+            option.onclick = () => {
+                document.querySelectorAll('.cursor-option').forEach(c => c.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedCursorFile = file;
+            };
+            grid.appendChild(option);
+        });
+    }
+
+    function applyCursor() {
+        console.log('Выбран курсор:', selectedCursorFile);
+        closeCursorModal();
+    }
+
+    function togglePremium() {
+        premiumCursor = !premiumCursor;
+        const lockIcon = document.getElementById('lockIcon');
+        const sizeSlider = document.getElementById('cursorSize');
+        const message = document.getElementById('premiumMessage');
+        if (premiumCursor) {
+            lockIcon.className = 'fas fa-unlock-alt lock-icon';
+            sizeSlider.max = 80;
+            message.style.display = 'block';
+        } else {
+            lockIcon.className = 'fas fa-lock lock-icon';
+            sizeSlider.max = 48;
+            message.style.display = 'none';
+            if (sizeSlider.value > 48) sizeSlider.value = 48;
+        }
+    }
+
+    function openCursorModal() {
+        renderCursors();
+        document.getElementById('cursorModal').style.display = 'flex';
+    }
+
+    function closeCursorModal() {
+        document.getElementById('cursorModal').style.display = 'none';
+    }
+
     function changeAvatar() {
         const newAvatar = prompt('Введите новый аватар (эмодзи):', document.querySelector('.avatar').innerText);
         if (newAvatar && newAvatar.length <= 2) {
             document.querySelector('.avatar').innerText = newAvatar;
-        } else if (newAvatar) {
-            alert('Аватар должен быть 1-2 символа (например, 👩‍💻 или 🐍)');
         }
+    }
+
+    function changeCover() {
+        alert('Здесь будет выбор фона шапки (скоро)');
     }
 
     function saveProfile() {
         const name = document.getElementById('userName').value;
-        const cursor = document.getElementById('userCursor').value;
         const avatar = document.querySelector('.avatar').innerText;
+        const cursorSize = document.getElementById('cursorSize').value;
 
         if (!name.trim()) {
             alert('Имя не может быть пустым');
             return;
         }
 
+        const cursorData = `${selectedCursorFile} ${cursorSize} ${premiumCursor ? 'premium' : 'normal'}`;
+
         fetch('/Profile/Update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, cursor, avatar })
+            body: JSON.stringify({ name, avatar, cursor: cursorData })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showNotification('✅ Профиль сохранён', 'success');
-                setTimeout(() => window.location.reload(), 1000);
+                fetch('/Profile/UpdateSocials', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ socials: socialFields })
+                });
+                alert('Профиль сохранён');
+                window.location.reload();
             } else {
-                showNotification('❌ Ошибка: ' + data.message, 'error');
+                alert('Ошибка: ' + data.message);
             }
         })
-        .catch(() => showNotification('❌ Ошибка при сохранении', 'error'));
+        .catch(() => alert('Ошибка при сохранении'));
     }
+
+    function createSpheres() {
+        const container = document.getElementById('spheresContainer');
+        for (let i = 0; i < 15; i++) {
+            const sphere = document.createElement('div');
+            sphere.className = 'sphere';
+            sphere.style.left = Math.random() * 100 + '%';
+            sphere.style.width = sphere.style.height = (40 + Math.random() * 60) + 'px';
+            sphere.style.animationDelay = Math.random() * 20 + 's';
+            sphere.style.animationDuration = 15 + Math.random() * 15 + 's';
+            container.appendChild(sphere);
+        }
+    }
+
+    loadSocials();
+    createSpheres();
+    document.getElementById('cursorSize').value = 32;
 </script>
+</body>
+</html>
