@@ -177,53 +177,6 @@
             color: #00aaff;
             margin-top: 10px;
         }
-        .cursor-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 80px));
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .cursor-option {
-            background: #0a0e1c;
-            border: 1px solid #2a2a4a;
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .cursor-option:hover, .cursor-option.selected {
-            border-color: #00aaff;
-            box-shadow: 0 0 15px #00aaff;
-            transform: scale(1.05);
-        }
-        .cursor-option img {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 2px rgba(0,170,255,0.5));
-        }
-        .size-control {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .size-control input {
-            flex: 1;
-        }
-        .lock-icon {
-            color: #ffaa00;
-            cursor: pointer;
-            font-size: 20px;
-        }
-        .premium-message {
-            color: #ffaa00;
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
-        }
         .actions {
             display: flex;
             gap: 15px;
@@ -268,7 +221,7 @@
             border-radius: 24px;
             padding: 30px;
             width: 90%;
-            max-width: 800px;
+            max-width: 1100px;
             border: 1px solid #00aaff;
             box-shadow: 0 0 30px #00aaff;
         }
@@ -278,6 +231,95 @@
             color: #a0a0a0;
             font-size: 12px;
             border-top: 1px solid rgba(0,170,255,0.2);
+        }
+        .cursor-workspace {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .preview-area {
+            flex: 1;
+            min-width: 260px;
+            text-align: center;
+        }
+        .preview-box {
+            background: #0a0e1c;
+            border-radius: 24px;
+            width: 260px;
+            height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #00aaff;
+            margin: 0 auto;
+            box-shadow: 0 0 20px rgba(0,170,255,0.2);
+        }
+        .controls-area {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .size-control, .color-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .size-control input, .color-control input {
+            flex: 1;
+        }
+        .color-control input {
+            width: 50px;
+            height: 40px;
+            border: 1px solid #00aaff;
+            border-radius: 8px;
+            background: #0a0e1c;
+        }
+        .lock-icon {
+            color: #ffaa00;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .premium-message {
+            color: #ffaa00;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .cursors-grid {
+            flex: 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .cursor-option {
+            background: #1a1e30;
+            border: 1px solid #2a2a4a;
+            border-radius: 16px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cursor-option:hover, .cursor-option.selected {
+            border-color: #00aaff;
+            box-shadow: 0 0 15px #00aaff;
+            transform: scale(1.05);
+        }
+        .cursor-option img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+        .cursor-option i {
+            font-size: 40px;
         }
     </style>
 </head>
@@ -313,7 +355,7 @@
         </div>
 
         <div class="section">
-            <button class="btn btn-primary" onclick="openCursorModal()">🎨 Конструктор курсора</button>
+            <button class="btn btn-primary" onclick="openCursorModal()">Конструктор курсора</button>
         </div>
 
         <div class="actions">
@@ -322,25 +364,38 @@
         </div>
 
         <div class="footer">
-            📅 Дата регистрации: 01.03.2026
+             Дата регистрации: 01.03.2026
         </div>
     </div>
 </div>
 
 <div id="cursorModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: white; margin-bottom: 20px;">🎨 Конструктор курсора</h3>
+        <h3 style="color: white; margin-bottom: 20px; text-align: center;">Конструктор курсора</h3>
         
-        <div class="cursor-grid" id="cursorGrid"></div>
+        <div class="cursor-workspace">
+            <div class="preview-area">
+                <div class="preview-box">
+                    <div id="cursorPreview"></div>
+                </div>
+                <div class="controls-area">
+                    <div class="size-control">
+                        <span style="color: white;">Размер</span>
+                        <input type="range" id="cursorSize" min="16" max="48" value="32" step="2">
+                        <i class="fas fa-lock lock-icon" id="lockIcon" onclick="togglePremium()"></i>
+                    </div>
+                    <div class="color-control">
+                        <span style="color: white;">Цвет</span>
+                        <input type="color" id="cursorColor" value="#00aaff">
+                    </div>
+                    <div id="premiumMessage" class="premium-message">Гигантский курсор — доступен в Coco Plus</div>
+                </div>
+            </div>
 
-        <div class="size-control">
-            <span style="color: white;">Размер</span>
-            <input type="range" id="cursorSize" min="16" max="48" value="32" step="2">
-            <i class="fas fa-lock lock-icon" id="lockIcon" onclick="togglePremium()"></i>
+            <div class="cursors-grid" id="cursorGrid"></div>
         </div>
-        <div id="premiumMessage" class="premium-message">🔒 Гигантский курсор — доступен в Coco Plus</div>
 
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; gap: 15px; margin-top: 30px;">
             <button class="btn btn-primary" onclick="applyCursor()">Применить</button>
             <button class="btn btn-secondary" onclick="closeCursorModal()">Отмена</button>
         </div>
@@ -394,36 +449,111 @@
     }
 
     const cursorFiles = [
-        "arrow", "arrow-down", "arrow-left", "arrow-right", "arrow-up",
-        "closedhand", "copy", "cross", "drag-copy", "drag-link",
-        "drag", "hand", "help", "ibeam", "move",
-        "not-allowed", "openhand", "point", "wait"
+        "default",
+        "handopen",
+        "handpointing",
+        "resizenorth",
+        "resizenorthwest",
+        "textcursor"
     ];
-    let selectedCursorFile = "arrow";
+
+    const fontAwesomeCursors = [
+        "fa-arrow-pointer",
+        "fa-hand-peace",
+        "fa-arrow-up",
+        "fa-arrow-down",
+        "fa-arrow-left",
+        "fa-arrow-right",
+        "fa-star",
+        "fa-heart",
+        "fa-crown"
+    ];
+
+    let allCursors = cursorFiles.map(f => ({ type: 'svg', name: f }));
+    fontAwesomeCursors.forEach(fa => {
+        allCursors.push({ type: 'fa', name: fa });
+    });
+
+    let selectedCursor = allCursors[0];
     let premiumCursor = false;
+
+    function updateColorControlVisibility() {
+        const colorControl = document.querySelector('.color-control');
+        if (!colorControl) return;
+        if (selectedCursor.type === 'svg') {
+            colorControl.style.opacity = '0.5';
+            colorControl.style.pointerEvents = 'none';
+            let hint = document.getElementById('colorHint');
+            if (!hint) {
+                hint = document.createElement('div');
+                hint.id = 'colorHint';
+                hint.style.color = '#ffaa00';
+                hint.style.fontSize = '12px';
+                hint.style.marginTop = '5px';
+                hint.innerText = '⚠️ Для этого курсора цвет не меняется';
+                colorControl.parentNode.appendChild(hint);
+            }
+        } else {
+            colorControl.style.opacity = '1';
+            colorControl.style.pointerEvents = 'auto';
+            const hint = document.getElementById('colorHint');
+            if (hint) hint.remove();
+        }
+    }
+
+    function updateCursorPreview() {
+        const previewContainer = document.getElementById('cursorPreview');
+        const size = document.getElementById('cursorSize').value;
+        const color = document.getElementById('cursorColor').value;
+        
+        if (!previewContainer) return;
+        previewContainer.innerHTML = '';
+        
+        if (selectedCursor.type === 'svg') {
+            const img = document.createElement('img');
+            img.src = `/cursors/${selectedCursor.name}.svg`;
+            img.style.width = size + 'px';
+            img.style.height = size + 'px';
+            img.style.objectFit = 'contain';
+            img.onerror = () => { img.src = '/cursors/default.svg'; };
+            previewContainer.appendChild(img);
+        } else {
+            const icon = document.createElement('i');
+            icon.className = `fas ${selectedCursor.name}`;
+            icon.style.fontSize = size + 'px';
+            icon.style.color = color;
+            previewContainer.appendChild(icon);
+        }
+        updateColorControlVisibility();
+    }
 
     function renderCursors() {
         const grid = document.getElementById('cursorGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        cursorFiles.forEach(file => {
+        allCursors.forEach(cursor => {
             const option = document.createElement('div');
             option.className = 'cursor-option';
-            if (file === selectedCursorFile) option.classList.add('selected');
-            const imgSrc = `/cursors/${file}.svg`;
-            option.innerHTML = `<img src="${imgSrc}" alt="${file}" onerror="this.src='/cursors/arrow.svg'">`;
+            
+            const isSelected = (cursor.type === selectedCursor.type && cursor.name === selectedCursor.name);
+            if (isSelected) option.classList.add('selected');
+            
+            if (cursor.type === 'svg') {
+                const imgSrc = `/cursors/${cursor.name}.svg`;
+                option.innerHTML = `<img src="${imgSrc}" alt="${cursor.name}" style="width: 40px; height: 40px;" onerror="this.parentElement.innerText='${cursor.name}'">`;
+            } else {
+                option.innerHTML = `<i class="fas ${cursor.name}" style="font-size: 32px; color: white;"></i>`;
+            }
+            
             option.onclick = () => {
                 document.querySelectorAll('.cursor-option').forEach(c => c.classList.remove('selected'));
                 option.classList.add('selected');
-                selectedCursorFile = file;
+                selectedCursor = cursor;
+                updateCursorPreview();
             };
             grid.appendChild(option);
         });
-    }
-
-    function applyCursor() {
-        console.log('Выбран курсор:', selectedCursorFile);
-        closeCursorModal();
+        updateCursorPreview();
     }
 
     function togglePremium() {
@@ -433,7 +563,7 @@
         const message = document.getElementById('premiumMessage');
         if (premiumCursor) {
             lockIcon.className = 'fas fa-unlock-alt lock-icon';
-            sizeSlider.max = 80;
+            sizeSlider.max = 200;
             message.style.display = 'block';
         } else {
             lockIcon.className = 'fas fa-lock lock-icon';
@@ -441,15 +571,22 @@
             message.style.display = 'none';
             if (sizeSlider.value > 48) sizeSlider.value = 48;
         }
+        updateCursorPreview();
     }
 
     function openCursorModal() {
         renderCursors();
+        updateColorControlVisibility();
         document.getElementById('cursorModal').style.display = 'flex';
     }
 
     function closeCursorModal() {
         document.getElementById('cursorModal').style.display = 'none';
+    }
+
+    function applyCursor() {
+        console.log('Выбран курсор:', selectedCursor);
+        closeCursorModal();
     }
 
     function changeAvatar() {
@@ -467,13 +604,14 @@
         const name = document.getElementById('userName').value;
         const avatar = document.querySelector('.avatar').innerText;
         const cursorSize = document.getElementById('cursorSize').value;
+        const cursorColor = document.getElementById('cursorColor').value;
 
         if (!name.trim()) {
             alert('Имя не может быть пустым');
             return;
         }
 
-        const cursorData = `${selectedCursorFile} ${cursorSize} ${premiumCursor ? 'premium' : 'normal'}`;
+        const cursorData = `${selectedCursor.type}:${selectedCursor.name} ${cursorSize} ${cursorColor} ${premiumCursor ? 'premium' : 'normal'}`;
 
         fetch('/Profile/Update', {
             method: 'POST',
@@ -510,9 +648,14 @@
         }
     }
 
+    document.getElementById('cursorSize').addEventListener('input', () => updateCursorPreview());
+    document.getElementById('cursorColor').addEventListener('input', () => updateCursorPreview());
+
     loadSocials();
     createSpheres();
     document.getElementById('cursorSize').value = 32;
+    document.getElementById('cursorColor').value = '#00aaff';
 </script>
+
 </body>
 </html>

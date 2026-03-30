@@ -74,7 +74,3 @@ public class ProfileModel : PageModel
 }
 
 
-
-а что за фигня вроде все работает но когда я нажимаю на конструктор курсора он просто вибрирует а вместо картинок курсоров слова там верный путь frontend/CodeCollabFrontend/wwwroot/cursors/handpointing.svg
-frontend/CodeCollabFrontend/wwwroot/cursors/default.svg
-вот такие файлы... 7 штук
