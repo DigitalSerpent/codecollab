@@ -30,297 +30,48 @@
     <title>Профиль | Code Collab</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
-            font-family: 'Segoe UI', 'Inter', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            position: relative;
-        }
-        .sphere {
-            position: fixed;
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, rgba(0,170,255,0.1), transparent);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: floatSphere 20s infinite ease-in-out;
-            z-index: 0;
-        }
-        @@keyframes floatSphere {
-            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-            20% { opacity: 0.5; }
-            80% { opacity: 0.5; }
-            100% { transform: translateY(-20vh) translateX(50px); opacity: 0; }
-        }
-        .profile-container {
-            position: relative;
-            z-index: 1;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px;
-        }
-        .profile-card {
-            background: rgba(10, 14, 28, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 32px;
-            border: 1px solid rgba(0, 170, 255, 0.4);
-            box-shadow: 0 0 50px rgba(0, 170, 255, 0.2);
-            overflow: hidden;
-        }
-        .cover {
-            height: 200px;
-            background: linear-gradient(45deg, #00aaff20, #00aaff05);
-            position: relative;
-            cursor: pointer;
-        }
-        .cover-hint {
-            position: absolute;
-            bottom: 10px;
-            right: 20px;
-            color: white;
-            font-size: 12px;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 8px;
-            border-radius: 20px;
-        }
-        .avatar-wrapper {
-            position: relative;
-            margin-top: -70px;
-            text-align: center;
-        }
-        .avatar {
-            width: 140px;
-            height: 140px;
-            background: #121628;
-            border-radius: 50%;
-            border: 3px solid #00aaff;
-            box-shadow: 0 0 20px #00aaff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4.5rem;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .info {
-            text-align: center;
-            padding: 20px 30px 10px;
-        }
-        .name {
-            font-size: 32px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 8px;
-        }
-        .name input {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 32px;
-            text-align: center;
-            width: 100%;
-        }
-        .email {
-            color: #a0a0a0;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        .section {
-            padding: 20px 30px;
-            border-top: 1px solid rgba(0, 170, 255, 0.2);
-        }
-        .section-title {
-            color: #00aaff;
-            font-size: 18px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .social-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .social-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .social-row input {
-            flex: 1;
-            padding: 10px;
-            background: rgba(10, 14, 28, 0.8);
-            border: 1px solid #2a2a4a;
-            border-radius: 12px;
-            color: white;
-        }
-        .social-row button {
-            background: none;
-            border: none;
-            color: #ff4444;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .add-social {
-            background: rgba(0, 170, 255, 0.2);
-            border: 1px dashed #00aaff;
-            border-radius: 12px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            color: #00aaff;
-            margin-top: 10px;
-        }
-        .actions {
-            display: flex;
-            gap: 15px;
-            padding: 20px 30px;
-        }
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            text-align: center;
-        }
-        .btn-primary {
-            background: #00aaff;
-            color: #0a0e1c;
-        }
-        .btn-primary:hover {
-            background: white;
-            box-shadow: 0 0 20px #00aaff;
-        }
-        .btn-secondary {
-            background: #1e1e3a;
-            color: white;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: #121628;
-            border-radius: 24px;
-            padding: 30px;
-            width: 90%;
-            max-width: 1100px;
-            border: 1px solid #00aaff;
-            box-shadow: 0 0 30px #00aaff;
-        }
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: #a0a0a0;
-            font-size: 12px;
-            border-top: 1px solid rgba(0,170,255,0.2);
-        }
-        .cursor-workspace {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .preview-area {
-            flex: 1;
-            min-width: 260px;
-            text-align: center;
-        }
-        .preview-box {
-            background: #0a0e1c;
-            border-radius: 24px;
-            width: 260px;
-            height: 260px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #00aaff;
-            margin: 0 auto;
-            box-shadow: 0 0 20px rgba(0,170,255,0.2);
-        }
-        .controls-area {
-            margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .size-control, .color-control {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .size-control input, .color-control input {
-            flex: 1;
-        }
-        .color-control input {
-            width: 50px;
-            height: 40px;
-            border: 1px solid #00aaff;
-            border-radius: 8px;
-            background: #0a0e1c;
-        }
-        .lock-icon {
-            color: #ffaa00;
-            cursor: pointer;
-            font-size: 20px;
-        }
-        .premium-message {
-            color: #ffaa00;
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
-        }
-        .cursors-grid {
-            flex: 2;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        .cursor-option {
-            background: #1a1e30;
-            border: 1px solid #2a2a4a;
-            border-radius: 16px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .cursor-option:hover, .cursor-option.selected {
-            border-color: #00aaff;
-            box-shadow: 0 0 15px #00aaff;
-            transform: scale(1.05);
-        }
-        .cursor-option img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-        }
-        .cursor-option i {
-            font-size: 40px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%); font-family: 'Segoe UI', 'Inter', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; position: relative; }
+        .sphere { position: fixed; width: 80px; height: 80px; background: radial-gradient(circle, rgba(0,170,255,0.1), transparent); border-radius: 50%; pointer-events: none; animation: floatSphere 20s infinite ease-in-out; z-index: 0; }
+        @@keyframes floatSphere { 0% { transform: translateY(100vh) translateX(0); opacity: 0; } 20% { opacity: 0.5; } 80% { opacity: 0.5; } 100% { transform: translateY(-20vh) translateX(50px); opacity: 0; } }
+        .profile-container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 40px; }
+        .profile-card { background: rgba(10, 14, 28, 0.6); backdrop-filter: blur(12px); border-radius: 32px; border: 1px solid rgba(0, 170, 255, 0.4); box-shadow: 0 0 50px rgba(0, 170, 255, 0.2); overflow: hidden; }
+        .cover { height: 200px; background: linear-gradient(45deg, #00aaff20, #00aaff05); position: relative; cursor: pointer; }
+        .cover-hint { position: absolute; bottom: 10px; right: 20px; color: white; font-size: 12px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 20px; }
+        .avatar-wrapper { position: relative; margin-top: -70px; text-align: center; }
+        .avatar { width: 140px; height: 140px; background: #121628; border-radius: 50%; border: 3px solid #00aaff; box-shadow: 0 0 20px #00aaff; display: inline-flex; align-items: center; justify-content: center; font-size: 4.5rem; cursor: pointer; transition: 0.2s; }
+        .info { text-align: center; padding: 20px 30px 10px; }
+        .name { font-size: 32px; font-weight: bold; color: white; margin-bottom: 8px; }
+        .name input { background: none; border: none; color: white; font-size: 32px; text-align: center; width: 100%; }
+        .email { color: #a0a0a0; font-size: 14px; margin-bottom: 10px; }
+        .section { padding: 20px 30px; border-top: 1px solid rgba(0, 170, 255, 0.2); }
+        .section-title { color: #00aaff; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .social-list { display: flex; flex-direction: column; gap: 10px; }
+        .social-row { display: flex; align-items: center; gap: 10px; }
+        .social-row input { flex: 1; padding: 10px; background: rgba(10, 14, 28, 0.8); border: 1px solid #2a2a4a; border-radius: 12px; color: white; }
+        .social-row button { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 14px; }
+        .add-social { background: rgba(0, 170, 255, 0.2); border: 1px dashed #00aaff; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; color: #00aaff; margin-top: 10px; }
+        .actions { display: flex; gap: 15px; padding: 20px 30px; }
+        .btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center; }
+        .btn-primary { background: #00aaff; color: #0a0e1c; }
+        .btn-primary:hover { background: white; box-shadow: 0 0 20px #00aaff; }
+        .btn-secondary { background: #1e1e3a; color: white; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: #121628; border-radius: 24px; padding: 30px; width: 90%; max-width: 900px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; }
+        .footer { text-align: center; padding: 20px; color: #a0a0a0; font-size: 12px; border-top: 1px solid rgba(0,170,255,0.2); }
+        .cursor-workspace { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
+        .preview-area { flex: 1; min-width: 260px; text-align: center; }
+        .preview-box { background: #0a0e1c; border-radius: 24px; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; border: 1px solid #00aaff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,170,255,0.2); }
+        .controls-area { margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .size-control, .color-control { display: flex; align-items: center; gap: 15px; }
+        .size-control input, .color-control input { flex: 1; }
+        .color-control input { width: 50px; height: 40px; border: 1px solid #00aaff; border-radius: 8px; background: #0a0e1c; }
+        .lock-icon { color: #ffaa00; cursor: pointer; font-size: 20px; }
+        .premium-message { color: #ffaa00; font-size: 12px; margin-top: 5px; display: none; }
+        .cursors-grid { flex: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 400px; margin: 0 auto; }
+        .cursor-option { background: #1a1e30; border: 1px solid #2a2a4a; border-radius: 16px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; }
+        .cursor-option:hover, .cursor-option.selected { border-color: #00aaff; box-shadow: 0 0 15px #00aaff; transform: scale(1.05); }
+        .cursor-option img { width: 48px; height: 48px; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -359,12 +110,11 @@
         </div>
 
         <div class="actions">
-            <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
             <button class="btn btn-secondary" onclick="window.location.href='/Dashboard'">Назад</button>
         </div>
 
         <div class="footer">
-             Дата регистрации: 01.03.2026
+            📅 Дата регистрации: 01.03.2026
         </div>
     </div>
 </div>
@@ -457,22 +207,7 @@
         "textcursor"
     ];
 
-    const fontAwesomeCursors = [
-        "fa-arrow-pointer",
-        "fa-hand-peace",
-        "fa-arrow-up",
-        "fa-arrow-down",
-        "fa-arrow-left",
-        "fa-arrow-right",
-        "fa-star",
-        "fa-heart",
-        "fa-crown"
-    ];
-
     let allCursors = cursorFiles.map(f => ({ type: 'svg', name: f }));
-    fontAwesomeCursors.forEach(fa => {
-        allCursors.push({ type: 'fa', name: fa });
-    });
 
     let selectedCursor = allCursors[0];
     let premiumCursor = false;
@@ -487,7 +222,7 @@
             if (!hint) {
                 hint = document.createElement('div');
                 hint.id = 'colorHint';
-                hint.style.color = '#ffaa00';
+                hint.style.color = '#00aaff';
                 hint.style.fontSize = '12px';
                 hint.style.marginTop = '5px';
                 hint.innerText = '⚠️ Для этого курсора цвет не меняется';
@@ -517,12 +252,6 @@
             img.style.objectFit = 'contain';
             img.onerror = () => { img.src = '/cursors/default.svg'; };
             previewContainer.appendChild(img);
-        } else {
-            const icon = document.createElement('i');
-            icon.className = `fas ${selectedCursor.name}`;
-            icon.style.fontSize = size + 'px';
-            icon.style.color = color;
-            previewContainer.appendChild(icon);
         }
         updateColorControlVisibility();
     }
@@ -541,8 +270,6 @@
             if (cursor.type === 'svg') {
                 const imgSrc = `/cursors/${cursor.name}.svg`;
                 option.innerHTML = `<img src="${imgSrc}" alt="${cursor.name}" style="width: 40px; height: 40px;" onerror="this.parentElement.innerText='${cursor.name}'">`;
-            } else {
-                option.innerHTML = `<i class="fas ${cursor.name}" style="font-size: 32px; color: white;"></i>`;
             }
             
             option.onclick = () => {
@@ -585,7 +312,22 @@
     }
 
     function applyCursor() {
-        console.log('Выбран курсор:', selectedCursor);
+        const size = document.getElementById('cursorSize').value;
+        const cursorData = `svg:${selectedCursor.name} ${size} ${premiumCursor ? 'premium' : 'normal'}`;
+        
+        // Сохраняем в localStorage
+        localStorage.setItem('globalCursor', cursorData);
+        
+        // Применяем курсор на текущей странице
+        const hotspot = { x: 16, y: 4 };
+        let style = document.getElementById('tempCursorStyle');
+        if (style) style.remove();
+        const newStyle = document.createElement('style');
+        newStyle.id = 'tempCursorStyle';
+        newStyle.textContent = `* { cursor: url('/cursors/${selectedCursor.name}.svg') ${hotspot.x} ${hotspot.y}, auto !important; }`;
+        document.head.appendChild(newStyle);
+        
+        alert('Курсор применён!');
         closeCursorModal();
     }
 
@@ -598,41 +340,6 @@
 
     function changeCover() {
         alert('Здесь будет выбор фона шапки (скоро)');
-    }
-
-    function saveProfile() {
-        const name = document.getElementById('userName').value;
-        const avatar = document.querySelector('.avatar').innerText;
-        const cursorSize = document.getElementById('cursorSize').value;
-        const cursorColor = document.getElementById('cursorColor').value;
-
-        if (!name.trim()) {
-            alert('Имя не может быть пустым');
-            return;
-        }
-
-        const cursorData = `${selectedCursor.type}:${selectedCursor.name} ${cursorSize} ${cursorColor} ${premiumCursor ? 'premium' : 'normal'}`;
-
-        fetch('/Profile/Update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, avatar, cursor: cursorData })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                fetch('/Profile/UpdateSocials', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ socials: socialFields })
-                });
-                alert('Профиль сохранён');
-                window.location.reload();
-            } else {
-                alert('Ошибка: ' + data.message);
-            }
-        })
-        .catch(() => alert('Ошибка при сохранении'));
     }
 
     function createSpheres() {
