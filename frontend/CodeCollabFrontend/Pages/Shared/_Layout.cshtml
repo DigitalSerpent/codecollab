@@ -17,26 +17,19 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CodeCollabFrontend.styles.css" asp-append-version="true" />
-    
-    <style id="globalCursorStyle">
-        /* Стиль по умолчанию, будет заменен */
-    </style>
+    <style id="globalCursorStyle"></style>
 </head>
 <body>
     <header style="background-color: #05070f; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; z-index: 1003; position: relative;">
         <div style="font-size: 2rem; font-weight: bold; color: white;">Code Collab</div>
         <div style="display: flex; align-items: center; gap: 15px;">
             <span style="color: white;">@(Context.Session.GetString("UserName") ?? "Гость")</span>
-            <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #00aaff; display: flex; align-items: center; justify-content: center; color: #0a0e1c; font-weight: bold;">
-                👤
-            </div>
+            <div style="width: 40px; height: 40px; border-radius: 50%; background-color: #00aaff; display: flex; align-items: center; justify-content: center; color: #0a0e1c; font-weight: bold;">👤</div>
         </div>
     </header>
     <div style="height: 2px; background: linear-gradient(to bottom, #00aaff, transparent); width: 100vw; position: relative; left: 0; z-index: 1002;"></div>
     <div style="margin-top: 20px; width: 100%; padding-left: 30px; padding-right: 30px;">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        <main role="main" class="pb-3">@RenderBody()</main>
     </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -44,110 +37,79 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
-    @{
-        var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
-        bool isAuthPage = currentPage?.StartsWith("/Login") == true || currentPage?.StartsWith("/Register") == true;
-        bool isRoom = currentPage?.StartsWith("/room") == true;
-    }
-    @if (!isRoom && !isAuthPage)
-    {
-        <!-- Правая панель (без изменений) -->
-        <div id="rightPanel" style="position: fixed; top: 0; right: 0; width: 50px; height: 100vh; background-color: #05070f; border-left: 1px solid #1e1e3a; transition: 0.3s; overflow: hidden; z-index: 999; color: #a0a0a0; font-size: 1rem; display: flex; flex-direction: column; align-items: center;"
-             onmouseover="this.style.width='180px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='1');"
-             onmouseout="this.style.width='50px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='0');">
-            <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
-                <a href="/Profile" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
-                   onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                   onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Профиль</a>
-                <a href="/CreateRoomPage" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
-                   onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                   onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Создать комнату</a>
-                <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-                     onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                     onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Настройки</div>
-            </div>
-            <div style="margin-bottom: 30px;">
-                <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-                     onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                     onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Выйти</div>
-            </div>
-        </div>
-    }
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+    bool isAuthPage = currentPage?.StartsWith("/Login") == true || currentPage?.StartsWith("/Register") == true;
+    bool isRoom = currentPage?.StartsWith("/room") == true;
+}
+@if (!isRoom && !isAuthPage)
+{
+    <!-- Правая панель -->
+    <div id="rightPanel" style="position: fixed; top: 0; right: 0; width: 50px; height: 100vh; background-color: #05070f; border-left: 1px solid #1e1e3a; transition: 0.3s; overflow: hidden; z-index: 999; color: #a0a0a0; font-size: 1rem; display: flex; flex-direction: column; align-items: center;"
+         onmouseover="this.style.width='180px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='1');"
+         onmouseout="this.style.width='50px'; this.querySelectorAll('.panel-item').forEach(el => el.style.opacity='0');">
 
-    <!-- Глобальные уведомления -->
-    <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+        <div style="display: flex; flex-direction: column; justify-content: center; flex-grow: 1;">
+            <a href="/Profile" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
+               onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+               onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Профиль</a>
+            <a href="/CreateRoomPage" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
+               onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+               onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Создать комнату</a>
+            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Настройки</div>
+        </div>
+        <div style="margin-bottom: 30px;">
+            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
+                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Выйти</div>
+        </div>
+    </div>
+}
 
     <script>
-        // 1. Функция для применения курсора
-        function applyCursor(cursorData) {
-            if (!cursorData) return;
+        function getHotspotForCursor(name, size) {
+            return { x: 0, y: 0 };
+        }
+
+        function applyGlobalCursor() {
+            const cursorData = localStorage.getItem('globalCursor');
+            if (!cursorData || !cursorData.startsWith('svg:')) return;
             
-            // Проверяем, что это SVG (первые 7 курсоров)
-            if (cursorData.startsWith('svg:')) {
-                const name = cursorData.split(':')[1].split(' ')[0];
-                const size = cursorData.split(' ')[1] || 32;
-                const hotspot = { x: 16, y: 4 }; // Точка клика
-                
-                const styleElement = document.getElementById('globalCursorStyle');
-                if (styleElement) {
-                    styleElement.textContent = `* { cursor: url('/cursors/${name}.svg') ${hotspot.x} ${hotspot.y}, auto !important; }`;
-                    console.log('✅ Курсор применён:', name);
-                }
-            }
+            const parts = cursorData.split(' ');
+            const name = parts[0].split(':')[1];
+            const targetSize = parseInt(parts[1]) || 32;
+            
+            fetch(`/cursors/${name}.svg`)
+                .then(response => response.text())
+                .then(svgText => {
+                    let resizedSvg = svgText
+                        .replace(/width="\d+"/, `width="${targetSize}"`)
+                        .replace(/height="\d+"/, `height="${targetSize}"`);
+                    if (!resizedSvg.includes('viewBox')) {
+                        resizedSvg = resizedSvg.replace('<svg', `<svg viewBox="0 0 ${targetSize} ${targetSize}"`);
+                    }
+                    const blob = new Blob([resizedSvg], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const hotspot = getHotspotForCursor(name, targetSize);
+                    
+                    let style = document.getElementById('globalCursorStyle');
+                    if (!style) {
+                        style = document.createElement('style');
+                        style.id = 'globalCursorStyle';
+                        document.head.appendChild(style);
+                    }
+                    style.textContent = `* { cursor: url('${url}') ${hotspot.x} ${hotspot.y}, auto !important; }`;
+                    
+                    setTimeout(() => URL.revokeObjectURL(url), 10000);
+                })
+                .catch(err => console.error('Ошибка загрузки курсора:', err));
         }
-
-        // 2. При загрузке страницы: сначала проверяем localStorage, потом сервер
-        const savedCursor = localStorage.getItem('globalCursor');
-        if (savedCursor) {
-            applyCursor(savedCursor);
-        } else if ('@globalCursor' !== 'default') {
-            // Если в localStorage пусто, берем из БД (но БД мы пока не чинили)
-            applyCursor('@globalCursor');
-        }
-
-        // 3. Слушаем изменения в localStorage (для синхронизации между вкладками)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'globalCursor') {
-                applyCursor(e.newValue);
-            }
-        });
-
-        // Уведомления (без изменений)
-        function showNotification(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.style.backgroundColor = type === 'error' ? '#ff4444' : (type === 'success' ? '#00aaff' : '#1e1e3a');
-            toast.style.color = 'white';
-            toast.style.padding = '12px 20px';
-            toast.style.borderRadius = '12px';
-            toast.style.border = '1px solid #00aaff';
-            toast.style.boxShadow = '0 0 20px rgba(0,170,255,0.3)';
-            toast.style.backdropFilter = 'blur(8px)';
-            toast.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
-            toast.style.fontSize = '14px';
-            toast.style.maxWidth = '300px';
-            toast.style.wordWrap = 'break-word';
-            toast.innerText = message;
-            toast.style.animation = 'slideIn 0.3s ease';
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        const style = document.createElement('style');
-        style.textContent = `
-            @@keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @@keyframes slideOut {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
+        
+        applyGlobalCursor();
+        window.addEventListener('storage', () => applyGlobalCursor());
     </script>
 </body>
 </html>

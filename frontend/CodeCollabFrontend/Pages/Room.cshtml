@@ -34,153 +34,33 @@ else
     <style id="globalCursorStyle"></style>
 
     <style>
-        /* Жёсткий курсор УДАЛЁН — теперь только динамический */
-        
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h2 {
-            color: white;
-            margin-bottom: 30px;
-            font-size: 28px;
-            font-weight: 500;
-        }
-        .rooms-grid {
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .room-card {
-            background: rgba(18, 22, 40, 0.7);
-            backdrop-filter: blur(8px);
-            border-radius: 20px;
-            border: 1px solid rgba(0, 170, 255, 0.3);
-            transition: all 0.3s ease;
-            width: 240px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .room-card:hover {
-            border-color: #00aaff;
-            box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
-            transform: translateY(-2px);
-        }
-        .preview {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 8px;
-            line-height: 1.2;
-            color: #88c0d0;
-            height: 120px;
-            overflow: hidden;
-        }
-        .card-content {
-            padding: 15px;
-        }
-        .card-content h4 {
-            color: white;
-            margin: 0 0 10px 0;
-            font-weight: bold;
-            font-size: 1.1rem;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-        }
-        .enter-button {
-            width: 100%;
-            background-color: #00aaff;
-            color: #0a0e1c;
-            border: none;
-            border-radius: 8px;
-            padding: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .enter-button:hover {
-            background-color: #ffffff;
-            box-shadow: 0 0 20px #00aaff;
-        }
-        .empty-state {
-            text-align: center;
-            color: white;
-            margin-top: 50px;
-            width: 100%;
-        }
-        .empty-state p {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-        .empty-button {
-            background-color: #00aaff;
-            color: #0a0e1c;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .marquee {
-            display: inline-block;
-            animation: marquee 40s linear infinite;
-            white-space: nowrap;
-            padding-left: 100%;
-        }
-        .marquee:hover {
-            animation-play-state: paused;
-        }
-        @@keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        #roomName {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
-            max-width: calc(100% - 40px);
-            font-size: 1.2rem;
-            line-height: 1.3;
-        }
-        .delete-icon {
-            color: #a0a0a0;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: 0.2s;
-            background: none;
-            border: none;
-            padding: 0;
-            flex-shrink: 0;
-        }
-        .delete-icon:hover {
-            color: #ff8888;
-            transform: scale(1.1);
-        }
-        .modal-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .modal-actions button {
-            width: 100%;
-        }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        h2 { color: white; margin-bottom: 30px; font-size: 28px; font-weight: 500; }
+        .rooms-grid { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+        .room-card { background: rgba(18, 22, 40, 0.7); backdrop-filter: blur(8px); border-radius: 20px; border: 1px solid rgba(0, 170, 255, 0.3); transition: all 0.3s ease; width: 240px; overflow: hidden; cursor: pointer; }
+        .room-card:hover { border-color: #00aaff; box-shadow: 0 0 20px rgba(0, 170, 255, 0.4); transform: translateY(-2px); }
+        .preview { background: rgba(0, 0, 0, 0.5); padding: 15px; font-family: 'Courier New', monospace; font-size: 8px; line-height: 1.2; color: #88c0d0; height: 120px; overflow: hidden; }
+        .card-content { padding: 15px; }
+        .card-content h4 { color: white; margin: 0 0 10px 0; font-weight: bold; font-size: 1.1rem; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
+        .enter-button { width: 100%; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px; cursor: pointer; transition: 0.3s; }
+        .enter-button:hover { background-color: #ffffff; box-shadow: 0 0 20px #00aaff; }
+        .empty-state { text-align: center; color: white; margin-top: 50px; width: 100%; }
+        .empty-state p { font-size: 1.5rem; margin-bottom: 20px; }
+        .empty-button { background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 12px 30px; font-size: 1rem; cursor: pointer; margin-top: 20px; }
+        .marquee { display: inline-block; animation: marquee 40s linear infinite; white-space: nowrap; padding-left: 100%; }
+        .marquee:hover { animation-play-state: paused; }
+        @@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; width: 100%; margin-bottom: 10px; }
+        #roomName { word-wrap: break-word; overflow-wrap: break-word; white-space: normal; max-width: calc(100% - 40px); font-size: 1.2rem; line-height: 1.3; }
+        .delete-icon { color: #a0a0a0; font-size: 1.2rem; cursor: pointer; transition: 0.2s; background: none; border: none; padding: 0; flex-shrink: 0; }
+        .delete-icon:hover { color: #ff8888; transform: scale(1.1); }
+        .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .modal-actions button { width: 100%; }
     </style>
 
     <!-- Основной контейнер -->
@@ -326,19 +206,35 @@ else
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
-    <script>
-        // ==================== ГЛОБАЛЬНЫЙ КУРСОР ====================
-        // 1. Применяем курсор при загрузке комнаты
-        (function applyCursorInRoom() {
-            const savedCursor = localStorage.getItem('globalCursor');
-            console.log('savedCursor:', savedCursor);
-            
-            if (savedCursor && savedCursor.startsWith('svg:')) {
-                const parts = savedCursor.split(' ');
-                const name = parts[0].split(':')[1];
-                const size = parseInt(parts[1]) || 32;
-                const hotspot = { x: 16, y: 4 };
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+<script>
+    // ==================== ГЛОБАЛЬНЫЙ КУРСОР ====================
+    function getHotspotForCursor(name, size) {
+        // Для всех курсоров — левый верхний угол
+        return { x: 0, y: 0 };
+    }
+
+    function applyCursorFromStorage() {
+        const cursorData = localStorage.getItem('globalCursor');
+        if (!cursorData || !cursorData.startsWith('svg:')) return;
+        
+        const parts = cursorData.split(' ');
+        const name = parts[0].split(':')[1];
+        const targetSize = parseInt(parts[1]) || 32;
+        
+        fetch(`/cursors/${name}.svg`)
+            .then(response => response.text())
+            .then(svgText => {
+                let resizedSvg = svgText
+                    .replace(/width="\d+"/, `width="${targetSize}"`)
+                    .replace(/height="\d+"/, `height="${targetSize}"`);
+                if (!resizedSvg.includes('viewBox')) {
+                    resizedSvg = resizedSvg.replace('<svg', `<svg viewBox="0 0 ${targetSize} ${targetSize}"`);
+                }
+                const blob = new Blob([resizedSvg], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                
+                const hotspot = getHotspotForCursor(name, targetSize);
                 
                 let style = document.getElementById('globalCursorStyle');
                 if (!style) {
@@ -346,333 +242,280 @@ else
                     style.id = 'globalCursorStyle';
                     document.head.appendChild(style);
                 }
-                style.textContent = `* { cursor: url('/cursors/${name}.svg') ${hotspot.x} ${hotspot.y}, auto !important; }`;
-                console.log('Курсор применён в комнате:', name, 'размер:', size);
-            } else {
-                console.log('Курсор не найден в localStorage или не SVG');
-            }
-        })();
-
-        // 2. Слушаем изменения localStorage (когда курсор меняется в профиле)
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'globalCursor') {
-                const newCursor = e.newValue;
-                if (newCursor && newCursor.startsWith('svg:')) {
-                    const parts = newCursor.split(' ');
-                    const name = parts[0].split(':')[1];
-                    const size = parseInt(parts[1]) || 32;
-                    const hotspot = { x: 16, y: 4 };
-                    let style = document.getElementById('globalCursorStyle');
-                    if (!style) {
-                        style = document.createElement('style');
-                        style.id = 'globalCursorStyle';
-                        document.head.appendChild(style);
-                    }
-                    style.textContent = `* { cursor: url('/cursors/${name}.svg') ${hotspot.x} ${hotspot.y}, auto !important; }`;
-                    console.log('Курсор обновлён в комнате:', name, 'размер:', size);
-                }
-            }
-        });
-
-        // ==================== ОСТАЛЬНОЙ КОД ====================
-        let editor;
-        const roomId = @roomId;
-        const cursorData = '@(currentUser?.Cursor ?? "default")';
-
-        // Функция hotspot для каждого курсора (как в _Layout)
-        function getHotspot(cursorName, size) {
-            switch(cursorName) {
-                case 'handpointing':
-                    return { x: 16, y: 4 };
-                case 'handopen':
-                    return { x: 16, y: 8 };
-                case 'default':
-                    return { x: 4, y: 4 };
-                case 'resizenorth':
-                    return { x: 16, y: 0 };
-                case 'resizenorthwest':
-                    return { x: 0, y: 0 };
-                case 'textcursor':
-                    return { x: 8, y: 16 };
-                default:
-                    return { x: Math.floor(size / 2), y: Math.floor(size / 2) };
-            }
-        }
-
-        function applyCursorFromProfile() {
-            if (cursorData && cursorData !== 'default') {
-                const parts = cursorData.split(' ');
-                const type = parts[0];
-                const name = parts[1];
-                const size = parseInt(parts[2]) || 32;
+                style.textContent = `* { cursor: url('${url}') ${hotspot.x} ${hotspot.y}, auto !important; }`;
                 
-                if (type === 'svg') {
-                    const hotspot = getHotspot(name, size);
-                    const style = document.createElement('style');
-                    style.textContent = `* { cursor: url('/cursors/${name}.svg') ${hotspot.x} ${hotspot.y}, auto !important; }`;
-                    document.head.appendChild(style);
-                    console.log('Курсор SVG применён глобально:', name, hotspot);
-                }
-            }
-        }
+                setTimeout(() => URL.revokeObjectURL(url), 10000);
+            })
+            .catch(err => console.error('Ошибка загрузки курсора:', err));
+    }
+    
+    applyCursorFromStorage();
+    window.addEventListener('storage', () => applyCursorFromStorage());
 
-        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+    // ==================== ОСТАЛЬНОЙ КОД ====================
+    let editor;
+    const roomId = @roomId;
 
-        require(['vs/editor/editor.main'], function () {
-            var initialCode = '@(Html.Raw(room.PreviewCode?.Replace("\n", "\\n").Replace("\r", "") ?? ""))';
-            editor = monaco.editor.create(document.getElementById('editor'), {
-                value: initialCode,
-                language: 'python',
-                theme: 'vs-dark',
-                automaticLayout: true,
-                fontSize: 14,
-                minimap: { enabled: false }
-            });
-            applyCursorFromProfile();
+    function getHotspot(cursorName, size) {
+        return { x: 0, y: 0 };
+    }
+
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+
+    require(['vs/editor/editor.main'], function () {
+        var initialCode = '@(Html.Raw(room.PreviewCode?.Replace("\n", "\\n").Replace("\r", "") ?? ""))';
+        editor = monaco.editor.create(document.getElementById('editor'), {
+            value: initialCode,
+            language: 'python',
+            theme: 'vs-dark',
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: { enabled: false }
         });
+    });
 
-        // ==================== Чат ====================
-        function loadChatHistory() {
-            fetch(`/api/chat/${roomId}`)
-                .then(response => response.json())
-                .then(messages => {
-                    const container = document.getElementById('chatMessages');
-                    container.innerHTML = '';
-                    messages.forEach(msg => {
-                        const msgDiv = document.createElement('div');
-                        msgDiv.style.marginBottom = '12px';
-                        msgDiv.style.display = 'flex';
-                        msgDiv.style.flexDirection = 'column';
-                        msgDiv.style.alignItems = msg.userName === 'Вы' ? 'flex-end' : 'flex-start';
-                        
-                        const bubble = document.createElement('div');
-                        bubble.style.maxWidth = '80%';
-                        bubble.style.padding = '8px 12px';
-                        bubble.style.borderRadius = '15px';
-                        bubble.style.backgroundColor = msg.userName === 'Вы' ? '#b198b3' : '#86a1b5';
-                        bubble.style.color = msg.userName === 'Вы' ? '#0a0e1c' : 'white';
-                        bubble.style.wordWrap = 'break-word';
-                        
-                        bubble.innerHTML = msg.userName === 'Вы' ? msg.text : `<span style="color: #b198b3; font-weight: bold;">${msg.userName}:</span> ${msg.text}`;
-                        msgDiv.appendChild(bubble);
-                        container.appendChild(msgDiv);
-                    });
-                    container.scrollTop = container.scrollHeight;
+    // ==================== Чат ====================
+    function loadChatHistory() {
+        fetch(`/api/chat/${roomId}`)
+            .then(response => response.json())
+            .then(messages => {
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                messages.forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.style.marginBottom = '12px';
+                    msgDiv.style.display = 'flex';
+                    msgDiv.style.flexDirection = 'column';
+                    msgDiv.style.alignItems = msg.userName === 'Вы' ? 'flex-end' : 'flex-start';
+                    
+                    const bubble = document.createElement('div');
+                    bubble.style.maxWidth = '80%';
+                    bubble.style.padding = '8px 12px';
+                    bubble.style.borderRadius = '15px';
+                    bubble.style.backgroundColor = msg.userName === 'Вы' ? '#b198b3' : '#86a1b5';
+                    bubble.style.color = msg.userName === 'Вы' ? '#0a0e1c' : 'white';
+                    bubble.style.wordWrap = 'break-word';
+                    
+                    bubble.innerHTML = msg.userName === 'Вы' ? msg.text : `<span style="color: #b198b3; font-weight: bold;">${msg.userName}:</span> ${msg.text}`;
+                    msgDiv.appendChild(bubble);
+                    container.appendChild(msgDiv);
                 });
+                container.scrollTop = container.scrollHeight;
+            });
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                roomId: roomId,
+                userId: 1,
+                userName: 'Вы',
+                text: text
+            })
+        })
+        .then(response => response.json())
+        .then(() => {
+            input.value = '';
+            input.style.height = 'auto';
+            loadChatHistory();
+        });
+    }
+
+    function sendSticker(sticker) {
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                roomId: roomId,
+                userId: 1,
+                userName: 'Вы',
+                text: sticker
+            })
+        })
+        .then(response => response.json())
+        .then(() => {
+            loadChatHistory();
+        });
+    }
+
+    function toggleStickersPanel() {
+        const panel = document.getElementById('stickersPanel');
+        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+    }
+
+    // ==================== Участники ====================
+    function toggleUsersPanel() {
+        const panel = document.getElementById('usersPanel');
+        if (panel.style.display === 'none' || panel.style.display === '') {
+            loadUsersList();
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
         }
+    }
 
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
+    function closeUsersPanel() {
+        document.getElementById('usersPanel').style.display = 'none';
+    }
 
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    roomId: roomId,
-                    userId: 1,
-                    userName: 'Вы',
-                    text: text
+    function loadUsersList() {
+        fetch(`/api/room/${roomId}/users`)
+            .then(response => response.json())
+            .then(users => {
+                const container = document.getElementById('usersList');
+                container.innerHTML = '';
+                users.forEach(user => {
+                    const userDiv = document.createElement('div');
+                    userDiv.style.display = 'flex';
+                    userDiv.style.alignItems = 'center';
+                    userDiv.style.marginBottom = '10px';
+                    userDiv.style.gap = '8px';
+                    userDiv.style.cursor = 'pointer';
+                    userDiv.onclick = () => goToProfile(user.name);
+                    userDiv.innerHTML = `
+                        <span style="font-size: 1.2rem;">${user.avatar}</span>
+                        <span style="color: white; font-size: 0.9rem; flex: 1;">${user.name}</span>
+                        <span style="font-size: 1rem;">${user.cursor}</span>
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
+                    `;
+                    container.appendChild(userDiv);
+                });
+            });
+    }
+
+    function goToProfile(name) {
+        alert('Переход к профилю пользователя ' + name);
+        closeUsersPanel();
+    }
+
+    // ==================== Терминал ====================
+    function runCode() {
+        const output = document.getElementById('terminalOutput');
+        const code = editor.getValue();
+        const language = document.getElementById('languageSelect').value;
+        
+        output.innerHTML += `$ Запуск кода (${language})...\n`;
+
+        fetch('/api/terminal/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                command: JSON.stringify({
+                    language: language,
+                    code: code
                 })
             })
-            .then(response => response.json())
-            .then(() => {
-                input.value = '';
-                input.style.height = 'auto';
-                loadChatHistory();
-            });
-        }
-
-        function sendSticker(sticker) {
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    roomId: roomId,
-                    userId: 1,
-                    userName: 'Вы',
-                    text: sticker
-                })
-            })
-            .then(response => response.json())
-            .then(() => {
-                loadChatHistory();
-            });
-        }
-
-        function toggleStickersPanel() {
-            const panel = document.getElementById('stickersPanel');
-            panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-        }
-
-        const chatInput = document.getElementById('chatInput');
-        if (chatInput) {
-            chatInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-            });
-        }
-
-        // ==================== Участники ====================
-        function toggleUsersPanel() {
-            const panel = document.getElementById('usersPanel');
-            if (panel.style.display === 'none' || panel.style.display === '') {
-                loadUsersList();
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.output) {
+                output.innerHTML += data.output + '\n';
+            } else if (data.error) {
+                output.innerHTML += `Ошибка: ${data.error}\n`;
             }
-        }
+            output.scrollTop = output.scrollHeight;
+        });
+    }
 
-        function closeUsersPanel() {
-            document.getElementById('usersPanel').style.display = 'none';
-        }
+    function runCommand(command) {
+        const output = document.getElementById('terminalOutput');
+        output.innerHTML += `$ ${command}\n`;
 
-        function loadUsersList() {
-            fetch(`/api/room/${roomId}/users`)
-                .then(response => response.json())
-                .then(users => {
-                    const container = document.getElementById('usersList');
-                    container.innerHTML = '';
-                    users.forEach(user => {
-                        const userDiv = document.createElement('div');
-                        userDiv.style.display = 'flex';
-                        userDiv.style.alignItems = 'center';
-                        userDiv.style.marginBottom = '10px';
-                        userDiv.style.gap = '8px';
-                        userDiv.style.cursor = 'pointer';
-                        userDiv.onclick = () => goToProfile(user.name);
-                        userDiv.innerHTML = `
-                            <span style="font-size: 1.2rem;">${user.avatar}</span>
-                            <span style="color: white; font-size: 0.9rem; flex: 1;">${user.name}</span>
-                            <span style="font-size: 1rem;">${user.cursor}</span>
-                            <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
-                        `;
-                        container.appendChild(userDiv);
-                    });
-                });
-        }
-
-        function goToProfile(name) {
-            alert('Переход к профилю пользователя ' + name);
-            closeUsersPanel();
-        }
-
-        // ==================== Терминал ====================
-        function runCode() {
-            const output = document.getElementById('terminalOutput');
-            const code = editor.getValue();
-            const language = document.getElementById('languageSelect').value;
-            
-            output.innerHTML += `$ Запуск кода (${language})...\n`;
-
-            fetch('/api/terminal/run', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    command: JSON.stringify({
-                        language: language,
-                        code: code
-                    })
+        fetch('/api/terminal/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                command: JSON.stringify({
+                    language: 'bash',
+                    code: command
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.output) {
-                    output.innerHTML += data.output + '\n';
-                } else if (data.error) {
-                    output.innerHTML += `Ошибка: ${data.error}\n`;
-                }
-                output.scrollTop = output.scrollHeight;
-            });
-        }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.output) {
+                output.innerHTML += data.output + '\n';
+            } else if (data.error) {
+                output.innerHTML += `Ошибка: ${data.error}\n`;
+            }
+            output.scrollTop = output.scrollHeight;
+        });
+    }
 
-        function runCommand(command) {
-            const output = document.getElementById('terminalOutput');
-            output.innerHTML += `$ ${command}\n`;
+    const terminalInput = document.getElementById('terminalInput');
+    if (terminalInput) {
+        terminalInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                runCommand(this.value);
+                this.value = '';
+            }
+        });
+    }
 
-            fetch('/api/terminal/run', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    command: JSON.stringify({
-                        language: 'bash',
-                        code: command
-                    })
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.output) {
-                    output.innerHTML += data.output + '\n';
-                } else if (data.error) {
-                    output.innerHTML += `Ошибка: ${data.error}\n`;
-                }
-                output.scrollTop = output.scrollHeight;
-            });
-        }
+    // ==================== Разделитель ====================
+    const resizer = document.getElementById('resizer');
+    const terminal = document.getElementById('terminalContainer');
+    const leftPart = document.querySelector('[style*="flex: 1; flex-direction: column;"]');
+    let isResizing = false;
 
-        const terminalInput = document.getElementById('terminalInput');
-        if (terminalInput) {
-            terminalInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    runCommand(this.value);
-                    this.value = '';
-                }
-            });
-        }
+    if (resizer) {
+        resizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+        });
+    }
 
-        // ==================== Разделитель ====================
-        const resizer = document.getElementById('resizer');
-        const terminal = document.getElementById('terminalContainer');
-        const leftPart = document.querySelector('[style*="flex: 1; flex-direction: column;"]');
-        let isResizing = false;
+    function resize(e) {
+        if (!isResizing) return;
+        const leftRect = leftPart.getBoundingClientRect();
+        const mouseY = e.clientY;
+        const leftBottom = leftRect.bottom;
+        let newHeight = leftBottom - mouseY;
+        newHeight = Math.max(100, Math.min(400, newHeight));
+        terminal.style.height = newHeight + 'px';
+    }
 
-        if (resizer) {
-            resizer.addEventListener('mousedown', function(e) {
-                isResizing = true;
-                document.addEventListener('mousemove', resize);
-                document.addEventListener('mouseup', stopResize);
-            });
-        }
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+    }
 
-        function resize(e) {
-            if (!isResizing) return;
-            const leftRect = leftPart.getBoundingClientRect();
-            const mouseY = e.clientY;
-            const leftBottom = leftRect.bottom;
-            let newHeight = leftBottom - mouseY;
-            newHeight = Math.max(100, Math.min(400, newHeight));
-            terminal.style.height = newHeight + 'px';
-        }
+    // ==================== Выход ====================
+    function openExitModal() {
+        document.getElementById('exitModal').style.display = 'flex';
+    }
 
-        function stopResize() {
-            isResizing = false;
-            document.removeEventListener('mousemove', resize);
-            document.removeEventListener('mouseup', stopResize);
-        }
+    function closeExitModal() {
+        document.getElementById('exitModal').style.display = 'none';
+    }
 
-        // ==================== Выход ====================
-        function openExitModal() {
-            document.getElementById('exitModal').style.display = 'flex';
-        }
+    function exitRoom() {
+        window.location.href = '/dashboard';
+    }
 
-        function closeExitModal() {
-            document.getElementById('exitModal').style.display = 'none';
-        }
+    // ==================== Настройки ====================
+    function toggleSettingsPanel() {
+        const panel = document.getElementById('settingsPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
 
-        function exitRoom() {
-            window.location.href = '/dashboard';
-        }
-
-        // ==================== Настройки ====================
-        function toggleSettingsPanel() {
-            const panel = document.getElementById('settingsPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
-
-        loadChatHistory();
-        setInterval(loadChatHistory, 3000);
-    </script>
+    loadChatHistory();
+    setInterval(loadChatHistory, 3000);
+</script>
 }
