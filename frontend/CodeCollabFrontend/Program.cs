@@ -49,4 +49,5 @@ app.MapRazorPages()
 
 app.MapControllers();
 app.UseSession();
+app.UseStatusCodePagesWithReExecute("/Error404");
 app.Run();

@@ -163,6 +163,10 @@
             padding: 2rem;
             color: rgba(255,255,255,0.4);
         }
+        @@keyframes premiumGlow {
+    0% { box-shadow: 0 0 30px rgba(255,255,255,0.1), 0 0 10px rgba(0,170,255,0.2); }
+    100% { box-shadow: 0 0 60px rgba(255,255,255,0.3), 0 0 30px rgba(0,170,255,0.5); }
+}
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
 </head>
@@ -187,12 +191,12 @@
         <div class="block"><div class="glass-card"><h3>💬 Чат и стикеры</h3><p>Общение без переключения контекста</p></div></div>
     </div>
 
-    <div class="plus-card glass-card">
-        <h3 style="color: #fbbf24;">✨ Coco Plus ✨</h3>
-        <p>Эксклюзивные курсоры, гигантские стикеры и бейджи. Стань легендой сообщества.</p>
+    <div class="plus-card glass-card" style="border: 1px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); box-shadow: 0 0 50px rgba(255,255,255,0.2), 0 0 20px rgba(0,170,255,0.3); animation: premiumGlow 3s infinite alternate;">
+    <h3 style="color: #ffffff; font-size: 2.5rem; margin-bottom: 0.5rem; font-weight: 600; text-shadow: 0 0 20px rgba(255,255,255,0.5);">Coco Plus</h3>
+    <p style="font-size: 1.2rem; color: #e0e0e0;">Эксклюзивные курсоры, стикеры и бейджи</p>
+    <div style="margin-top: 1rem;">
+        <span style="display: inline-block; background: rgba(255,255,255,0.15); padding: 5px 20px; border-radius: 50px; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.4); color: #fff;">Ранний доступ</span>
     </div>
-
-    <footer>© 2026 Code Collab — Технологии будущего уже сегодня</footer>
 </div>
 
 <script>
@@ -236,6 +240,28 @@
     
     setInterval(createBubble, 800);
 </script>
+
+<footer style="text-align: center; padding: 2rem; color: rgba(255,255,255,0.4); font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 4rem;">
+    <p>© 2026 Code Collab — Технологии будущего уже сегодня</p>
+    
+    <div style="display: flex; justify-content: center; align-items: center; gap: 2rem; margin: 1.5rem 0;">
+    <a href="https://github.com" target="_blank" style="display: inline-block; opacity: 0.6; transition: 0.3s;">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" alt="GitHub" style="width: 32px; height: 32px; filter: invert(1);">
+    </a>
+    <a href="https://www.docker.com" target="_blank" style="display: inline-block; opacity: 0.6; transition: 0.3s;">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" alt="Docker" style="width: 32px; height: 32px;">
+    </a>
+    <a href="https://dotnet.microsoft.com" target="_blank" style="display: inline-block; opacity: 0.6; transition: 0.3s;">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/dotnetcore/dotnetcore-original.svg" alt=".NET" style="width: 32px; height: 32px;">
+    </a>
+</div>
+
+    <p style="margin-top: 0.5rem;">
+        <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none; margin: 0 10px;">Telegram</a>
+        <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none; margin: 0 10px;">GitHub</a>
+        <a href="#" style="color: rgba(255,255,255,0.4); text-decoration: none; margin: 0 10px;">Поддержка</a>
+    </p>
+</footer>
 
 </body>
 </html>
