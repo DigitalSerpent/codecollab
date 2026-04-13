@@ -5,6 +5,7 @@
 @using Microsoft.AspNetCore.Http
 
 @{
+    #nullable disable
     ViewData["Title"] = "Dashboard";
 
     var userId = HttpContext.Session.GetInt32("UserId");

@@ -5,7 +5,8 @@
 @using Microsoft.AspNetCore.Http
 
 @{
-    if (!int.TryParse((string?)RouteData.Values["id"], out int roomId))
+    #nullable disable
+    if (!int.TryParse((string)RouteData.Values["id"], out int roomId))
     {
         <h2 style="color: white;">Неверный ID комнаты</h2>
         return;
