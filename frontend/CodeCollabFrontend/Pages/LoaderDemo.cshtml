@@ -6,137 +6,124 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
-    <title>Демо — Киберпанк-загрузка</title>
+    <title>Загрузка — Неоновые волны</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #01060d; font-family: 'Inter', sans-serif; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #01060d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Inter', monospace;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
         .info {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 0;
             right: 0;
             text-align: center;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.8rem;
+            color: #60a5fa;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
             z-index: 10;
             pointer-events: none;
+            text-shadow: 0 0 8px #3b82f6;
+            font-weight: 300;
         }
     </style>
 </head>
 <body>
-    <div class="info">
-        ⚡ Летающий шар по траектории «восьмёрка» вокруг тора | Бесконечная анимация загрузки
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <canvas id="waveCanvas"></canvas>
+    <div class="info">INITIALIZING SYSTEM</div>
 
     <script>
-        window.addEventListener('load', function() {
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x01060d);
-            scene.fog = new THREE.FogExp2(0x01060d, 0.02);
-
-            // Фронтальная камера (смотрим прямо на центр)
-            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 0, 8);
-            camera.lookAt(0, 0, 0);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            document.body.appendChild(renderer.domElement);
-
-            // Единый светлый голубой цвет
-            const mainColor = 0x60a5fa;
-            const emissiveColor = 0x3b82f6;
-
-            // Освещение (мягкое, чтобы не было глянца)
-            const ambientLight = new THREE.AmbientLight(0x222244);
-            scene.add(ambientLight);
-            const frontLight = new THREE.PointLight(mainColor, 1);
-            frontLight.position.set(0, 0, 5);
-            scene.add(frontLight);
-            const fillLight = new THREE.PointLight(mainColor, 0.5);
-            fillLight.position.set(1, 1, 2);
-            scene.add(fillLight);
-
-            // Кольцо (матовая текстура, без глянца)
-            const torusGeo = new THREE.TorusGeometry(1.4, 0.28, 128, 200);
-            const torusMat = new THREE.MeshStandardMaterial({ 
-                color: mainColor, 
-                emissive: emissiveColor, 
-                emissiveIntensity: 0.3, 
-                metalness: 0.1, 
-                roughness: 0.8,
-                flatShading: false
-            });
-            const torus = new THREE.Mesh(torusGeo, torusMat);
-            scene.add(torus);
-
-            // Шар (такой же матовый цвет)
-            const sphereGeo = new THREE.SphereGeometry(0.32, 64, 64);
-            const sphereMat = new THREE.MeshStandardMaterial({ 
-                color: mainColor, 
-                emissive: mainColor, 
-                emissiveIntensity: 0.4,
-                metalness: 0.1,
-                roughness: 0.8
-            });
-            const sphere = new THREE.Mesh(sphereGeo, sphereMat);
-            scene.add(sphere);
-
-            // Лёгкое свечение вокруг шара (полупрозрачное)
-            const glowGeo = new THREE.SphereGeometry(0.45, 16, 16);
-            const glowMat = new THREE.MeshBasicMaterial({ color: mainColor, transparent: true, opacity: 0.15 });
-            const glow = new THREE.Mesh(glowGeo, glowMat);
-            sphere.add(glow);
-
-            // Звёзды
-            const starCount = 1000;
-            const starGeo = new THREE.BufferGeometry();
-            const starPositions = new Float32Array(starCount * 3);
-            for (let i = 0; i < starCount; i++) {
-                starPositions[i*3] = (Math.random() - 0.5) * 200;
-                starPositions[i*3+1] = (Math.random() - 0.5) * 100;
-                starPositions[i*3+2] = (Math.random() - 0.5) * 80 - 40;
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let time = 0;
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        function draw() {
+            requestAnimationFrame(draw);
+            time += 0.016;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Глубокий тёмный фон
+            const grad = ctx.createLinearGradient(0, 0, width, height);
+            grad.addColorStop(0, '#01060d');
+            grad.addColorStop(1, '#030c1a');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // Неоновые кольца
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, 120 + i * 35, 80 + i * 25, time * 0.3 * (i + 1), 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(59, 130, 246, ${0.15 - i * 0.02})`;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
             }
-            starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-            const starMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.06, transparent: true, opacity: 0.4 });
-            const stars = new THREE.Points(starGeo, starMat);
-            scene.add(stars);
-
-            let time = 0;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                time += 0.014;
-
-                // Траектория восьмёрка в плоскости XY (фронтально)
-                const radiusX = 1.9;
-                const radiusY = 1.2;
-                const figure8X = Math.sin(time) * radiusX;
-                const figure8Y = Math.sin(time * 2) * radiusY;
-                const figure8Z = Math.sin(time * 1.8) * 0.3;
-
-                sphere.position.set(figure8X, figure8Y, figure8Z);
-
-                // Медленное вращение кольца
-                torus.rotation.z = time * 0.3;
-                torus.rotation.x = Math.sin(time * 0.2) * 0.1;
-
-                stars.rotation.y += 0.0002;
-                stars.rotation.x += 0.0001;
-
-                renderer.render(scene, camera);
+            
+            // Пульсирующий центр
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 25 + Math.sin(time * 4) * 6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(59, 130, 246, 0.35)`;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 12 + Math.sin(time * 5) * 3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(96, 165, 250, 0.9)`;
+            ctx.fill();
+            
+            // Летающие частицы (без форм, просто точки)
+            for (let i = 0; i < 80; i++) {
+                const angle = time * 1.2 + i * 0.4;
+                const radius = 140 + Math.sin(time * 1.5 + i) * 25;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle * 0.8) * radius * 0.7;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(59, 130, 246, 0.8)`;
+                ctx.fill();
             }
-
-            animate();
-
-            window.addEventListener('resize', function() {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        });
+            
+            // Минималистичный текст
+            ctx.font = '300 12px "Inter", monospace';
+            ctx.fillStyle = '#60a5fa';
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = '#3b82f6';
+            ctx.textAlign = 'center';
+            
+            let dots = '.'.repeat(Math.floor(time * 2.5) % 4);
+            ctx.fillText(`LOADING${dots}`, centerX, centerY + 95);
+            
+            ctx.font = '200 10px "Inter", monospace';
+            ctx.fillStyle = '#3b82f6';
+            ctx.fillText(`v1.0.0`, centerX, centerY + 125);
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        draw();
     </script>
 </body>
 </html>
