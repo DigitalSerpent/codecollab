@@ -9,23 +9,17 @@
         return;
     }
 
-    if (!int.TryParse(Request.Query["id"], out int roomId))
-    {
-        Response.Redirect("/Dashboard");
-        return;
-    }
-
     var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
     optionsBuilder.UseSqlite("Data Source=codecollab.db");
     using var context = new AppDbContext(optionsBuilder.Options);
     
-    var room = context.Rooms.Find(roomId);
-    if (room != null && room.OwnerId == userId)
+    var user = context.Users.Find(userId);
+    if (user != null)
     {
-        context.Rooms.Remove(room);
+        context.Users.Remove(user);
         context.SaveChanges();
     }
-
-    // Добавляем параметр в URL
-    Response.Redirect("/Dashboard?deleted=true");
+    
+    HttpContext.Session.Clear();
+    Response.Redirect("/Login");
 }

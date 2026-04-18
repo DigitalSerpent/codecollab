@@ -10,10 +10,6 @@
 
     var userId = HttpContext.Session.GetInt32("UserId");
     
-    // Лог для проверки
-    Console.WriteLine($"📌 Dashboard: UserId из сессии = {userId}");
-    Console.WriteLine($"   Session ID: {HttpContext.Session.Id}");
-
     if (userId == null)
     {
         HttpContext.Response.Redirect("/Login");
@@ -25,6 +21,15 @@
         .Include(r => r.RoomParticipants)
         .ThenInclude(rp => rp.User)
         .ToList();
+}
+
+@if (Request.Query.ContainsKey("deleted"))
+{
+    <script>
+        if (typeof window.showNotification === 'function') {
+            window.showNotification('Комната удалена', 'success');
+        }
+    </script>
 }
 
 <style>
@@ -116,25 +121,39 @@
 
     .empty-state {
         text-align: center;
-        color: white;
-        margin-top: 50px;
+        margin-top: 80px;
         width: 100%;
     }
 
     .empty-state p {
         font-size: 1.5rem;
         margin-bottom: 20px;
+        color: #a0a0a0;
     }
 
     .empty-button {
         background-color: #00aaff;
         color: #0a0e1c;
         border: none;
-        border-radius: 8px;
-        padding: 12px 30px;
-        font-size: 1rem;
+        border-radius: 12px;
+        padding: 12px 32px;
+        font-size: 1.2rem;
+        font-weight: bold;
         cursor: pointer;
-        margin-top: 20px;
+        transition: 0.3s;
+        animation: pulse 2s infinite;
+    }
+
+    .empty-button:hover {
+        background-color: #ffffff;
+        box-shadow: 0 0 20px #00aaff;
+        transform: scale(1.02);
+    }
+
+    @@keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0, 170, 255, 0.4); }
+        70% { box-shadow: 0 0 0 20px rgba(0, 170, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(0, 170, 255, 0); }
     }
 
     .marquee {
@@ -162,9 +181,8 @@
         {
             <div class="empty-state">
                 <p>Создайте первую комнату</p>
-                <span style="display: inline-block; width: 10px; height: 20px; background-color: #00aaff; animation: blink 1s infinite;"></span>
                 <div>
-                    <button class="empty-button" onclick="openCreateRoomModal()">➕ Создать комнату</button>
+                    <button class="empty-button" onclick="openCreateRoomModal()">Создать комнату</button>
                 </div>
             </div>
         }
@@ -211,7 +229,6 @@
         51%, 100% { opacity: 0; }
     }
 
-    /* Стили для модального окна */
     .modal-header {
         display: flex;
         justify-content: space-between;
@@ -264,7 +281,6 @@
     }
 </style>
 
-<!-- Модальное окно информации о комнате -->
 <div id="roomInfoModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
     <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 600px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; display: flex; gap: 30px;">
         <div style="flex: 1;">
@@ -330,11 +346,11 @@
 
     function confirmDelete() {
         showConfirmModal(
-            '⚠️ Удаление комнаты',
+            'Удаление комнаты',
             'Вы уверены, что хотите удалить эту комнату? Это действие необратимо.',
             () => {
                 showConfirmModal(
-                    '🗑 Последнее подтверждение',
+                    'Последнее подтверждение',
                     'Удалить комнату навсегда?',
                     () => deleteRoom(currentRoomId),
                     'Да, удалить',
@@ -348,32 +364,33 @@
 
     function showConfirmModal(title, message, onConfirm, confirmText = 'Удалить', cancelText = 'Отмена') {
         const modalHtml = `
-            <div id="customConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 3000; display: flex; align-items: center; justify-content: center;">
-                <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; text-align: center;">
-                    <h3 style="color: white; margin-bottom: 15px;">${title}</h3>
-                    <p style="color: #a0a0a0; margin-bottom: 25px;">${message}</p>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="confirmCancelBtn" style="background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">${cancelText}</button>
-                        <button id="confirmOkBtn" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">${confirmText}</button>
+            <div id="customConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(1, 6, 13, 0.9); backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: rgba(18, 22, 40, 0.9); border-radius: 24px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; padding: 30px; width: 400px; text-align: center; backdrop-filter: blur(12px);">
+                    <h3 style="color: #00aaff; margin-bottom: 15px;">${title}</h3>
+                    <p style="color: #e0e0e0; margin-bottom: 25px;">${message}</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button id="confirmCancelBtn" style="background: #1e1e3a; color: white; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer; transition: 0.2s;">${cancelText}</button>
+                        <button id="confirmOkBtn" style="background: #00aaff; color: #0a0e1c; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer; transition: 0.2s;">${confirmText}</button>
                     </div>
                 </div>
             </div>
         `;
-        
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
-        document.getElementById('confirmOkBtn').onclick = () => {
-            document.getElementById('customConfirmModal').remove();
-            onConfirm();
-        };
-        document.getElementById('confirmCancelBtn').onclick = () => {
-            document.getElementById('customConfirmModal').remove();
-        };
+        const modal = document.getElementById('customConfirmModal');
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        okBtn.onclick = () => { modal.remove(); onConfirm(); };
+        cancelBtn.onclick = () => modal.remove();
     }
 
     function deleteRoom(roomId) {
         if (confirm('Удалить комнату?')) {
             window.location.href = '/DeleteRoom?id=' + roomId;
         }
+    }
+
+    // ========== СОЗДАНИЕ КОМНАТЫ ==========
+    function openCreateRoomModal() {
+        window.location.href = '/CreateRoomPage';
     }
 </script>

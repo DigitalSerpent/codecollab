@@ -1,0 +1,278 @@
+@page
+@using Microsoft.AspNetCore.Http
+@{
+    Layout = null;
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (userId == null)
+    {
+        HttpContext.Response.Redirect("/Login");
+        return;
+    }
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Настройки — Code Collab</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at 30% 20%, #030c1a, #01060d);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+        }
+        .bubble {
+            position: fixed;
+            bottom: -50px;
+            background: rgba(59, 130, 246, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: rise 8s infinite linear;
+            z-index: 0;
+        }
+        @@keyframes rise {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
+        }
+        .glass-card {
+            background: rgba(18, 22, 40, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            border: 1px solid rgba(0, 170, 255, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 0 30px rgba(0,170,255,0.2);
+            z-index: 10;
+            position: relative;
+        }
+        h2 { text-align: center; margin-bottom: 30px; color: #00aaff; font-size: 2rem; }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { font-size: 1.1rem; font-weight: 500; }
+        .setting-desc { font-size: 0.8rem; color: #a0a0a0; margin-top: 5px; }
+        .btn {
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .btn-danger { background: #ff4444; color: white; }
+        .btn-danger:hover { background: #ff6666; box-shadow: 0 0 15px #ff4444; }
+        .btn-primary { background: #00aaff; color: #0a0e1c; }
+        .btn-primary:hover { background: white; box-shadow: 0 0 20px #00aaff; transform: scale(1.02); }
+        .actions { display: flex; gap: 15px; margin-top: 30px; }
+        .back-link { display: block; text-align: center; margin-top: 25px; color: #00aaff; text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2a2a4a;
+            transition: 0.3s;
+            border-radius: 30px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: white !important;
+    background-color: #0a0e1c !important;
+    caret-color: white;
+}
+
+
+        input:checked + .slider { background-color: #00aaff; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; color: #00aaff; margin-bottom: 8px; }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            background: #0a0e1c;
+            border: 1px solid #2a2a4a;
+            border-radius: 12px;
+            color: white;
+        }
+        .input-group input:focus { outline: none; border-color: #00aaff; box-shadow: 0 0 10px #00aaff; }
+    </style>
+</head>
+<body>
+
+<div id="bubblesContainer"></div>
+
+<div class="glass-card">
+    <h2>Настройки</h2>
+
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">Уведомления</div>
+            <div class="setting-desc">Показывать всплывающие уведомления</div>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="notifyToggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">Сменить пароль</div>
+            <div class="setting-desc">Обновить пароль для входа</div>
+        </div>
+        <button class="btn btn-primary" id="changePasswordBtn">Сменить</button>
+    </div>
+
+    <div class="setting-item">
+        <div>
+            <div class="setting-label">Удалить аккаунт</div>
+            <div class="setting-desc">Все данные будут удалены безвозвратно</div>
+        </div>
+        <button class="btn btn-danger" id="deleteAccountBtn">Удалить</button>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-primary" id="saveSettingsBtn" style="flex: 1;">Сохранить</button>
+    </div>
+
+    <a href="/Dashboard" class="back-link">← Вернуться в панель</a>
+</div>
+
+<script>
+    // ========== МОДАЛКА ДЛЯ СМЕНЫ ПАРОЛЯ ==========
+    function showPasswordModal() {
+        const modalHtml = `
+            <div id="passwordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(1, 6, 13, 0.9); backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: rgba(18, 22, 40, 0.9); border-radius: 24px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; padding: 30px; width: 400px; backdrop-filter: blur(12px);">
+                    <h3 style="color: #00aaff; text-align: center; margin-bottom: 20px;">Смена пароля</h3>
+                    <div class="input-group"><label>Старый пароль</label><input type="password" id="oldPassword" placeholder="Введите старый пароль"></div>
+                    <div class="input-group"><label>Новый пароль</label><input type="password" id="newPassword" placeholder="Введите новый пароль"></div>
+                    <div class="input-group"><label>Подтверждение</label><input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль"></div>
+                    <div style="display: flex; gap: 15px; margin-top: 20px;">
+                        <button id="passwordCancelBtn" style="background: #1e1e3a; color: white; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer; flex: 1;">Отмена</button>
+                        <button id="passwordOkBtn" style="background: #00aaff; color: #0a0e1c; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer; flex: 1;">Сменить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('passwordModal');
+        const oldInput = document.getElementById('oldPassword');
+        const newInput = document.getElementById('newPassword');
+        const confirmInput = document.getElementById('confirmPassword');
+        const okBtn = document.getElementById('passwordOkBtn');
+        const cancelBtn = document.getElementById('passwordCancelBtn');
+        
+        cancelBtn.onclick = () => modal.remove();
+        okBtn.onclick = () => {
+            const oldPwd = oldInput.value;
+            const newPwd = newInput.value;
+            const confirmPwd = confirmInput.value;
+            if (!oldPwd || !newPwd || !confirmPwd) { alert('Заполните все поля'); return; }
+            if (newPwd !== confirmPwd) { alert('Новый пароль и подтверждение не совпадают'); return; }
+            
+           window.location.href = `/ChangePassword?old=${encodeURIComponent(oldPwd)}&new=${encodeURIComponent(newPwd)}`;
+        };
+    }
+
+    // ========== МОДАЛКА ДЛЯ УДАЛЕНИЯ ==========
+    function showDeleteModal() {
+        const modalHtml = `
+            <div id="deleteModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(1, 6, 13, 0.9); backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: rgba(18, 22, 40, 0.9); border-radius: 24px; border: 1px solid #ff4444; box-shadow: 0 0 30px #ff4444; padding: 30px; width: 400px; text-align: center; backdrop-filter: blur(12px);">
+                    <h3 style="color: #ff4444; margin-bottom: 15px;">Удаление аккаунта</h3>
+                    <p style="color: #e0e0e0; margin-bottom: 25px;">Вы уверены? Аккаунт будет удалён безвозвратно.</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button id="deleteCancelBtn" style="background: #1e1e3a; color: white; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer;">Отмена</button>
+                        <button id="deleteOkBtn" style="background: #ff4444; color: white; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer;">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        const modal = document.getElementById('deleteModal');
+        const cancelBtn = document.getElementById('deleteCancelBtn');
+        const okBtn = document.getElementById('deleteOkBtn');
+        cancelBtn.onclick = () => modal.remove();
+        okBtn.onclick = () => {
+            window.location.href = '/DeleteAccount';
+        };
+    }
+
+    // ========== НАСТРОЙКИ ==========
+    const notifyToggle = document.getElementById('notifyToggle');
+    const saveBtn = document.getElementById('saveSettingsBtn');
+    const deleteBtn = document.getElementById('deleteAccountBtn');
+    const changePwdBtn = document.getElementById('changePasswordBtn');
+
+    const notifications = localStorage.getItem('notifications') !== 'false';
+    notifyToggle.checked = notifications;
+
+    saveBtn.addEventListener('click', () => {
+        localStorage.setItem('notifications', notifyToggle.checked);
+        alert('Настройки сохранены');
+    });
+
+    deleteBtn.addEventListener('click', () => showDeleteModal());
+    changePwdBtn.addEventListener('click', () => showPasswordModal());
+
+    function createBubble() {
+        const container = document.getElementById('bubblesContainer');
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const size = Math.random() * 40 + 10;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.left = Math.random() * 100 + '%';
+        bubble.style.animationDuration = Math.random() * 8 + 6 + 's';
+        bubble.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 14000);
+    }
+    setInterval(createBubble, 800);
+</script>
+
+</body>
+</html>

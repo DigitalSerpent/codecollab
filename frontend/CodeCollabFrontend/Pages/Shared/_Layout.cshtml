@@ -56,12 +56,9 @@
             <a href="/CreateRoomPage" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
                onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
                onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Создать комнату</a>
-            <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
-                 onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
-                 onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';"
-                 onclick="alert('Настройки будут доступны в следующей версии')">
-                Настройки
-            </div>
+            <a href="/Settings" class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer; text-decoration: none;"
+               onmouseover="this.style.color='#00aaff'; this.style.transform='scale(1.1)'; this.style.fontWeight='bold';"
+               onmouseout="this.style.color='#a0a0a0'; this.style.transform='scale(1)'; this.style.fontWeight='normal';">Настройки</a>
         </div>
         <div style="margin-bottom: 30px;">
             <div class="panel-item" style="white-space: nowrap; opacity: 0; transition: 0.2s; margin: 15px 0; width: 100%; text-align: center; cursor: pointer;"
@@ -247,6 +244,96 @@
         window.hideLoader = hideLoaderImmediately;
     })();
 </script>
+
+<!-- Система уведомлений (очередь) -->
+<div id="notificationQueue" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 350px;"></div>
+
+<script>
+    let notificationQueue = [];
+    let isProcessing = false;
+
+    function showNotification(message, type = 'info', duration = 5000) {
+        notificationQueue.push({ message, type, duration });
+        processQueue();
+    }
+
+    function processQueue() {
+        if (isProcessing || notificationQueue.length === 0) return;
+        isProcessing = true;
+        
+        const notification = notificationQueue.shift();
+        displayNotification(notification.message, notification.type, notification.duration);
+        
+        setTimeout(() => {
+            isProcessing = false;
+            processQueue();
+        }, notification.duration);
+    }
+
+    function displayNotification(message, type, duration) {
+        const container = document.getElementById('notificationQueue');
+        const toast = document.createElement('div');
+        
+        let bgColor, icon;
+        switch (type) {
+            case 'success':
+                bgColor = '#00ff88';
+                icon = '✅';
+                break;
+            case 'error':
+                bgColor = '#ff4444';
+                icon = '❌';
+                break;
+            case 'warning':
+                bgColor = '#ffaa00';
+                icon = '⚠️';
+                break;
+            default:
+                bgColor = '#00aaff';
+                icon = 'ℹ️';
+        }
+        
+        toast.style.background = '#121628';
+        toast.style.borderLeft = `4px solid ${bgColor}`;
+        toast.style.borderRadius = '12px';
+        toast.style.padding = '12px 15px';
+        toast.style.color = 'white';
+        toast.style.fontFamily = 'monospace';
+        toast.style.fontSize = '0.85rem';
+        toast.style.boxShadow = '0 0 20px rgba(0,170,255,0.3)';
+        toast.style.backdropFilter = 'blur(8px)';
+        toast.style.marginBottom = '10px';
+        toast.style.display = 'flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '10px';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        
+        toast.innerHTML = `
+            <span style="font-size: 1.2rem;">${icon}</span>
+            <span style="flex: 1;">${message}</span>
+            <span style="cursor: pointer; color: #a0a0a0; font-size: 1rem;" onclick="this.parentElement.remove()">✖</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateX(0)';
+        }, 10);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    // Глобальные функции для вызова из любого места
+    window.showNotification = showNotification;
+</script>
+
 
 </body>
 </html>
