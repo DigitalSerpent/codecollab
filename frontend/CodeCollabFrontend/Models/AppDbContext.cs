@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<Room> Rooms { get; set; }
     public DbSet<RoomParticipant> RoomParticipants { get; set; }
 public DbSet<ChatMessage> ChatMessages { get; set; }
+public DbSet<RoomFile> RoomFiles { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Связь участников с комнатами

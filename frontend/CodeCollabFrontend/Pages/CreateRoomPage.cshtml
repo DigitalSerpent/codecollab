@@ -134,4 +134,50 @@
     <div class="link">
         <a href="/Dashboard">← Вернуться к комнатам</a>
     </div>
+
+    <script>
+        (function() {
+            function getHotspotForCursor(name, size) {
+                return { x: 0, y: 0 };
+            }
+
+            function applyGlobalCursor() {
+                const cursorData = localStorage.getItem('globalCursor');
+                if (!cursorData || !cursorData.startsWith('svg:')) return;
+                
+                const parts = cursorData.split(' ');
+                const name = parts[0].split(':')[1];
+                const targetSize = parseInt(parts[1]) || 32;
+                
+                fetch(`/cursors/${name}.svg`)
+                    .then(response => response.text())
+                    .then(svgText => {
+                        let resizedSvg = svgText
+                            .replace(/width="\d+"/, `width="${targetSize}"`)
+                            .replace(/height="\d+"/, `height="${targetSize}"`);
+                        if (!resizedSvg.includes('viewBox')) {
+                            resizedSvg = resizedSvg.replace('<svg', `<svg viewBox="0 0 ${targetSize} ${targetSize}"`);
+                        }
+                        const blob = new Blob([resizedSvg], { type: 'image/svg+xml' });
+                        const url = URL.createObjectURL(blob);
+                        
+                        const hotspot = getHotspotForCursor(name, targetSize);
+                        
+                        let style = document.getElementById('globalCursorStyle');
+                        if (!style) {
+                            style = document.createElement('style');
+                            style.id = 'globalCursorStyle';
+                            document.head.appendChild(style);
+                        }
+                        style.textContent = `* { cursor: url('${url}') ${hotspot.x} ${hotspot.y}, auto !important; }`;
+                        
+                        setTimeout(() => URL.revokeObjectURL(url), 10000);
+                    })
+                    .catch(err => console.error('Ошибка загрузки курсора:', err));
+            }
+            
+            applyGlobalCursor();
+            window.addEventListener('storage', () => applyGlobalCursor());
+        })();
+    </script>
 </div>

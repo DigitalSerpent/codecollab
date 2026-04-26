@@ -5,57 +5,47 @@
 namespace CodeCollabFrontend.Migrations
 {
     /// <inheritdoc />
-    public partial class FixNullableModels : Migration
+    public partial class AddTelegramUsername : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "Rooms",
+                name: "PasswordHash",
+                table: "Users",
                 type: "TEXT",
-                maxLength: 50,
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "TEXT",
-                oldMaxLength: 50);
+                oldMaxLength: 100);
 
             migrationBuilder.AlterColumn<string>(
-                name: "UserName",
-                table: "ChatMessages",
+                name: "Email",
+                table: "Users",
                 type: "TEXT",
                 nullable: true,
                 oldClrType: typeof(string),
                 oldType: "TEXT");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "Text",
-                table: "ChatMessages",
+            migrationBuilder.AddColumn<string>(
+                name: "TelegramUsername",
+                table: "Users",
                 type: "TEXT",
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "TEXT");
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "Name",
-                table: "Rooms",
-                type: "TEXT",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "TEXT",
-                oldMaxLength: 50,
-                oldNullable: true);
+            migrationBuilder.DropColumn(
+                name: "TelegramUsername",
+                table: "Users");
 
             migrationBuilder.AlterColumn<string>(
-                name: "UserName",
-                table: "ChatMessages",
+                name: "PasswordHash",
+                table: "Users",
                 type: "TEXT",
+                maxLength: 100,
                 nullable: false,
                 defaultValue: "",
                 oldClrType: typeof(string),
@@ -63,8 +53,8 @@ namespace CodeCollabFrontend.Migrations
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
-                name: "Text",
-                table: "ChatMessages",
+                name: "Email",
+                table: "Users",
                 type: "TEXT",
                 nullable: false,
                 defaultValue: "",

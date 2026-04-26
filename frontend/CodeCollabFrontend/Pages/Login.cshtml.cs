@@ -45,12 +45,14 @@ public class LoginModel : PageModel
             return Page();
         }
 
+        if (!user.IsConfirmed)
+        {
+            ErrorMessage = "Аккаунт не подтверждён. Проверьте Telegram и введите код на странице подтверждения.";
+            return Page();
+        }
+
         HttpContext.Session.SetInt32("UserId", user.Id);
         HttpContext.Session.SetString("UserName", user.Name);
-
-        // Лог для проверки
-        Console.WriteLine($"✅ Сохранено в сессию: UserId={user.Id}, UserName={user.Name}");
-        Console.WriteLine($"   Session ID: {HttpContext.Session.Id}");
 
         return RedirectToPage("/Dashboard");
     }

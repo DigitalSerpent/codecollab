@@ -30,493 +30,474 @@ else
 {
     ViewData["Title"] = room.Name;
 
-    <!-- Подключаем Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style id="globalCursorStyle"></style>
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .dashboard-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        h2 { color: white; margin-bottom: 30px; font-size: 28px; font-weight: 500; }
-        .rooms-grid { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
-        .room-card { background: rgba(18, 22, 40, 0.7); backdrop-filter: blur(8px); border-radius: 20px; border: 1px solid rgba(0, 170, 255, 0.3); transition: all 0.3s ease; width: 240px; overflow: hidden; cursor: pointer; }
-        .room-card:hover { border-color: #00aaff; box-shadow: 0 0 20px rgba(0, 170, 255, 0.4); transform: translateY(-2px); }
-        .preview { background: rgba(0, 0, 0, 0.5); padding: 15px; font-family: 'Courier New', monospace; font-size: 8px; line-height: 1.2; color: #88c0d0; height: 120px; overflow: hidden; }
-        .card-content { padding: 15px; }
-        .card-content h4 { color: white; margin: 0 0 10px 0; font-weight: bold; font-size: 1.1rem; word-wrap: break-word; overflow-wrap: break-word; white-space: normal; }
-        .enter-button { width: 100%; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px; cursor: pointer; transition: 0.3s; }
-        .enter-button:hover { background-color: #ffffff; box-shadow: 0 0 20px #00aaff; }
-        .empty-state { text-align: center; color: white; margin-top: 50px; width: 100%; }
-        .empty-state p { font-size: 1.5rem; margin-bottom: 20px; }
-        .empty-button { background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 12px 30px; font-size: 1rem; cursor: pointer; margin-top: 20px; }
-        .marquee { display: inline-block; animation: marquee 40s linear infinite; white-space: nowrap; padding-left: 100%; }
-        .marquee:hover { animation-play-state: paused; }
-        @@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-        .modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; width: 100%; margin-bottom: 10px; }
-        #roomName { word-wrap: break-word; overflow-wrap: break-word; white-space: normal; max-width: calc(100% - 40px); font-size: 1.2rem; line-height: 1.3; }
-        .delete-icon { color: #a0a0a0; font-size: 1.2rem; cursor: pointer; transition: 0.2s; background: none; border: none; padding: 0; flex-shrink: 0; }
-        .delete-icon:hover { color: #ff8888; transform: scale(1.1); }
-        .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-        .modal-actions button { width: 100%; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0e1c; overflow: hidden; }
+        .file-tree { user-select: none; }
+        .file-item { padding: 4px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; font-size: 13px; }
+        .file-item:hover { background-color: #2a2a4a; }
+        .file-item.active { background-color: #0d3d5c; }
+        .file-icon { width: 20px; text-align: center; font-size: 13px; }
+        .new-file-btn { background: none; border: none; color: #00aaff; cursor: pointer; margin-top: 8px; padding: 5px; width: 100%; text-align: left; font-size: 12px; }
+        .new-file-btn:hover { background-color: #2a2a4a; border-radius: 4px; }
+        
+        .tabs-container { display: flex; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; overflow-x: auto; white-space: nowrap; min-height: 32px; }
+        .tab { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background-color: #0d0d1a; color: #a0a0a0; cursor: pointer; border-right: 1px solid #1e1e3a; min-width: 100px; font-size: 12px; }
+        .tab.active { background-color: #1e1e3a; color: white; border-bottom: 2px solid #00aaff; }
+        .tab:hover { background-color: #2a2a4a; }
+        .tab-close { margin-left: auto; opacity: 0.6; font-size: 11px; }
+        .tab-close:hover { opacity: 1; color: #ff8888; }
+        
+        .resizer { height: 3px; background-color: #00aaff; cursor: ns-resize; }
+        .terminal { background-color: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; }
+        .terminal-header { height: 24px; background-color: #2d2d2d; display: flex; align-items: center; padding: 0 8px; color: white; font-size: 11px; }
+        .terminal-output { flex: 1; padding: 6px; color: #ccc; font-family: monospace; overflow-y: auto; white-space: pre-wrap; font-size: 11px; }
+        .terminal-input-line { display: flex; align-items: center; padding: 4px 8px; border-top: 1px solid #3c3c3c; background-color: #1e1e1e; }
+        .terminal-prompt { color: #00aaff; font-weight: bold; margin-right: 6px; font-size: 12px; }
+        .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; font-size: 11px; }
+        
+        .chat-panel { width: 240px; background-color: #0d0d1a; border-left: 1px solid #00aaff; display: flex; flex-direction: column; }
+        .chat-header { height: 32px; background-color: #121628; border-bottom: 1px solid #00aaff; display: flex; align-items: center; padding-left: 10px; color: white; font-weight: bold; font-size: 12px; }
+        .chat-messages { flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .chat-message { max-width: 85%; padding: 5px 8px; border-radius: 10px; font-size: 12px; word-wrap: break-word; }
+        .chat-message.me { background-color: #b198b3; color: #0a0e1c; align-self: flex-end; }
+        .chat-message.other { background-color: #86a1b5; color: white; align-self: flex-start; }
+        .chat-input-area { padding: 8px; border-top: 1px solid #00aaff; display: flex; gap: 6px; }
+        .chat-input { flex: 1; padding: 6px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 6px; resize: none; font-size: 12px; }
+        .chat-button { background-color: #0a0e1c; border: 1px solid #00aaff; border-radius: 6px; padding: 6px; cursor: pointer; color: white; font-size: 12px; }
+        .send-button { background-color: #00aaff; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; color: #0a0e1c; }
+        
+        .icon-button { width: 36px; height: 36px; background-color: #121628; border: 1px solid #00aaff; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 16px; }
+        .icon-button:hover { background-color: #1e1e3a; color: #00aaff; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background-color: #121628; border-radius: 16px; padding: 20px; width: 320px; border: 1px solid #00aaff; text-align: center; }
+        .modal-content h3 { color: white; margin-bottom: 15px; font-size: 18px; }
+        .modal-buttons { display: flex; gap: 8px; margin-top: 15px; }
+        .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
+        .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
+        
+        .floating-panel { display: none; position: fixed; bottom: 70px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
+        .floating-panel.right { left: auto; right: 80px; }
+        .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
+        .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
+        .participant-item:hover { background-color: #1e1e3a; }
+        .participant-avatar { font-size: 1rem; }
+        .participant-name { flex: 1; color: white; }
+        .participant-cursor { font-size: 0.9rem; }
+        .participant-status { width: 7px; height: 7px; border-radius: 50%; }
+        
+        .language-select { background-color: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 4px; padding: 4px 6px; font-size: 12px; }
     </style>
 
-    <!-- Основной контейнер -->
-    <div style="display: flex; flex-direction: column; height: calc(100vh - 80px); padding: 10px; padding-right: 60px;">
+    @if (userId == room.OwnerId)
+    {
+        <div style="margin: 6px 12px 0 12px; background-color: #0a0e1c; padding: 5px 10px; border-radius: 6px;">
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" 
+                       style="flex: 1; background-color: #121628; border: 1px solid #1e1e3a; color: white; border-radius: 4px; padding: 4px 6px; font-size: 11px;">
+                <button onclick="copyInviteLink()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px;">Копировать</button>
+            </div>
+        </div>
+    }
 
-        <!-- Главный прямоугольник -->
-        <div style="display: flex; flex: 1; background-color: #121628; border-radius: 20px; border: 1px solid #00aaff; overflow: hidden;">
+    <div style="display: flex; flex-direction: column; height: calc(100vh - 100px); padding: 8px; padding-right: 50px;">
 
-            <!-- Левая часть: структура + код + терминал -->
-            <div style="display: flex; flex: 1; flex-direction: column;">
+        <div style="display: flex; flex: 1; min-height: 0; background-color: #121628; border-radius: 12px; border: 1px solid #00aaff; overflow: hidden;">
 
-                <!-- Верхняя панель: выбор языка + вкладки + Run -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 15px; background-color: #0d0d1a; border-bottom: 1px solid #00aaff;">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <select id="languageSelect" style="background-color: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 5px; padding: 5px;">
-                            <option value="python">Python</option>
-                            <option value="javascript">JavaScript</option>
-                            <option value="bash">Bash</option>
-                        </select>
-                        <div style="display: flex; gap: 5px;">
-                            <div style="background-color: #1e1e3a; color: white; padding: 5px 15px; border-radius: 8px 8px 0 0; border: 1px solid #00aaff; border-bottom: none;">main.py</div>
-                            <div style="color: #a0a0a0; padding: 5px 15px;">utils.py</div>
-                            <div style="color: #a0a0a0; padding: 5px 15px;">README.md</div>
-                        </div>
-                    </div>
-                    <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 5px 20px; cursor: pointer; font-weight: bold;">Run</button>
+            <!-- ЛЕВАЯ ПАНЕЛЬ -->
+            <div style="width: 200px; background-color: #0d0d1a; border-right: 1px solid #00aaff; display: flex; flex-direction: column;">
+                <div style="padding: 8px; border-bottom: 1px solid #00aaff; font-weight: bold; color: white; font-size: 12px;">Файлы</div>
+                <div id="fileTree" style="flex: 1; padding: 6px; overflow-y: auto;"></div>
+                <button class="new-file-btn" onclick="promptNewFile()">
+                    <i class="fas fa-plus"></i> Новый файл
+                </button>
+            </div>
+
+            <!-- ЦЕНТР -->
+            <div style="display: flex; flex: 1; flex-direction: column; min-width: 0;">
+
+                <div id="tabsContainer" class="tabs-container"></div>
+
+                <!-- Кнопка Run -->
+                <div style="display: flex; justify-content: flex-end; padding: 8px; background-color: #0d0d1a; border-bottom: 1px solid #00aaff;">
+                    <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 5px 15px; cursor: pointer;">▶ Run</button>
                 </div>
 
-                <!-- Структура + код (основная часть) -->
-                <div style="display: flex; flex: 1; min-height: 0; overflow: hidden;">
-                    <div style="width: 200px; background-color: #0d0d1a; border-right: 1px solid #00aaff; padding: 15px; overflow-y: auto;">
-                        <div style="color: #a0a0a0; padding: 5px;"><i class="fas fa-file-code"></i> main.py</div>
-                        <div style="color: #a0a0a0; padding: 5px;"><i class="fas fa-file-code"></i> utils.py</div>
-                        <div style="color: #a0a0a0; padding: 5px;"><i class="fas fa-file-alt"></i> README.md</div>
-                    </div>
-                    <div style="flex: 1; background-color: #0d0d1a;">
-                        <div id="editor" style="height: 100%; width: 100%;"></div>
-                    </div>
-                </div>
+                <div id="editorContainer" style="flex: 1; background-color: #0d0d1a; min-height: 0;"></div>
 
-                <!-- Разделитель (можно двигать) -->
-                <div id="resizer" style="height: 5px; background-color: #00aaff; cursor: ns-resize;"></div>
+                <div id="resizer" class="resizer"></div>
 
-                <!-- Терминал -->
-                <div id="terminalContainer" style="height: 150px; background-color: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column;">
-                    <div style="height: 30px; background-color: #2d2d2d; display: flex; align-items: center; padding: 0 10px; color: white; justify-content: space-between;">
+                <div id="terminal" class="terminal" style="height: 120px; flex-shrink: 0;">
+                    <div class="terminal-header">
                         <span>Терминал</span>
                     </div>
-                    <div id="terminalOutput" style="flex: 1; padding: 10px; color: #cccccc; font-family: 'Cascadia Code', 'Consolas', monospace; overflow-y: auto; white-space: pre-wrap;"></div>
-                    <div style="padding: 8px; border-top: 1px solid #3c3c3c; display: flex;">
-                        <span style="color: #cccccc; margin-right: 5px;">$</span>
-                        <input type="text" id="terminalInput" style="flex: 1; background: none; border: none; color: #cccccc; outline: none;" placeholder="Введите команду...">
+                    <div id="terminalOutput" class="terminal-output"></div>
+                    <div class="terminal-input-line">
+                        <span class="terminal-prompt">$</span>
+                        <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
                     </div>
                 </div>
             </div>
 
-            <!-- Чат -->
-            <div style="width: 280px; background-color: #0d0d1a; border-left: 1px solid #00aaff; display: flex; flex-direction: column;">
-                <div style="height: 40px; background-color: #121628; border-bottom: 1px solid #00aaff; display: flex; align-items: center; padding-left: 15px; color: white; font-weight: bold;">
-                    <i class="fas fa-comments" style="margin-right: 8px;"></i> Чат
+            <!-- ЧАТ -->
+            <div class="chat-panel">
+                <div class="chat-header">
+                    <i class="fas fa-comments" style="margin-right: 6px;"></i> Чат
                 </div>
-                <div id="chatMessages" style="flex: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
-                
-                <!-- Панель стикеров (скрыта по умолчанию) -->
-                <div id="stickersPanel" style="display: none; padding: 10px; background-color: #0a0e1c; border-top: 1px solid #00aaff; border-bottom: 1px solid #00aaff; gap: 8px; flex-wrap: wrap;">
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('😊')">😊</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('😂')">😂</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('❤️')">❤️</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🔥')">🔥</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🎉')">🎉</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🚀')">🚀</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('😎')">😎</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('👍')">👍</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('💀')">💀</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('✨')">✨</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('💡')">💡</span>
-                    <span style="font-size: 1.5rem; cursor: pointer;" onclick="sendSticker('🍕')">🍕</span>
+                <div id="chatMessages" class="chat-messages"></div>
+                <div id="stickersPanel" style="display: none; padding: 6px; background-color: #0a0e1c; gap: 5px; flex-wrap: wrap; border-top: 1px solid #1e1e3a;">
+                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('😊')">😊</span>
+                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('😂')">😂</span>
+                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('❤️')">❤️</span>
+                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('🔥')">🔥</span>
+                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('🎉')">🎉</span>
+                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('🚀')">🚀</span>
                 </div>
-
-                <!-- Поле ввода + кнопки -->
-                <div style="padding: 10px; border-top: 1px solid #00aaff; display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display: flex; gap: 8px;">
-                        <button onclick="toggleStickersPanel()" style="background-color: #0a0e1c; color: white; border: 1px solid #00aaff; border-radius: 8px; padding: 8px; cursor: pointer;">
-                            <i class="fa-solid fa-icons"></i>
-                        </button>
-                        <textarea id="chatInput" rows="1" placeholder="Введите сообщение..." style="flex: 1; padding: 8px; background-color: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px; resize: vertical; min-height: 35px; max-height: 100px;"></textarea>
-                        <button onclick="sendMessage()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 8px 15px; cursor: pointer;">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
+                <div class="chat-input-area">
+                    <button class="chat-button" onclick="toggleStickersPanel()">
+                        <i class="fa-solid fa-icons"></i>
+                    </button>
+                    <textarea id="chatInput" class="chat-input" rows="1" placeholder="Сообщение..."></textarea>
+                    <button class="send-button" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Нижние иконки (слева и справа) -->
-        <div style="margin-top: 10px; display: flex; justify-content: space-between;">
-            <div style="display: flex; gap: 15px;">
-                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Участники" onclick="toggleUsersPanel()">
-                    <i class="fas fa-users"></i>
-                </div>
+        <div style="margin-top: 8px; display: flex; justify-content: space-between;">
+            <div class="icon-button" onclick="toggleUsersPanel()">
+                <i class="fas fa-users"></i>
             </div>
-            <div style="display: flex; gap: 15px;">
-                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Настройки комнаты" onclick="toggleSettingsPanel()">
+            <div style="display: flex; gap: 10px;">
+                <div class="icon-button" onclick="toggleSettingsPanel()">
                     <i class="fas fa-gears"></i>
                 </div>
-                <div style="width: 45px; height: 45px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #a0a0a0; font-size: 1.5rem; cursor: pointer;" title="Выйти из комнаты" onclick="openExitModal()">
+                <div class="icon-button" onclick="openExitModal()">
                     <i class="fas fa-arrow-right-from-bracket"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Панель участников (слева) -->
-    <div id="usersPanel" style="display: none; position: fixed; bottom: 80px; left: 20px; width: 280px; background-color: #121628; border: 1px solid #00aaff; border-radius: 15px; padding: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,170,255,0.5);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <h4 style="color: white; margin: 0;"><i class="fas fa-users"></i> Участники</h4>
-            <span style="color: #a0a0a0; font-size: 1.2rem; cursor: pointer;" onclick="closeUsersPanel()"><i class="fas fa-times"></i></span>
-        </div>
-        <div id="usersList" style="max-height: 300px; overflow-y: auto;"></div>
+    <div id="usersPanel" class="floating-panel">
+        <h4>Участники <span onclick="closeUsersPanel()" style="cursor:pointer;">✖</span></h4>
+        <div id="usersList" style="max-height: 250px; overflow-y: auto;"></div>
     </div>
 
-    <!-- Панель настроек (справа) -->
-    <div id="settingsPanel" style="display: none; position: fixed; bottom: 80px; right: 70px; width: 280px; background-color: #121628; border: 1px solid #00aaff; border-radius: 15px; padding: 15px; z-index: 200; box-shadow: 0 0 20px rgba(0,170,255,0.5);">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <h4 style="color: white; margin: 0;"><i class="fas fa-gears"></i> Настройки</h4>
-            <span style="color: #a0a0a0; font-size: 1.2rem; cursor: pointer;" onclick="toggleSettingsPanel()"><i class="fas fa-times"></i></span>
-        </div>
-        <div style="color: white;">
-            <p><i class="fas fa-users"></i> Макс. участников: 5</p>
-            <p><i class="fas fa-calendar"></i> Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
-        </div>
+    <div id="settingsPanel" class="floating-panel right">
+        <h4>Настройки</h4>
+        <p style="color:#a0a0a0; margin:4px 0; font-size:12px;">Макс. участников: 5</p>
+        <p style="color:#a0a0a0; margin:4px 0; font-size:12px;">Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
     </div>
 
-    <!-- Модальное окно выхода -->
-    <div id="exitModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-        <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; text-align: center;">
-            <h3 style="color: white; margin-bottom: 20px;">Выход из комнаты</h3>
-            <p style="color: #a0a0a0; margin-bottom: 30px;">Вы уверены, что хотите покинуть комнату?</p>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="closeExitModal()" style="background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">Нет, остаться</button>
-                <button onclick="exitRoom()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; flex: 1; cursor: pointer;">Да, выйти</button>
+    <div id="exitModal" class="modal">
+        <div class="modal-content">
+            <h3>Выйти из комнаты?</h3>
+            <div class="modal-buttons">
+                <button class="modal-button" onclick="closeExitModal()">Нет</button>
+                <button class="modal-button primary" onclick="exitRoom()">Да</button>
             </div>
         </div>
     </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
-<script>
-    // ==================== ГЛОБАЛЬНЫЙ КУРСОР ====================
-    function getHotspotForCursor(name, size) {
-        // Для всех курсоров — левый верхний угол
-        return { x: 0, y: 0 };
-    }
-
-    function applyCursorFromStorage() {
-        const cursorData = localStorage.getItem('globalCursor');
-        if (!cursorData || !cursorData.startsWith('svg:')) return;
-        
-        const parts = cursorData.split(' ');
-        const name = parts[0].split(':')[1];
-        const targetSize = parseInt(parts[1]) || 32;
-        
-        fetch(`/cursors/${name}.svg`)
-            .then(response => response.text())
-            .then(svgText => {
-                let resizedSvg = svgText
-                    .replace(/width="\d+"/, `width="${targetSize}"`)
-                    .replace(/height="\d+"/, `height="${targetSize}"`);
-                if (!resizedSvg.includes('viewBox')) {
-                    resizedSvg = resizedSvg.replace('<svg', `<svg viewBox="0 0 ${targetSize} ${targetSize}"`);
-                }
-                const blob = new Blob([resizedSvg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                
-                const hotspot = getHotspotForCursor(name, targetSize);
-                
-                let style = document.getElementById('globalCursorStyle');
-                if (!style) {
-                    style = document.createElement('style');
-                    style.id = 'globalCursorStyle';
-                    document.head.appendChild(style);
-                }
-                style.textContent = `* { cursor: url('${url}') ${hotspot.x} ${hotspot.y}, auto !important; }`;
-                
-                setTimeout(() => URL.revokeObjectURL(url), 10000);
-            })
-            .catch(err => console.error('Ошибка загрузки курсора:', err));
-    }
-    
-    applyCursorFromStorage();
-    window.addEventListener('storage', () => applyCursorFromStorage());
-
-    // ==================== ОСТАЛЬНОЙ КОД ====================
-    let editor;
-    const roomId = @roomId;
-
-    function getHotspot(cursorName, size) {
-        return { x: 0, y: 0 };
-    }
-
-    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
-
-    require(['vs/editor/editor.main'], function () {
-        var initialCode = '@(Html.Raw(room.PreviewCode?.Replace("\n", "\\n").Replace("\r", "") ?? ""))';
-        editor = monaco.editor.create(document.getElementById('editor'), {
-            value: initialCode,
-            language: 'python',
-            theme: 'vs-dark',
-            automaticLayout: true,
-            fontSize: 14,
-            minimap: { enabled: false }
-        });
-    });
-
-    // ==================== Чат ====================
-    function loadChatHistory() {
-        fetch(`/api/chat/${roomId}`)
-            .then(response => response.json())
-            .then(messages => {
-                const container = document.getElementById('chatMessages');
-                container.innerHTML = '';
-                messages.forEach(msg => {
-                    const msgDiv = document.createElement('div');
-                    msgDiv.style.marginBottom = '12px';
-                    msgDiv.style.display = 'flex';
-                    msgDiv.style.flexDirection = 'column';
-                    msgDiv.style.alignItems = msg.userName === 'Вы' ? 'flex-end' : 'flex-start';
-                    
-                    const bubble = document.createElement('div');
-                    bubble.style.maxWidth = '80%';
-                    bubble.style.padding = '8px 12px';
-                    bubble.style.borderRadius = '15px';
-                    bubble.style.backgroundColor = msg.userName === 'Вы' ? '#b198b3' : '#86a1b5';
-                    bubble.style.color = msg.userName === 'Вы' ? '#0a0e1c' : 'white';
-                    bubble.style.wordWrap = 'break-word';
-                    
-                    bubble.innerHTML = msg.userName === 'Вы' ? msg.text : `<span style="color: #b198b3; font-weight: bold;">${msg.userName}:</span> ${msg.text}`;
-                    msgDiv.appendChild(bubble);
-                    container.appendChild(msgDiv);
-                });
-                container.scrollTop = container.scrollHeight;
-            });
-    }
-
-    function sendMessage() {
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text) return;
-
-        fetch('/api/chat/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                roomId: roomId,
-                userId: 1,
-                userName: 'Вы',
-                text: text
-            })
-        })
-        .then(response => response.json())
-        .then(() => {
-            input.value = '';
-            input.style.height = 'auto';
-            loadChatHistory();
-        });
-    }
-
-    function sendSticker(sticker) {
-        fetch('/api/chat/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                roomId: roomId,
-                userId: 1,
-                userName: 'Вы',
-                text: sticker
-            })
-        })
-        .then(response => response.json())
-        .then(() => {
-            loadChatHistory();
-        });
-    }
-
-    function toggleStickersPanel() {
-        const panel = document.getElementById('stickersPanel');
-        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
-    }
-
-    const chatInput = document.getElementById('chatInput');
-    if (chatInput) {
-        chatInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-        });
-    }
-
-    // ==================== Участники ====================
-    function toggleUsersPanel() {
-        const panel = document.getElementById('usersPanel');
-        if (panel.style.display === 'none' || panel.style.display === '') {
-            loadUsersList();
-            panel.style.display = 'block';
-        } else {
-            panel.style.display = 'none';
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
+    <script>
+        function showNotification(msg, isError) {
+            const div = document.createElement('div');
+            div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 2500);
         }
-    }
 
-    function closeUsersPanel() {
-        document.getElementById('usersPanel').style.display = 'none';
-    }
+        function copyInviteLink() {
+            const inp = document.getElementById('inviteLink');
+            if (inp) { inp.select(); document.execCommand('copy'); showNotification('Ссылка скопирована'); }
+        }
 
-    function loadUsersList() {
-        fetch(`/api/room/${roomId}/users`)
-            .then(response => response.json())
-            .then(users => {
-                const container = document.getElementById('usersList');
+        function getLanguageFromFileName(name) {
+            const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+            const map = { 'py': 'python', 'js': 'javascript', 'ts': 'typescript', 'html': 'html', 'css': 'css', 'json': 'json', 'md': 'markdown', 'txt': 'text', 'sh': 'bash', 'bash': 'bash' };
+            return map[ext] || 'text';
+        }
+
+        function getFileIcon(name) {
+            if (name.toLowerCase() === 'readme.md') return '<i class="fas fa-book"></i>';
+            const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+            const icons = { 'py': '<i class="fab fa-python"></i>', 'js': '<i class="fab fa-js"></i>', 'html': '<i class="fab fa-html5"></i>', 'css': '<i class="fab fa-css3-alt"></i>', 'json': '<i class="fas fa-brackets-curly"></i>', 'md': '<i class="fas fa-markdown"></i>', 'txt': '<i class="fas fa-file-alt"></i>', 'sh': '<i class="fas fa-terminal"></i>' };
+            return icons[ext] || '<i class="fas fa-file-code"></i>';
+        }
+
+        let editor = null;
+        let currentFileId = null;
+        let openTabs = [];
+        let roomId = @roomId;
+        let isEditorReady = false;
+        let saveTimeout = null;
+
+        async function loadFiles() {
+            try {
+                const res = await fetch(`/api/room/${roomId}/file`);
+                const files = await res.json();
+                const container = document.getElementById('fileTree');
+                if (!container) return;
                 container.innerHTML = '';
-                users.forEach(user => {
-                    const userDiv = document.createElement('div');
-                    userDiv.style.display = 'flex';
-                    userDiv.style.alignItems = 'center';
-                    userDiv.style.marginBottom = '10px';
-                    userDiv.style.gap = '8px';
-                    userDiv.style.cursor = 'pointer';
-                    userDiv.onclick = () => goToProfile(user.name);
-                    userDiv.innerHTML = `
-                        <span style="font-size: 1.2rem;">${user.avatar}</span>
-                        <span style="color: white; font-size: 0.9rem; flex: 1;">${user.name}</span>
-                        <span style="font-size: 1rem;">${user.cursor}</span>
-                        <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(userDiv);
-                });
+                for (const f of files) {
+                    const div = document.createElement('div');
+                    div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
+                    div.innerHTML = `<div class="file-icon">${getFileIcon(f.name)}</div><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${f.name}</span>`;
+                    div.onclick = () => openFile(f.id, f.name);
+                    container.appendChild(div);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function openFile(id, name) {
+            try {
+                const res = await fetch(`/api/room/${roomId}/file/${id}`);
+                if (!res.ok) throw new Error();
+                const file = await res.json();
+                
+                if (!openTabs.some(t => t.id === id)) {
+                    openTabs.push({ id, name, language: getLanguageFromFileName(name) });
+                }
+                currentFileId = id;
+                renderTabs();
+                loadFiles();
+                
+                if (editor && isEditorReady) {
+                    editor.setValue(file.content || '');
+                    monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFileName(name));
+                }
+            } catch(e) { showNotification('Ошибка открытия файла', true); }
+        }
+
+        async function createFile(name) {
+            if (!name) return;
+            const res = await fetch(`/api/room/${roomId}/file`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
             });
-    }
-
-    function goToProfile(name) {
-        alert('Переход к профилю пользователя ' + name);
-        closeUsersPanel();
-    }
-
-    // ==================== Терминал ====================
-    function runCode() {
-        const output = document.getElementById('terminalOutput');
-        const code = editor.getValue();
-        const language = document.getElementById('languageSelect').value;
-        
-        output.innerHTML += `$ Запуск кода (${language})...\n`;
-
-        fetch('/api/terminal/run', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                command: JSON.stringify({
-                    language: language,
-                    code: code
-                })
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.output) {
-                output.innerHTML += data.output + '\n';
-            } else if (data.error) {
-                output.innerHTML += `Ошибка: ${data.error}\n`;
+            if (res.ok) {
+                const newFile = await res.json();
+                await loadFiles();
+                await openFile(newFile.id, newFile.name);
+            } else {
+                showNotification('Ошибка создания файла', true);
             }
-            output.scrollTop = output.scrollHeight;
-        });
-    }
+        }
 
-    function runCommand(command) {
-        const output = document.getElementById('terminalOutput');
-        output.innerHTML += `$ ${command}\n`;
+        function promptNewFile() {
+            let name = prompt('Имя файла (например, script.py, readme.md, file.txt):');
+            if (!name) return;
+            if (!name.includes('.')) name = name + '.txt';
+            createFile(name);
+        }
 
-        fetch('/api/terminal/run', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                command: JSON.stringify({
-                    language: 'bash',
-                    code: command
-                })
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.output) {
-                output.innerHTML += data.output + '\n';
-            } else if (data.error) {
-                output.innerHTML += `Ошибка: ${data.error}\n`;
+        async function saveCurrentFile() {
+            if (!currentFileId || !editor || !isEditorReady) return;
+            const content = editor.getValue();
+            await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+        }
+
+        async function closeTab(fileId) {
+            const index = openTabs.findIndex(t => t.id === fileId);
+            if (index === -1) return;
+            openTabs.splice(index, 1);
+            if (currentFileId === fileId) {
+                if (openTabs.length > 0) {
+                    await openFile(openTabs[0].id, openTabs[0].name);
+                } else {
+                    currentFileId = null;
+                    if (editor && isEditorReady) editor.setValue('');
+                    loadFiles();
+                }
             }
-            output.scrollTop = output.scrollHeight;
-        });
-    }
+            renderTabs();
+        }
 
-    const terminalInput = document.getElementById('terminalInput');
-    if (terminalInput) {
-        terminalInput.addEventListener('keypress', function(e) {
+        function renderTabs() {
+            const container = document.getElementById('tabsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            for (const tab of openTabs) {
+                const tabDiv = document.createElement('div');
+                tabDiv.className = 'tab' + (currentFileId === tab.id ? ' active' : '');
+                tabDiv.innerHTML = `
+                    ${getFileIcon(tab.name)}
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span>
+                    <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>
+                `;
+                tabDiv.onclick = () => openFile(tab.id, tab.name);
+                container.appendChild(tabDiv);
+            }
+        }
+
+        function runCode() {
+            if (!editor || !isEditorReady) return;
+            const code = editor.getValue();
+            const out = document.getElementById('terminalOutput');
+            out.innerHTML += `$ Запуск...\n`;
+            fetch('/api/terminal/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: JSON.stringify({ language: 'python', code }) })
+            }).then(r => r.json()).then(data => {
+                out.innerHTML += (data.output || data.error || '') + '\n';
+                out.scrollTop = out.scrollHeight;
+            });
+        }
+
+        async function loadChatHistory() {
+            try {
+                const res = await fetch(`/api/chat/${roomId}`);
+                const msgs = await res.json();
+                const container = document.getElementById('chatMessages');
+                if (!container) return;
+                container.innerHTML = '';
+                for (const m of msgs) {
+                    const div = document.createElement('div');
+                    div.className = `chat-message ${m.userName === 'Вы' ? 'me' : 'other'}`;
+                    div.innerHTML = m.userName === 'Вы' ? m.text : `<b>${m.userName}:</b> ${m.text}`;
+                    container.appendChild(div);
+                }
+                container.scrollTop = container.scrollHeight;
+            } catch(e) {}
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text })
+            }).then(() => { input.value = ''; loadChatHistory(); });
+        }
+
+        function sendSticker(sticker) {
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text: sticker })
+            }).then(() => loadChatHistory());
+        }
+
+        function toggleStickersPanel() {
+            const p = document.getElementById('stickersPanel');
+            p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        async function toggleUsersPanel() {
+    const panel = document.getElementById('usersPanel');
+    if (panel.style.display === 'none' || !panel.style.display) {
+        const res = await fetch(`/api/room/${roomId}/users`);
+        const users = await res.json();
+        const container = document.getElementById('usersList');
+        container.innerHTML = '';
+        for (const u of users) {
+            const div = document.createElement('div');
+            div.className = 'participant-item';
+            div.onclick = () => showNotification('Профиль ' + u.name);
+            div.innerHTML = `
+                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
+                        ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
+                        : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
+                </div>
+                <span style="flex: 1; color: white; font-size: 0.9rem;">${u.name}</span>
+                <span style="font-size: 1rem;">${u.cursor}</span>
+                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${u.online ? '#00ff00' : '#888'};"></span>
+            `;
+            container.appendChild(div);
+        }
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+        function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
+        function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
+        function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
+        function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
+        function exitRoom() { window.location.href = '/dashboard'; }
+
+        function initEditor() {
+            const container = document.getElementById('editorContainer');
+            if (!container) return;
+            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+                editor = monaco.editor.create(container, {
+                    value: '',
+                    language: 'python',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    fontSize: 12,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false
+                });
+                isEditorReady = true;
+                editor.onDidChangeModelContent(() => {
+                    if (saveTimeout) clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(saveCurrentFile, 1000);
+                });
+                loadFiles();
+            });
+        }
+
+        initEditor();
+        loadChatHistory();
+        setInterval(loadChatHistory, 3000);
+
+        document.getElementById('terminalInput')?.addEventListener('keypress', e => {
             if (e.key === 'Enter') {
-                runCommand(this.value);
-                this.value = '';
+                const cmd = e.target.value;
+                e.target.value = '';
+                const out = document.getElementById('terminalOutput');
+                out.innerHTML += `$ ${cmd}\n`;
+                fetch('/api/terminal/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: JSON.stringify({ language: 'bash', code: cmd }) })
+                }).then(r => r.json()).then(data => {
+                    out.innerHTML += (data.output || data.error || '') + '\n';
+                    out.scrollTop = out.scrollHeight;
+                });
             }
         });
-    }
 
-    // ==================== Разделитель ====================
-    const resizer = document.getElementById('resizer');
-    const terminal = document.getElementById('terminalContainer');
-    const leftPart = document.querySelector('[style*="flex: 1; flex-direction: column;"]');
-    let isResizing = false;
-
-    if (resizer) {
-        resizer.addEventListener('mousedown', function(e) {
-            isResizing = true;
-            document.addEventListener('mousemove', resize);
-            document.addEventListener('mouseup', stopResize);
-        });
-    }
-
-    function resize(e) {
-        if (!isResizing) return;
-        const leftRect = leftPart.getBoundingClientRect();
-        const mouseY = e.clientY;
-        const leftBottom = leftRect.bottom;
-        let newHeight = leftBottom - mouseY;
-        newHeight = Math.max(100, Math.min(400, newHeight));
-        terminal.style.height = newHeight + 'px';
-    }
-
-    function stopResize() {
-        isResizing = false;
-        document.removeEventListener('mousemove', resize);
-        document.removeEventListener('mouseup', stopResize);
-    }
-
-    // ==================== Выход ====================
-    function openExitModal() {
-        document.getElementById('exitModal').style.display = 'flex';
-    }
-
-    function closeExitModal() {
-        document.getElementById('exitModal').style.display = 'none';
-    }
-
-    function exitRoom() {
-        window.location.href = '/dashboard';
-    }
-
-    // ==================== Настройки ====================
-    function toggleSettingsPanel() {
-        const panel = document.getElementById('settingsPanel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-
-    loadChatHistory();
-    setInterval(loadChatHistory, 3000);
-</script>
+        const resizer = document.getElementById('resizer');
+        const terminal = document.getElementById('terminal');
+        let isResizing = false;
+        if (resizer) {
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                document.addEventListener('mousemove', resize);
+                document.addEventListener('mouseup', stopResize);
+            });
+        }
+        function resize(e) {
+            if (!isResizing) return;
+            const rect = document.querySelector('[style*="flex: 1; flex-direction: column;"]')?.getBoundingClientRect();
+            if (!rect) return;
+            let h = rect.bottom - e.clientY;
+            h = Math.max(80, Math.min(300, h));
+            terminal.style.height = h + 'px';
+        }
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+    </script>
 }

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CodeCollabFrontend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260412101606_FixNullableModels")]
-    partial class FixNullableModels
+    [Migration("20260425114528_AddTelegramChatId")]
+    partial class AddTelegramChatId
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,14 +55,16 @@ namespace CodeCollabFrontend.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("InviteToken")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("MaxParticipants")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("OwnerId")
+                    b.Property<int?>("OwnerId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("PreviewCode")
@@ -71,6 +73,31 @@ namespace CodeCollabFrontend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Rooms");
+                });
+
+            modelBuilder.Entity("CodeCollabFrontend.Models.RoomFile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsReadme")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RoomId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoomId");
+
+                    b.ToTable("RoomFiles");
                 });
 
             modelBuilder.Entity("CodeCollabFrontend.Models.RoomParticipant", b =>
@@ -116,6 +143,12 @@ namespace CodeCollabFrontend.Migrations
                     b.Property<string>("Avatar")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CoverUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Cursor")
                         .HasColumnType("TEXT");
 
@@ -133,9 +166,26 @@ namespace CodeCollabFrontend.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SocialLinks")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("TelegramChatId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("CodeCollabFrontend.Models.RoomFile", b =>
+                {
+                    b.HasOne("CodeCollabFrontend.Models.Room", "Room")
+                        .WithMany()
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Room");
                 });
 
             modelBuilder.Entity("CodeCollabFrontend.Models.RoomParticipant", b =>

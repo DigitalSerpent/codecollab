@@ -1,6 +1,7 @@
 @page
 @model RegisterModel
 @{
+    Layout = null;
     ViewData["Title"] = "Регистрация";
 }
 
@@ -8,12 +9,15 @@
     body {
         margin: 0;
         padding: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         overflow: hidden;
+        position: relative;
     }
-
     canvas {
         position: fixed;
         top: 0;
@@ -23,187 +27,157 @@
         z-index: 0;
         pointer-events: none;
     }
-
-    .glass-card {
-    position: relative;
-    z-index: 2;
-    background: rgba(30, 35, 55, 0.8);  /* светлее */
-    backdrop-filter: blur(12px);
-    border-radius: 24px;
-    border: 1px solid rgba(0, 170, 255, 0.3);
-    box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
-    transition: all 0.3s ease;
-    width: 100%;
-    max-width: 420px;
-    padding: 40px;
-    margin: 0 auto;
-}
-
-    .glass-card:hover {
-        border-color: #00aaff;
-        box-shadow: 0 0 40px rgba(0, 170, 255, 0.4);
+    .card {
+        position: relative;
+        z-index: 2;
+        background: rgba(18, 22, 40, 0.85);
+        backdrop-filter: blur(12px);
+        border-radius: 32px;
+        padding: 40px;
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        border: 1px solid rgba(0, 170, 255, 0.4);
+        box-shadow: 0 0 40px rgba(0, 170, 255, 0.2);
     }
-
+    h2 {
+        color: white;
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    .sub {
+        color: #a0a0a0;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
     input {
         width: 100%;
-        padding: 12px;
-        border-radius: 10px;
-        background: rgba(10, 14, 28, 0.8);
+        padding: 14px;
+        background: rgba(10, 14, 28, 0.9);
         border: 1px solid #2a2a4a;
+        border-radius: 16px;
         color: white;
-        transition: all 0.3s ease;
+        font-size: 16px;
+        margin-bottom: 20px;
         box-sizing: border-box;
-        margin-bottom: 16px;
+        transition: 0.2s;
     }
-
     input:focus {
         outline: none;
         border-color: #00aaff;
-        box-shadow: 0 0 10px #00aaff;
+        box-shadow: 0 0 12px #00aaff;
     }
-
     button {
         width: 100%;
-        padding: 12px;
-        border-radius: 10px;
+        padding: 14px;
+        background: #00aaff;
+        border: none;
+        border-radius: 16px;
         font-size: 16px;
         font-weight: bold;
-        cursor: pointer;
-        background: #00aaff;
-        transition: all 0.3s ease;
-        border: none;
-        margin-top: 8px;
-    }
-
-    button:hover {
-        background: #ffffff;
         color: #0a0e1c;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    button:hover {
+        background: white;
         box-shadow: 0 0 20px #00aaff;
     }
-
-    h2 {
-        color: white;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-
-    p {
-        color: #a0a0a0;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-
     .error {
-        background-color: rgba(255, 68, 68, 0.9);
-        color: white;
-        padding: 10px;
-        border-radius: 8px;
+        background: rgba(255, 68, 68, 0.9);
+        padding: 12px;
+        border-radius: 12px;
         margin-bottom: 20px;
-        text-align: center;
+        color: white;
     }
-
     .link {
-        text-align: center;
         margin-top: 20px;
         color: #a0a0a0;
     }
-
     .link a {
         color: #00aaff;
         text-decoration: none;
     }
 </style>
 
-<canvas id="rainCanvas"></canvas>
+<canvas id="registerCanvas"></canvas>
 
-<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-    <div class="glass-card">
-        <h2>Добро пожаловать</h2>
-        <p>Создайте аккаунт</p>
+<div class="card">
+    <h2>Регистрация</h2>
+    <div class="sub">Создайте новый аккаунт</div>
 
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="error">@Model.ErrorMessage</div>
-        }
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="error">@Model.ErrorMessage</div>
+    }
 
-        <form method="post">
-            <input type="text" asp-for="Input.Name" placeholder="Имя">
-            <span asp-validation-for="Input.Name" style="color: #ff8888;"></span>
+    <form method="post">
+        <input type="text" asp-for="Input.Name" placeholder="Имя">
+        <span asp-validation-for="Input.Name" style="color: #ff8888;"></span>
 
-            <input type="email" asp-for="Input.Email" placeholder="Email">
-            <span asp-validation-for="Input.Email" style="color: #ff8888;"></span>
+        <input type="email" asp-for="Input.Email" placeholder="Email">
+        <span asp-validation-for="Input.Email" style="color: #ff8888;"></span>
 
-            <input type="password" asp-for="Input.Password" placeholder="Пароль">
-            <span asp-validation-for="Input.Password" style="color: #ff8888;"></span>
+        <input type="password" asp-for="Input.Password" placeholder="Пароль">
+        <span asp-validation-for="Input.Password" style="color: #ff8888;"></span>
 
-            <input type="password" asp-for="Input.ConfirmPassword" placeholder="Подтвердите пароль">
-            <span asp-validation-for="Input.ConfirmPassword" style="color: #ff8888;"></span>
+        <input type="password" asp-for="Input.ConfirmPassword" placeholder="Подтвердите пароль">
+        <span asp-validation-for="Input.ConfirmPassword" style="color: #ff8888;"></span>
 
-            <button type="submit">Зарегистрироваться</button>
-        </form>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
 
-        <div class="link">
-            Уже есть аккаунт? <a href="/Login">Войти</a>
-        </div>
+    <div class="link">
+        Уже есть аккаунт? <a href="/Login">Войти</a>
     </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('rainCanvas');
+    const canvas = document.getElementById('registerCanvas');
     const ctx = canvas.getContext('2d');
-
-    let drops = [];
-    const DROP_COUNT = 40;
+    let particles = [];
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        createDrops();
+        initParticles();
     }
 
-    function createDrops() {
-    drops = [];
-    for (let i = 0; i < DROP_COUNT; i++) {
-        drops.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            speed: Math.random() * 0.3 + 0.2,  // было 1.5 + 0.8 → стало 0.6 + 0.3
-            radius: Math.random() * 6 + 3,
-            opacity: Math.random() * 0.4 + 0.3
-        });
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: Math.random() * 0.8 + 0.3,
+                opacity: Math.random() * 0.3 + 0.1
+            });
+        }
     }
-}
 
-    function drawRain() {
+    function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        for (let drop of drops) {
-            ctx.save();
+        for (let p of particles) {
             ctx.beginPath();
-            ctx.ellipse(drop.x, drop.y, drop.radius * 0.7, drop.radius, 0, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(0, 170, 255, ${drop.opacity})`;
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 170, 255, ${p.opacity})`;
             ctx.fill();
             
-            ctx.beginPath();
-            ctx.moveTo(drop.x - drop.radius * 0.3, drop.y + drop.radius * 0.5);
-            ctx.quadraticCurveTo(drop.x, drop.y + drop.radius * 1.2, drop.x + drop.radius * 0.3, drop.y + drop.radius * 0.5);
-            ctx.fillStyle = `rgba(0, 170, 255, ${drop.opacity * 0.8})`;
-            ctx.fill();
-            ctx.restore();
-
-            drop.y += drop.speed;
-            drop.x += (Math.random() - 0.5) * 0.5;
+            p.x += p.speedX;
+            p.y += p.speedY;
             
-            if (drop.y > canvas.height + 50) {
-                drop.y = -50;
-                drop.x = Math.random() * canvas.width;
-                drop.radius = Math.random() * 6 + 3;
-                drop.speed = Math.random() * 1.5 + 0.8;
-                drop.opacity = Math.random() * 0.4 + 0.3;
+            if (p.y > canvas.height + 20) {
+                p.y = -20;
+                p.x = Math.random() * canvas.width;
             }
+            if (p.x > canvas.width + 20) p.x = -20;
+            if (p.x < -20) p.x = canvas.width + 20;
         }
-
-        requestAnimationFrame(drawRain);
+        
+        requestAnimationFrame(draw);
     }
 
     window.addEventListener('resize', () => {
@@ -211,5 +185,5 @@
     });
 
     resizeCanvas();
-    drawRain();
+    draw();
 </script>

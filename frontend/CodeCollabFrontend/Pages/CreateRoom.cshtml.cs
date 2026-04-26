@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CodeCollabFrontend.Models;
+using System.Text.Json;
 
 namespace CodeCollabFrontend.Pages;
 
@@ -13,9 +14,6 @@ public class CreateRoomModel : PageModel
         _context = context;
     }
 
-    [BindProperty]
-    public RoomData Input { get; set; } = new();
-
     public class RoomData
     {
         public string Name { get; set; } = "";
@@ -23,46 +21,51 @@ public class CreateRoomModel : PageModel
         public string Rights { get; set; } = "";
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public IActionResult OnPost([FromBody] RoomData data)
     {
-        try
+        if (string.IsNullOrWhiteSpace(data.Name))
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (userId == null)
-            {
-                return StatusCode(401, new { success = false, message = "Вы не авторизованы" });
-            }
-
-            if (string.IsNullOrWhiteSpace(Input.Name))
-            {
-                return BadRequest(new { success = false, message = "Название обязательно" });
-            }
-
-            var room = new Room
-            {
-                Name = Input.Name,
-                CreatedAt = DateTime.Now,
-                MaxParticipants = Input.MaxParticipants,
-                PreviewCode = "// новая комната"
-            };
-
-            _context.Rooms.Add(room);
-            await _context.SaveChangesAsync();
-
-            var participant = new RoomParticipant
-            {
-                RoomId = room.Id,
-                UserId = userId.Value,
-                IsOnline = true
-            };
-            _context.RoomParticipants.Add(participant);
-            await _context.SaveChangesAsync();
-
-            return new JsonResult(new { success = true, roomId = room.Id });
+            return BadRequest("Название обязательно");
         }
-        catch (Exception ex)
+
+        // Получаем ID текущего пользователя из сессии
+        int? userId = HttpContext.Session.GetInt32("UserId");
+        if (userId == null)
         {
-            return StatusCode(500, new { success = false, message = ex.Message });
+            return Unauthorized();  // ✅ теперь без строки
         }
+
+        // Генерируем токен для приглашения
+        string inviteToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+            .Replace("+", "")
+            .Replace("/", "")
+            .Replace("=", "")
+            .Substring(0, 16);
+
+        // Создаём комнату
+        var room = new Room
+        {
+            Name = data.Name,
+            CreatedAt = DateTime.Now,
+            MaxParticipants = data.MaxParticipants,
+            PreviewCode = "// новая комната",
+            InviteToken = inviteToken,
+            OwnerId = userId.Value
+        };
+
+        _context.Rooms.Add(room);
+        _context.SaveChanges();
+
+        // Добавляем создателя как участника
+        var participant = new RoomParticipant
+        {
+            RoomId = room.Id,
+            UserId = userId.Value,
+            IsOnline = true
+        };
+        _context.RoomParticipants.Add(participant);
+        _context.SaveChanges();
+
+        return new JsonResult(new { success = true, roomId = room.Id });
     }
 }

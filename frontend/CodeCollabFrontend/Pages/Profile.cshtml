@@ -1,10 +1,12 @@
-@page
+@page "{handler?}"
+@model CodeCollabFrontend.Pages.ProfileModel
 @{
     Layout = null;
 }
 @using CodeCollabFrontend.Models
 @inject AppDbContext _context
 @using Microsoft.AspNetCore.Http
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Xsrf
 @{
     var userId = HttpContext.Session.GetInt32("UserId");
     if (userId == null)
@@ -19,6 +21,7 @@
         HttpContext.Response.Redirect("/Login");
         return;
     }
+    var antiforgeryToken = Xsrf.GetAndStoreTokens(HttpContext).RequestToken;
 }
 
 <!DOCTYPE html>
@@ -53,13 +56,34 @@
         }
         .profile-container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 40px; }
         .profile-card { background: rgba(10, 14, 28, 0.6); backdrop-filter: blur(12px); border-radius: 32px; border: 1px solid rgba(0, 170, 255, 0.4); box-shadow: 0 0 50px rgba(0, 170, 255, 0.2); overflow: hidden; }
-        .cover { height: 200px; background: linear-gradient(45deg, #00aaff20, #00aaff05); position: relative; cursor: pointer; }
-        .cover-hint { position: absolute; bottom: 10px; right: 20px; color: white; font-size: 12px; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 20px; }
+        .cover {
+            height: 200px;
+            background: linear-gradient(45deg, #00aaff20, #00aaff05);
+            position: relative;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+        }
+        .cover-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            color: white;
+            font-size: 12px;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
         .avatar-wrapper { position: relative; margin-top: -70px; text-align: center; }
-        .avatar { width: 140px; height: 140px; background: #121628; border-radius: 50%; border: 3px solid #00aaff; box-shadow: 0 0 20px #00aaff; display: inline-flex; align-items: center; justify-content: center; font-size: 4.5rem; cursor: pointer; transition: 0.2s; }
+        .avatar {
+            width: 140px; height: 140px; background: #121628; border-radius: 50%; border: 3px solid #00aaff;
+            box-shadow: 0 0 20px #00aaff; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 4.5rem; cursor: pointer; transition: 0.2s; overflow: hidden;
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
         .info { text-align: center; padding: 20px 30px 10px; }
         .name { font-size: 32px; font-weight: bold; color: white; margin-bottom: 8px; }
-        .name input { background: none; border: none; color: white; font-size: 32px; text-align: center; width: 100%; }
+        .name input { background: none; border: none; color: white; font-size: 32px; text-align: center; width: 100%; outline: none; }
         .email { color: #a0a0a0; font-size: 14px; margin-bottom: 10px; }
         .section { padding: 20px 30px; border-top: 1px solid rgba(0, 170, 255, 0.2); }
         .section-title { color: #00aaff; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
@@ -68,14 +92,47 @@
         .social-row input { flex: 1; padding: 10px; background: rgba(10, 14, 28, 0.8); border: 1px solid #2a2a4a; border-radius: 12px; color: white; }
         .social-row button { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 14px; }
         .add-social { background: rgba(0, 170, 255, 0.2); border: 1px dashed #00aaff; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; color: #00aaff; margin-top: 10px; }
+        .cursor-button {
+            background: linear-gradient(135deg, #1e2a3a, #0d1a2a);
+            color: #00aaff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 12px 24px;
+            border: 1px solid #00aaff;
+            border-radius: 12px;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cursor-button:hover {
+            background: #00aaff;
+            color: #0a0e1c;
+            box-shadow: 0 0 15px #00aaff;
+            border-color: #00aaff;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1e2a3a, #0d1a2a);
+            color: #00aaff;
+            border: 1px solid #00aaff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary:hover {
+            background: #00aaff;
+            color: #0a0e1c;
+            box-shadow: 0 0 12px #00aaff;
+        }
         .actions { display: flex; gap: 15px; padding: 20px 30px; }
-        .btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center; }
-        .btn-primary { background: #00aaff; color: #0a0e1c; }
-        .btn-primary:hover { background: white; box-shadow: 0 0 20px #00aaff; }
-        .btn-secondary { background: #1e1e3a; color: white; }
+        .btn-secondary { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; background: #1e1e3a; color: white; text-align: center; }
+        .btn-secondary:hover { background: #2a2a4a; }
+        .footer { text-align: center; padding: 20px; color: #a0a0a0; font-size: 12px; border-top: 1px solid rgba(0,170,255,0.2); }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: #121628; border-radius: 24px; padding: 30px; width: 90%; max-width: 1000px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; }
-        .footer { text-align: center; padding: 20px; color: #a0a0a0; font-size: 12px; border-top: 1px solid rgba(0,170,255,0.2); }
         .cursor-workspace { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
         .preview-area { flex: 1; min-width: 260px; text-align: center; }
         .preview-box { background: #0a0e1c; border-radius: 24px; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; border: 1px solid #00aaff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,170,255,0.2); position: relative; }
@@ -84,8 +141,6 @@
         .controls-area { margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
         .size-control { display: flex; align-items: center; gap: 15px; }
         .size-control input { flex: 1; }
-        .lock-icon { color: #00aaff; cursor: pointer; font-size: 20px; }
-        .premium-message { color: #88ccff; font-size: 12px; margin-top: 5px; display: none; text-align: center; }
         .cursors-grid { flex: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 500px; margin: 0 auto; max-height: 400px; overflow-y: auto; padding: 10px; }
         .cursor-option { background: #1a1e30; border: 1px solid #2a2a4a; border-radius: 16px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; position: relative; }
         .cursor-option:hover, .cursor-option.selected { border-color: #00aaff; box-shadow: 0 0 15px #00aaff; transform: scale(1.05); }
@@ -98,16 +153,27 @@
 </head>
 <body>
 
+<input type="hidden" id="antiforgeryToken" value="@antiforgeryToken" />
+
 <div id="spheresContainer"></div>
 
 <div class="profile-container">
     <div class="profile-card">
-        <div class="cover" onclick="changeCover()">
+        <div id="cover" class="cover" onclick="changeCover()" style="background-image: url('@(string.IsNullOrEmpty(user.CoverUrl) ? "none" : user.CoverUrl)'); background-size: cover; background-position: center;">
             <div class="cover-hint">Нажми, чтобы изменить фон</div>
         </div>
 
         <div class="avatar-wrapper">
-            <div class="avatar" onclick="changeAvatar()">@user.Avatar</div>
+            <div class="avatar" onclick="openAvatarUpload()">
+                @if (!string.IsNullOrEmpty(user.Avatar) && !user.Avatar.StartsWith("👤") && user.Avatar.Contains("/uploads/"))
+                {
+                    <img src="@user.Avatar" alt="avatar">
+                }
+                else
+                {
+                    <span>@user.Avatar</span>
+                }
+            </div>
         </div>
 
         <div class="info">
@@ -128,23 +194,30 @@
         </div>
 
         <div class="section">
-            <button class="btn btn-primary" onclick="openCursorModal()">Конструктор курсора</button>
+            <button class="cursor-button" onclick="openCursorModal()">КОНСТРУКТОР КУРСОРА</button>
         </div>
 
         <div class="actions">
-            <button class="btn btn-secondary" onclick="window.location.href='/Dashboard'">Назад</button>
+            <button class="btn-secondary" onclick="window.location.href='/Dashboard'">Назад</button>
         </div>
 
         <div class="footer">
-            📅 Дата регистрации: 01.03.2026
+            📅 Дата регистрации: @user.CreatedAt.ToString("dd.MM.yyyy")
         </div>
     </div>
 </div>
 
+<form id="avatarForm" method="post" enctype="multipart/form-data" style="display: none;">
+    <input type="file" id="avatarFileInput" name="avatarFile" accept="image/jpeg,image/png,image/gif,image.webp" />
+</form>
+
+<form id="coverForm" method="post" enctype="multipart/form-data" style="display: none;">
+    <input type="file" id="coverFileInput" name="coverFile" accept="image/jpeg,image/png,image/gif,image.webp" />
+</form>
+
 <div id="cursorModal" class="modal">
     <div class="modal-content">
         <h3 style="color: white; margin-bottom: 20px; text-align: center;">Конструктор курсора</h3>
-        
         <div class="cursor-workspace">
             <div class="preview-area">
                 <div class="preview-box">
@@ -158,13 +231,11 @@
                     </div>
                 </div>
             </div>
-
             <div class="cursors-grid" id="cursorGrid"></div>
         </div>
-
         <div style="display: flex; justify-content: space-between; gap: 15px; margin-top: 30px;">
-            <button class="btn btn-primary" onclick="applyCursor()">Применить</button>
-            <button class="btn btn-secondary" onclick="closeCursorModal()">Отмена</button>
+            <button class="btn-primary" onclick="applyCursor()">ПРИМЕНИТЬ</button>
+            <button class="btn-secondary" onclick="closeCursorModal()">ОТМЕНА</button>
         </div>
     </div>
 </div>
@@ -191,6 +262,7 @@
                 const type = e.target.getAttribute('data-type');
                 if (type === 'name') socialFields[idx].name = e.target.value;
                 else socialFields[idx].url = e.target.value;
+                saveSocials();
             });
         });
     }
@@ -203,6 +275,19 @@
     function removeSocialField(index) {
         socialFields.splice(index, 1);
         renderSocials();
+        saveSocials();
+    }
+
+    function saveSocials() {
+        const token = document.getElementById('antiforgeryToken').value;
+        fetch('/Profile/UpdateSocials', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ socials: socialFields })
+        });
     }
 
     function loadSocials() {
@@ -215,20 +300,72 @@
             .catch(() => {});
     }
 
+    // Автосохранение имени с токеном
+    document.getElementById('userName').addEventListener('blur', function() {
+        const token = document.getElementById('antiforgeryToken').value;
+        fetch('/Profile/UpdateName', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({ name: this.value })
+        });
+    });
+
+    function openAvatarUpload() {
+        const input = document.getElementById('avatarFileInput');
+        input.onchange = function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const formData = new FormData();
+                formData.append('avatarFile', e.target.files[0]);
+                const token = document.getElementById('antiforgeryToken').value;
+                fetch('/Profile/UploadAvatar', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'RequestVerificationToken': token }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else showToast(data.message || 'Ошибка загрузки', 'error');
+                })
+                .catch(() => showToast('Ошибка загрузки', 'error'));
+            }
+        };
+        input.click();
+    }
+
+    function changeCover() {
+        const input = document.getElementById('coverFileInput');
+        input.onchange = function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const formData = new FormData();
+                formData.append('coverFile', e.target.files[0]);
+                const token = document.getElementById('antiforgeryToken').value;
+                fetch('/Profile/UploadCover', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'RequestVerificationToken': token }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                    else showToast(data.message || 'Ошибка загрузки', 'error');
+                })
+                .catch(() => showToast('Ошибка загрузки', 'error'));
+            }
+        };
+        input.click();
+    }
+
     // ========== КУРСОРЫ ==========
-    const freeCursors = [
-        "o", "default", "handopen", "handpointing", "resizenorth", "resizenorthwest", "textcursor"
-    ];
-    
-    const premiumCursors = [
-        "tr", "y", "e", "t", "ee", "g", "fk", "ct", "p", "u", "i"
-    ];
-    
+    const freeCursors = ["o", "default", "handopen", "handpointing", "resizenorth", "resizenorthwest", "textcursor"];
+    const premiumCursors = ["tr", "y", "e", "t", "ee", "g", "fk", "ct", "p", "u", "i"];
     let allCursors = [
         ...freeCursors.map(name => ({ type: 'svg', name: name, premium: false })),
         ...premiumCursors.map(name => ({ type: 'svg', name: name, premium: true }))
     ];
-    
     let selectedCursor = allCursors[0];
 
     function renderCursors() {
@@ -284,12 +421,10 @@
     function applyCursorFromStorage() {
         const cursorData = localStorage.getItem('globalCursor');
         if (!cursorData || !cursorData.startsWith('svg:')) return;
-        
         const parts = cursorData.split(' ');
         const name = parts[0].split(':')[1];
         let targetSize = parseInt(parts[1]) || 32;
         targetSize = Math.min(targetSize, 128);
-        
         fetch(`/cursors/${name}.svg`)
             .then(response => response.text())
             .then(svgText => {
@@ -301,7 +436,6 @@
                 }
                 const blob = new Blob([resizedSvg], { type: 'image/svg+xml' });
                 const url = URL.createObjectURL(blob);
-                
                 let style = document.getElementById('globalCursorStyle');
                 if (!style) {
                     style = document.createElement('style');
@@ -318,49 +452,34 @@
         const size = parseInt(document.getElementById('cursorSize').value);
         saveCursorToLocalStorage(selectedCursor.name, size);
         applyCursorFromStorage();
-        showToast(' Курсор применён!', 'success');
+        showToast('✓ Курсор применён', 'success');
         closeCursorModal();
     }
 
-    function showToast(message, type = 'info') {
+    function showToast(message, type) {
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.textContent = message;
-        if (type === 'premium') toast.style.borderLeftColor = '#88ccff';
         if (type === 'success') toast.style.borderLeftColor = '#00ff00';
         if (type === 'error') toast.style.borderLeftColor = '#ff0000';
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
 
-    function changeAvatar() {
-        const newAvatar = prompt('Введите новый аватар (эмодзи):', document.querySelector('.avatar').innerText);
-        if (newAvatar && newAvatar.length <= 2) {
-            document.querySelector('.avatar').innerText = newAvatar;
-        }
-    }
-
-    function changeCover() {
-        alert('Здесь будет выбор фона шапки (скоро)');
-    }
-
     function createSpheres() {
         const container = document.getElementById('spheresContainer');
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
             const sphere = document.createElement('div');
             sphere.className = 'sphere';
             sphere.style.left = Math.random() * 100 + '%';
-            sphere.style.width = sphere.style.height = (40 + Math.random() * 60) + 'px';
+            sphere.style.width = sphere.style.height = (40 + Math.random() * 80) + 'px';
             sphere.style.animationDelay = Math.random() * 20 + 's';
-            sphere.style.animationDuration = 15 + Math.random() * 15 + 's';
+            sphere.style.animationDuration = 15 + Math.random() * 20 + 's';
             container.appendChild(sphere);
         }
     }
 
-    // Вызываем при загрузке
     applyCursorFromStorage();
-    
-    // Слушаем изменения в localStorage
     window.addEventListener('storage', function(e) {
         if (e.key === 'globalCursor') {
             applyCursorFromStorage();

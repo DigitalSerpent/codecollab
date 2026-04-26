@@ -10,16 +10,21 @@ public class User
     [StringLength(50)]
     public string Name { get; set; } = "";
     
-    [Required(ErrorMessage = "Email обязателен")]
     [EmailAddress(ErrorMessage = "Некорректный email")]
-    public string Email { get; set; } = "";
+    public string? Email { get; set; }
     
-    [Required(ErrorMessage = "Пароль обязателен")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "Пароль должен быть от 6 до 100 символов")]
-    public string PasswordHash { get; set; } = "";
+    public string? PasswordHash { get; set; }
+    
+    public string? TelegramUsername { get; set; }
+    public long? TelegramChatId { get; set; }
+    public string? ConfirmationCode { get; set; }
+    public bool IsConfirmed { get; set; } = false;
     
     public string? Avatar { get; set; } = "👤";
     public string? Cursor { get; set; } = "⬤";
+    public string? SocialLinks { get; set; }
+    public string? CoverUrl { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
     
     public ICollection<RoomParticipant>? RoomParticipants { get; set; }
 }
