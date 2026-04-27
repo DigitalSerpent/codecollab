@@ -119,20 +119,27 @@ else
             <!-- ЦЕНТР -->
             <div style="display: flex; flex: 1; flex-direction: column; min-width: 0;">
 
-                <div id="tabsContainer" class="tabs-container"></div>
-
-                <!-- Кнопка Run -->
-                <div style="display: flex; justify-content: flex-end; padding: 8px; background-color: #0d0d1a; border-bottom: 1px solid #00aaff;">
-                    <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 5px 15px; cursor: pointer;">▶ Run</button>
+                <!-- Верхняя панель: вкладки + язык + Run -->
+                <div style="display: flex; align-items: center; justify-content: space-between; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; padding: 4px 8px;">
+                    <div id="tabsContainer" class="tabs-container" style="flex: 1; min-width: 0;"></div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 8px;">
+                        <select id="languageSelect" class="language-select">
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="bash">Bash</option>
+                        </select>
+                        <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;">▶ Run</button>
+                    </div>
                 </div>
 
                 <div id="editorContainer" style="flex: 1; background-color: #0d0d1a; min-height: 0;"></div>
 
                 <div id="resizer" class="resizer"></div>
 
-                <div id="terminal" class="terminal" style="height: 120px; flex-shrink: 0;">
+                <div id="terminal" class="terminal" style="height: 150px; flex-shrink: 0;">
                     <div class="terminal-header">
                         <span>Терминал</span>
+                        <button onclick="toggleTerminal()" style="background: none; border: none; color: #ccc; margin-left: auto; cursor: pointer;">▲ Свернуть</button>
                     </div>
                     <div id="terminalOutput" class="terminal-output"></div>
                     <div class="terminal-input-line">
@@ -344,12 +351,13 @@ else
         function runCode() {
             if (!editor || !isEditorReady) return;
             const code = editor.getValue();
+            const lang = document.getElementById('languageSelect').value;
             const out = document.getElementById('terminalOutput');
-            out.innerHTML += `$ Запуск...\n`;
+            out.innerHTML += `$ Запуск (${lang})...\n`;
             fetch('/api/terminal/run', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: JSON.stringify({ language: 'python', code }) })
+                body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
             }).then(r => r.json()).then(data => {
                 out.innerHTML += (data.output || data.error || '') + '\n';
                 out.scrollTop = out.scrollHeight;
@@ -398,33 +406,33 @@ else
         }
 
         async function toggleUsersPanel() {
-    const panel = document.getElementById('usersPanel');
-    if (panel.style.display === 'none' || !panel.style.display) {
-        const res = await fetch(`/api/room/${roomId}/users`);
-        const users = await res.json();
-        const container = document.getElementById('usersList');
-        container.innerHTML = '';
-        for (const u of users) {
-            const div = document.createElement('div');
-            div.className = 'participant-item';
-            div.onclick = () => showNotification('Профиль ' + u.name);
-            div.innerHTML = `
-                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                        ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                        : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                </div>
-                <span style="flex: 1; color: white; font-size: 0.9rem;">${u.name}</span>
-                <span style="font-size: 1rem;">${u.cursor}</span>
-                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-            `;
-            container.appendChild(div);
+            const panel = document.getElementById('usersPanel');
+            if (panel.style.display === 'none' || !panel.style.display) {
+                const res = await fetch(`/api/room/${roomId}/users`);
+                const users = await res.json();
+                const container = document.getElementById('usersList');
+                container.innerHTML = '';
+                for (const u of users) {
+                    const div = document.createElement('div');
+                    div.className = 'participant-item';
+                    div.onclick = () => showNotification('Профиль ' + u.name);
+                    div.innerHTML = `
+                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
+                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
+                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
+                        </div>
+                        <span class="participant-name">${u.name}</span>
+                        <span class="participant-cursor">${u.cursor}</span>
+                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
+                    `;
+                    container.appendChild(div);
+                }
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
         }
-        panel.style.display = 'block';
-    } else {
-        panel.style.display = 'none';
-    }
-}
 
         function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
         function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
@@ -453,6 +461,18 @@ else
                 });
                 loadFiles();
             });
+        }
+
+        function toggleTerminal() {
+            const term = document.getElementById('terminal');
+            const btn = term.querySelector('.terminal-header button');
+            if (term.style.height === '30px') {
+                term.style.height = '150px';
+                btn.innerHTML = '▲ Свернуть';
+            } else {
+                term.style.height = '30px';
+                btn.innerHTML = '▼ Развернуть';
+            }
         }
 
         initEditor();
@@ -491,7 +511,7 @@ else
             const rect = document.querySelector('[style*="flex: 1; flex-direction: column;"]')?.getBoundingClientRect();
             if (!rect) return;
             let h = rect.bottom - e.clientY;
-            h = Math.max(80, Math.min(300, h));
+            h = Math.max(30, Math.min(500, h));
             terminal.style.height = h + 'px';
         }
         function stopResize() {
