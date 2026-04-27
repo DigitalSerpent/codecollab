@@ -79,7 +79,7 @@ else
         .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
         .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
         
-        .floating-panel { display: none; position: fixed; bottom: 70px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
+        .floating-panel { display: none; position: fixed; bottom: 80px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
         .floating-panel.right { left: auto; right: 80px; }
         .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
@@ -119,7 +119,6 @@ else
             <!-- ЦЕНТР -->
             <div style="display: flex; flex: 1; flex-direction: column; min-width: 0;">
 
-                <!-- Верхняя панель: вкладки + язык + Run -->
                 <div style="display: flex; align-items: center; justify-content: space-between; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; padding: 4px 8px;">
                     <div id="tabsContainer" class="tabs-container" style="flex: 1; min-width: 0;"></div>
                     <div style="display: flex; align-items: center; gap: 8px; margin-left: 8px;">
@@ -299,7 +298,7 @@ else
         }
 
         function promptNewFile() {
-            let name = prompt('Имя файла (например, script.py, readme.md, file.txt):');
+            let name = prompt('✏️ Введите имя файла (например, script.py, main.js, readme.md):');
             if (!name) return;
             if (!name.includes('.')) name = name + '.txt';
             createFile(name);
