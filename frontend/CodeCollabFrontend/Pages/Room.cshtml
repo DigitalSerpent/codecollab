@@ -298,11 +298,54 @@ else
         }
 
         function promptNewFile() {
-            let name = prompt('✏️ Введите имя файла (например, script.py, main.js, readme.md):');
-            if (!name) return;
-            if (!name.includes('.')) name = name + '.txt';
+    // Создаём модальное окно
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    modal.style.zIndex = '10000';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    
+    modal.innerHTML = `
+        <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
+            <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создать файл</h3>
+            <input type="text" id="newFileName" placeholder="main.py" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px;">
+                <button id="cancelBtn" style="flex:1; background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Отмена</button>
+                <button id="createBtn" style="flex:1; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Создать</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Фокус на поле ввода
+    setTimeout(() => document.getElementById('newFileName').focus(), 100);
+    
+    // Обработчики
+    document.getElementById('createBtn').onclick = () => {
+        let name = document.getElementById('newFileName').value.trim();
+        if (name) {
+            if (!name.includes('.')) name += '.txt';
             createFile(name);
+        } else {
+            showNotification('Введите имя файла', 'error');
         }
+        modal.remove();
+    };
+    
+    document.getElementById('cancelBtn').onclick = () => modal.remove();
+    
+    // Закрыть по Escape
+    modal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') modal.remove();
+    });
+}
 
         async function saveCurrentFile() {
             if (!currentFileId || !editor || !isEditorReady) return;
