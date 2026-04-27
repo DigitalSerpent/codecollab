@@ -22,6 +22,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=codecollab.db"));
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddHttpClient<ApiService>();
 builder.Services.AddScoped<ApiService>();
 builder.Services.AddScoped<EmailService>();
@@ -49,4 +50,5 @@ app.MapRazorPages().WithStaticAssets();
 app.MapControllers();
 app.UseSession();
 app.UseStatusCodePagesWithReExecute("/Error404");
+app.MapHub<RoomHub>("/roomHub");
 app.Run();

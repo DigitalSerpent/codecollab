@@ -211,7 +211,11 @@ else
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
+        // ========== SignalR ==========
+        let connection = null;
+        
         function showNotification(msg, isError) {
             const div = document.createElement('div');
             div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
@@ -298,54 +302,48 @@ else
         }
 
         function promptNewFile() {
-    // Создаём модальное окно
-    const modal = document.createElement('div');
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    modal.style.zIndex = '10000';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    
-    modal.innerHTML = `
-        <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
-            <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создать файл</h3>
-            <input type="text" id="newFileName" placeholder="main.py" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; margin-bottom: 20px;">
-            <div style="display: flex; gap: 10px;">
-                <button id="cancelBtn" style="flex:1; background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Отмена</button>
-                <button id="createBtn" style="flex:1; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Создать</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Фокус на поле ввода
-    setTimeout(() => document.getElementById('newFileName').focus(), 100);
-    
-    // Обработчики
-    document.getElementById('createBtn').onclick = () => {
-        let name = document.getElementById('newFileName').value.trim();
-        if (name) {
-            if (!name.includes('.')) name += '.txt';
-            createFile(name);
-        } else {
-            showNotification('Введите имя файла', 'error');
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            modal.style.zIndex = '10000';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            
+            modal.innerHTML = `
+                <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
+                    <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создать файл</h3>
+                    <input type="text" id="newFileName" placeholder="main.py" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px;">
+                        <button id="cancelBtn" style="flex:1; background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Отмена</button>
+                        <button id="createBtn" style="flex:1; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Создать</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            setTimeout(() => document.getElementById('newFileName').focus(), 100);
+            
+            document.getElementById('createBtn').onclick = () => {
+                let name = document.getElementById('newFileName').value.trim();
+                if (name) {
+                    if (!name.includes('.')) name += '.txt';
+                    createFile(name);
+                } else {
+                    showNotification('Введите имя файла', 'error');
+                }
+                modal.remove();
+            };
+            
+            document.getElementById('cancelBtn').onclick = () => modal.remove();
+            modal.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') modal.remove();
+            });
         }
-        modal.remove();
-    };
-    
-    document.getElementById('cancelBtn').onclick = () => modal.remove();
-    
-    // Закрыть по Escape
-    modal.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') modal.remove();
-    });
-}
 
         async function saveCurrentFile() {
             if (!currentFileId || !editor || !isEditorReady) return;
@@ -561,5 +559,54 @@ else
             document.removeEventListener('mousemove', resize);
             document.removeEventListener('mouseup', stopResize);
         }
+
+        // ========== SignalR инициализация ==========
+        async function initSignalR() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/roomHub")
+                .build();
+
+            connection.on("ParticipantList", (participants) => {
+                const container = document.getElementById('usersList');
+                if (!container) return;
+                container.innerHTML = '';
+                participants.forEach(u => {
+                    const div = document.createElement('div');
+                    div.className = 'participant-item';
+                    div.onclick = () => showNotification('Профиль ' + u.name);
+                    div.innerHTML = `
+                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
+                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
+                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
+                        </div>
+                        <span class="participant-name">${u.name}</span>
+                        <span class="participant-cursor">${u.cursor}</span>
+                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+
+            connection.on("UserMessage", (msg) => {
+                const out = document.getElementById('terminalOutput');
+                if (out) out.innerHTML += `${msg}\n`;
+            });
+
+            try {
+                await connection.start();
+                const userId = @userId ?? 0;
+                const userName = "@(currentUser?.Name ?? "Гость")";
+                const avatar = "@(currentUser?.Avatar ?? "👤")";
+                const cursor = "@(currentUser?.Cursor ?? "⬤")";
+                if (userId && roomId) {
+                    await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
+                }
+            } catch (err) {
+                console.error("SignalR error:", err);
+            }
+        }
+
+        initSignalR();
     </script>
 }
