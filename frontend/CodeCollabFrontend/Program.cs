@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using CodeCollabFrontend.Models;
 using CodeCollabFrontend.Services;
 using Microsoft.AspNetCore.Http.Features;
+using CodeCollabFrontend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 

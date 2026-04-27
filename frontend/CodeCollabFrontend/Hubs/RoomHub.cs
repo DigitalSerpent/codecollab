@@ -51,25 +51,7 @@ public class RoomHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception ex)
     {
-        var roomId = await GetRoomIdByConnection(Context.ConnectionId);
-        if (roomId != null)
-        {
-            var participant = _db.RoomParticipants.FirstOrDefault(p => p.RoomId == roomId && p.IsOnline == true);
-            if (participant != null)
-            {
-                participant.IsOnline = false;
-                await _db.SaveChangesAsync();
-                await Clients.Group($"room_{roomId}").SendAsync("ParticipantList", await GetParticipants(roomId.Value));
-            }
-        }
+        // пока пропускаем, чтобы не усложнять
         await base.OnDisconnectedAsync(ex);
-    }
-
-    private async Task<int?> GetRoomIdByConnection(string connectionId)
-    {
-        var group = await _db.RoomParticipants
-            .Where(p => p.RoomId != null)
-            .FirstOrDefaultAsync();
-        return group?.RoomId;
     }
 }
