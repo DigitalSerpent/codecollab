@@ -48,10 +48,4 @@ public class RoomHub : Hub
             })
             .ToListAsync<object>();
     }
-
-    public override async Task OnDisconnectedAsync(Exception ex)
-    {
-        // пока пропускаем, чтобы не усложнять
-        await base.OnDisconnectedAsync(ex);
-    }
 }
