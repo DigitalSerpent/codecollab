@@ -13,27 +13,39 @@ public class RoomHub : Hub
         _db = db;
     }
 
-    public async Task JoinRoom(string roomId, int userId, string userName, string avatar, string cursor)
+    public async Task JoinRoom(int roomId, int userId, string userName, string avatar, string cursor)
     {
         var participant = await _db.RoomParticipants
-            .FirstOrDefaultAsync(p => p.RoomId.ToString() == roomId && p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.RoomId == roomId && p.UserId == userId);
 
         if (participant == null)
         {
             participant = new RoomParticipant
             {
-                RoomId = int.Parse(roomId),
+                RoomId = roomId,
                 UserId = userId,
-                IsOnline = true
+                IsOnline = true,
+                UserName = userName,
+                Avatar = avatar,
+                Cursor = cursor,
+                LastSeen = DateTime.UtcNow,
+                ConnectionId = Context.ConnectionId
             };
             _db.RoomParticipants.Add(participant);
         }
-
-        participant.IsOnline = true;
-        participant.ConnectionId = Context.ConnectionId;
+        else
+        {
+            participant.IsOnline = true;
+            participant.UserName = userName;
+            participant.Avatar = avatar;
+            participant.Cursor = cursor;
+            participant.LastSeen = DateTime.UtcNow;
+            participant.ConnectionId = Context.ConnectionId;
+            _db.RoomParticipants.Update(participant);
+        }
 
         await _db.SaveChangesAsync();
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
 
         await SendParticipantList(roomId);
     }
@@ -47,26 +59,26 @@ public class RoomHub : Hub
         {
             participant.IsOnline = false;
             await _db.SaveChangesAsync();
-            await SendParticipantList(participant.RoomId.ToString());
+            await SendParticipantList(participant.RoomId);
         }
 
         await base.OnDisconnectedAsync(exception);
     }
 
-    private async Task SendParticipantList(string roomId)
+    private async Task SendParticipantList(int roomId)
     {
-        var list = await _db.RoomParticipants
-            .Where(p => p.RoomId.ToString() == roomId && p.IsOnline)
-            .Include(p => p.User)
+        var participants = await _db.RoomParticipants
+            .Where(p => p.RoomId == roomId && p.IsOnline)
             .Select(p => new
             {
-                id = p.UserId,
-                name = p.User.Name,
-                avatar = p.User.Avatar,
-                cursor = p.User.Cursor
+                p.UserId,
+                name = p.UserName,
+                avatar = p.Avatar,
+                cursor = p.Cursor,
+                online = p.IsOnline
             })
             .ToListAsync();
 
-        await Clients.Group(roomId).SendAsync("ParticipantList", list);
+        await Clients.Group(roomId.ToString()).SendAsync("ParticipantList", participants);
     }
 }
