@@ -17,10 +17,18 @@ public class RoomHub : Hub
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"room_{roomId}");
 
-        var participant = _db.RoomParticipants.FirstOrDefault(p => p.RoomId == roomId && p.UserId == userId);
+        var participant = await _db.RoomParticipants
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.RoomId == roomId && p.UserId == userId);
+
         if (participant == null)
         {
-            participant = new RoomParticipant { RoomId = roomId, UserId = userId, IsOnline = true };
+            participant = new RoomParticipant 
+            { 
+                RoomId = roomId, 
+                UserId = userId, 
+                IsOnline = true 
+            };
             _db.RoomParticipants.Add(participant);
         }
         else
@@ -29,6 +37,16 @@ public class RoomHub : Hub
         }
         await _db.SaveChangesAsync();
 
+        // Обновляем данные пользователя в любом случае
+        var user = await _db.Users.FindAsync(userId);
+        if (user != null)
+        {
+            user.Name = userName;
+            user.Avatar = avatar;
+            user.Cursor = cursor;
+            await _db.SaveChangesAsync();
+        }
+
         await Clients.Group($"room_{roomId}").SendAsync("ParticipantList", await GetParticipants(roomId));
         await Clients.Group($"room_{roomId}").SendAsync("UserMessage", $"{userName} вошёл в комнату");
     }
@@ -36,7 +54,7 @@ public class RoomHub : Hub
     private async Task<List<object>> GetParticipants(int roomId)
     {
         return await _db.RoomParticipants
-            .Where(p => p.RoomId == roomId)
+            .Where(p => p.RoomId == roomId && p.IsOnline == true)
             .Include(p => p.User)
             .Select(p => new
             {
