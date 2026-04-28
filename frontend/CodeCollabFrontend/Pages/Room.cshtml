@@ -214,8 +214,51 @@ else
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
         // ========== SignalR ==========
-        let connection = null;
-        
+        const roomId = @roomId;
+        const userId = @(userId ?? 0);
+        const userName = "@(currentUser?.Name ?? "Гость")";
+        const avatar = "@(currentUser?.Avatar ?? "👤")";
+        const cursor = "@(currentUser?.Cursor ?? "⬤")";
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/roomHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ParticipantList", (participants) => {
+            const container = document.getElementById("usersList");
+            if (!container) return;
+            container.innerHTML = "";
+            participants.forEach(p => {
+                const div = document.createElement("div");
+                div.className = "participant-item";
+                div.innerHTML = `
+                    <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        ${(!p.avatar || p.avatar.startsWith('👤') || !p.avatar.includes('/uploads/')) 
+                            ? `<span style="font-size: 1rem;">${p.avatar || '👤'}</span>` 
+                            : `<img src="${p.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
+                    </div>
+                    <span class="participant-name">${p.name}</span>
+                    <span class="participant-cursor">${p.cursor}</span>
+                `;
+                container.appendChild(div);
+            });
+        });
+
+        async function startSignalR() {
+            try {
+                await connection.start();
+                console.log("SignalR connected");
+                await connection.invoke("JoinRoom", roomId.toString(), userId, userName, avatar, cursor);
+            } catch (err) {
+                console.error(err);
+                setTimeout(startSignalR, 5000);
+            }
+        }
+
+        startSignalR();
+
+        // ========== Остальные функции ==========
         function showNotification(msg, isError) {
             const div = document.createElement('div');
             div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
@@ -244,7 +287,6 @@ else
         let editor = null;
         let currentFileId = null;
         let openTabs = [];
-        let roomId = @roomId;
         let isEditorReady = false;
         let saveTimeout = null;
 
@@ -448,26 +490,6 @@ else
         async function toggleUsersPanel() {
             const panel = document.getElementById('usersPanel');
             if (panel.style.display === 'none' || !panel.style.display) {
-                const res = await fetch(`/api/room/${roomId}/users`);
-                const users = await res.json();
-                const container = document.getElementById('usersList');
-                container.innerHTML = '';
-                for (const u of users) {
-                    const div = document.createElement('div');
-                    div.className = 'participant-item';
-                    div.onclick = () => showNotification('Профиль ' + u.name);
-                    div.innerHTML = `
-                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                        </div>
-                        <span class="participant-name">${u.name}</span>
-                        <span class="participant-cursor">${u.cursor}</span>
-                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(div);
-                }
                 panel.style.display = 'block';
             } else {
                 panel.style.display = 'none';
@@ -559,76 +581,5 @@ else
             document.removeEventListener('mousemove', resize);
             document.removeEventListener('mouseup', stopResize);
         }
-
-        // ========== SignalR инициализация ==========
-        async function initSignalR() {
-    connection = new signalR.HubConnectionBuilder()
-        .withUrl("/roomHub")
-        .build();
-
-    connection.on("ParticipantList", (participants) => {
-        const container = document.getElementById('usersList');
-        if (!container) return;
-        container.innerHTML = '';
-        participants.forEach(u => {
-            const div = document.createElement('div');
-            div.className = 'participant-item';
-            div.onclick = () => showNotification('Профиль ' + u.name);
-            div.innerHTML = `
-                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                        ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                        : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                </div>
-                <span class="participant-name">${u.name}</span>
-                <span class="participant-cursor">${u.cursor}</span>
-                <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-            `;
-            container.appendChild(div);
-        });
-    });
-
-    connection.on("UserMessage", (msg) => {
-        const out = document.getElementById('terminalOutput');
-        if (out) out.innerHTML += `${msg}\n`;
-    });
-
-    try {
-        await connection.start();
-        
-        const userId = @(userId ?? 0);
-        const roomId = @roomId;
-        const userName = "@(currentUser?.Name ?? "Гость")";
-        const avatar = "@(currentUser?.Avatar ?? "👤")";
-        const cursor = "@(currentUser?.Cursor ?? "⬤")";
-        
-        if (userId && roomId) {
-            await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-        }
-    } catch (err) {
-        console.error("SignalR error:", err);
-    }
-}
-
-            connection.on("UserMessage", (msg) => {
-                const out = document.getElementById('terminalOutput');
-                if (out) out.innerHTML += `${msg}\n`;
-            });
-
-            try {
-                await connection.start();
-                const userId = @userId ?? 0;
-                const userName = "@(currentUser?.Name ?? "Гость")";
-                const avatar = "@(currentUser?.Avatar ?? "👤")";
-                const cursor = "@(currentUser?.Cursor ?? "⬤")";
-                if (userId && roomId) {
-                    await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-                }
-            } catch (err) {
-                console.error("SignalR error:", err);
-            }
-        }
-
-        initSignalR();
     </script>
 }

@@ -13,57 +13,60 @@ public class RoomHub : Hub
         _db = db;
     }
 
-    public async Task JoinRoom(int roomId, int userId, string userName, string avatar, string cursor)
+    public async Task JoinRoom(string roomId, int userId, string userName, string avatar, string cursor)
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"room_{roomId}");
-
         var participant = await _db.RoomParticipants
-            .Include(p => p.User)
-            .FirstOrDefaultAsync(p => p.RoomId == roomId && p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.RoomId.ToString() == roomId && p.UserId == userId);
 
         if (participant == null)
         {
-            participant = new RoomParticipant 
-            { 
-                RoomId = roomId, 
-                UserId = userId, 
-                IsOnline = true 
+            participant = new RoomParticipant
+            {
+                RoomId = int.Parse(roomId),
+                UserId = userId,
+                IsOnline = true
             };
             _db.RoomParticipants.Add(participant);
         }
-        else
-        {
-            participant.IsOnline = true;
-        }
+
+        participant.IsOnline = true;
+        participant.ConnectionId = Context.ConnectionId;
+
         await _db.SaveChangesAsync();
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
-        // Обновляем данные пользователя в любом случае
-        var user = await _db.Users.FindAsync(userId);
-        if (user != null)
-        {
-            user.Name = userName;
-            user.Avatar = avatar;
-            user.Cursor = cursor;
-            await _db.SaveChangesAsync();
-        }
-
-        await Clients.Group($"room_{roomId}").SendAsync("ParticipantList", await GetParticipants(roomId));
-        await Clients.Group($"room_{roomId}").SendAsync("UserMessage", $"{userName} вошёл в комнату");
+        await SendParticipantList(roomId);
     }
 
-    private async Task<List<object>> GetParticipants(int roomId)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        return await _db.RoomParticipants
-            .Where(p => p.RoomId == roomId && p.IsOnline == true)
+        var participant = await _db.RoomParticipants
+            .FirstOrDefaultAsync(p => p.ConnectionId == Context.ConnectionId);
+
+        if (participant != null)
+        {
+            participant.IsOnline = false;
+            await _db.SaveChangesAsync();
+            await SendParticipantList(participant.RoomId.ToString());
+        }
+
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    private async Task SendParticipantList(string roomId)
+    {
+        var list = await _db.RoomParticipants
+            .Where(p => p.RoomId.ToString() == roomId && p.IsOnline)
             .Include(p => p.User)
             .Select(p => new
             {
-                id = p.User.Id,
+                id = p.UserId,
                 name = p.User.Name,
                 avatar = p.User.Avatar,
-                cursor = p.User.Cursor,
-                online = p.IsOnline
+                cursor = p.User.Cursor
             })
-            .ToListAsync<object>();
+            .ToListAsync();
+
+        await Clients.Group(roomId).SendAsync("ParticipantList", list);
     }
 }

@@ -9,5 +9,6 @@ public class RoomParticipant
 
     // Навигационные свойства
     public Room? Room { get; set; }
+    public string? ConnectionId { get; set; }
     public User? User { get; set; }
 }
