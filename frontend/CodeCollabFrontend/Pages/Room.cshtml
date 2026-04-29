@@ -79,7 +79,7 @@ else
         .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
         .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
         
-        .floating-panel { display: none; position: fixed; bottom: 80px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
+        .floating-panel { display: none; position: fixed; bottom: 20px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
         .floating-panel.right { left: auto; right: 80px; }
         .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
@@ -210,491 +210,350 @@ else
         </div>
     </div>
 
- <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
+   
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
 <script>
-    // "Хак" для SignalR перед загрузкой самого SignalR
-    var existingDefineAmd = window.define && window.define.amd;
-    if (existingDefineAmd) window.define.amd = false;
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-<script>
-    if (existingDefineAmd) window.define.amd = existingDefineAmd; // Возвращаем AMD для Monaco
-</script>
+    let roomId = @roomId;
+    let userId = @(userId ?? 0);
+    let userName = "@(currentUser?.Name ?? "Гость")";
+    let avatar = "@(currentUser?.Avatar ?? "👤")";
+    let cursor = "@(currentUser?.Cursor ?? "⬤")";
+    let ws = null;
 
-<script>
-    // Глобальная переменная для доступа из других скриптов
-    let connection; 
+    function connectWebSocket() {
+        const wsUrl = `ws://${window.location.hostname}:8001/ws/${roomId}/${userId}`;
+        ws = new WebSocket(wsUrl);
 
-    const roomData = {
-        roomId: @roomId,
-        userId: @(userId ?? 0),
-        userName: "@(currentUser?.Name ?? "Гость")",
-        avatar: "@(currentUser?.Avatar ?? "👤")",
-        cursor: "@(currentUser?.Cursor ?? "⬤")"
-    };
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+            ws.send(JSON.stringify({
+                type: "join",
+                user_id: userId,
+                name: userName,
+                avatar: avatar,
+                cursor: cursor
+            }));
+        };
 
-    // Функция инициализации SignalR
-    async function initSignalR() {
-        connection = new signalR.HubConnectionBuilder()
-            .withUrl("/roomHub")
-            .withAutomaticReconnect()
-            .build();
+        ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "participant_list") {
+                const container = document.getElementById('usersList');
+                if (!container) return;
+                container.innerHTML = '';
+                msg.users.forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'participant-item';
+                    div.onclick = () => window.location.href = `/Profile?id=${user.user_id}`;
+                    div.innerHTML = `
+                        <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background-color:#1e1e3a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            ${(!user.avatar || user.avatar.startsWith('👤') || !user.avatar.includes('/uploads/')) 
+                                ? `<span style="font-size:1rem;">${user.avatar || '👤'}</span>` 
+                                : `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;">`}
+                        </div>
+                        <span class="participant-name">${user.name}</span>
+                        <span class="participant-cursor">${user.cursor}</span>
+                        <span style="width:8px;height:8px;border-radius:50%;background-color: ${user.online ? '#00ff00' : '#888'};"></span>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        };
 
-        connection.on("ParticipantList", (participants) => {
-            const container = document.getElementById('usersList');
+        ws.onclose = () => {
+            console.log("WebSocket disconnected, reconnecting...");
+            setTimeout(connectWebSocket, 3000);
+        };
+    }
+
+    function showNotification(msg, isError) {
+        const div = document.createElement('div');
+        div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
+    }
+
+    function copyInviteLink() {
+        const inp = document.getElementById('inviteLink');
+        if (inp) { inp.select(); document.execCommand('copy'); showNotification('Ссылка скопирована'); }
+    }
+
+    function getLanguageFromFileName(name) {
+        const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+        const map = { 'py': 'python', 'js': 'javascript', 'ts': 'typescript', 'html': 'html', 'css': 'css', 'json': 'json', 'md': 'markdown', 'txt': 'text', 'sh': 'bash', 'bash': 'bash' };
+        return map[ext] || 'text';
+    }
+
+    function getFileIcon(name) {
+        if (name.toLowerCase() === 'readme.md') return '<i class="fas fa-book"></i>';
+        const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+        const icons = { 'py': '<i class="fab fa-python"></i>', 'js': '<i class="fab fa-js"></i>', 'html': '<i class="fab fa-html5"></i>', 'css': '<i class="fab fa-css3-alt"></i>', 'json': '<i class="fas fa-brackets-curly"></i>', 'md': '<i class="fas fa-markdown"></i>', 'txt': '<i class="fas fa-file-alt"></i>', 'sh': '<i class="fas fa-terminal"></i>' };
+        return icons[ext] || '<i class="fas fa-file-code"></i>';
+    }
+
+    let editor = null;
+    let currentFileId = null;
+    let openTabs = [];
+    let isEditorReady = false;
+    let saveTimeout = null;
+
+    async function loadFiles() {
+        try {
+            const res = await fetch(`/api/room/${roomId}/file`);
+            const files = await res.json();
+            const container = document.getElementById('fileTree');
             if (!container) return;
             container.innerHTML = '';
-            participants.forEach(p => {
+            for (const f of files) {
                 const div = document.createElement('div');
-                div.className = 'participant-item';
-                div.innerHTML = `
-                    <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        ${(!p.avatar || p.avatar.startsWith('👤') || !p.avatar.includes('/uploads/')) 
-                            ? `<span style="font-size: 1rem;">${p.avatar || '👤'}</span>` 
-                            : `<img src="${p.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                    </div>
-                    <span class="participant-name">${p.userName}</span>
-                    <span class="participant-cursor">${p.cursor}</span>
-                `;
+                div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
+                div.innerHTML = `<div class="file-icon">${getFileIcon(f.name)}</div><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${f.name}</span>`;
+                div.onclick = () => openFile(f.id, f.name);
                 container.appendChild(div);
-            });
-        });
+            }
+        } catch(e) { console.error(e); }
+    }
 
+    async function openFile(id, name) {
         try {
-            await connection.start();
-            console.log("SignalR Connected.");
-            await connection.invoke("JoinRoom", roomData.roomId.toString(), roomData.userId, roomData.userName, roomData.avatar, roomData.cursor);
-        } catch (err) {
-            console.error("SignalR Start Error:", err);
-            setTimeout(initSignalR, 5000);
+            const res = await fetch(`/api/room/${roomId}/file/${id}`);
+            if (!res.ok) throw new Error();
+            const file = await res.json();
+            
+            if (!openTabs.some(t => t.id === id)) {
+                openTabs.push({ id, name, language: getLanguageFromFileName(name) });
+            }
+            currentFileId = id;
+            renderTabs();
+            loadFiles();
+            
+            if (editor && isEditorReady) {
+                editor.setValue(file.content || '');
+                monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFileName(name));
+            }
+        } catch(e) { showNotification('Ошибка открытия файла', true); }
+    }
+
+    async function createFile(name) {
+        if (!name) return;
+        const res = await fetch(`/api/room/${roomId}/file`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+            const newFile = await res.json();
+            await loadFiles();
+            await openFile(newFile.id, newFile.name);
+        } else {
+            showNotification('Ошибка создания файла', true);
         }
     }
 
-    // Инициализация Monaco
-    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
-    require(['vs/editor/editor.main'], function () {
-        // Твоя инициализация редактора (она уже есть в файле, не создавай новую)
-        // Просто запускаем SignalR после Monaco
-        initSignalR();
-    });
-</script>
-    <script>
-        // ========== SignalR ==========
-        let connection = null;
-        
-        function showNotification(msg, isError) {
-            const div = document.createElement('div');
-            div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 2500);
-        }
+    function promptNewFile() {
+        let name = prompt('Имя файла (например, script.py, readme.md, file.txt):');
+        if (!name) return;
+        if (!name.includes('.')) name = name + '.txt';
+        createFile(name);
+    }
 
-        function copyInviteLink() {
-            const inp = document.getElementById('inviteLink');
-            if (inp) { inp.select(); document.execCommand('copy'); showNotification('Ссылка скопирована'); }
-        }
+    async function saveCurrentFile() {
+        if (!currentFileId || !editor || !isEditorReady) return;
+        const content = editor.getValue();
+        await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content })
+        });
+    }
 
-        function getLanguageFromFileName(name) {
-            const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
-            const map = { 'py': 'python', 'js': 'javascript', 'ts': 'typescript', 'html': 'html', 'css': 'css', 'json': 'json', 'md': 'markdown', 'txt': 'text', 'sh': 'bash', 'bash': 'bash' };
-            return map[ext] || 'text';
-        }
-
-        function getFileIcon(name) {
-            if (name.toLowerCase() === 'readme.md') return '<i class="fas fa-book"></i>';
-            const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
-            const icons = { 'py': '<i class="fab fa-python"></i>', 'js': '<i class="fab fa-js"></i>', 'html': '<i class="fab fa-html5"></i>', 'css': '<i class="fab fa-css3-alt"></i>', 'json': '<i class="fas fa-brackets-curly"></i>', 'md': '<i class="fas fa-markdown"></i>', 'txt': '<i class="fas fa-file-alt"></i>', 'sh': '<i class="fas fa-terminal"></i>' };
-            return icons[ext] || '<i class="fas fa-file-code"></i>';
-        }
-
-        let editor = null;
-        let currentFileId = null;
-        let openTabs = [];
-        let roomId = @roomId;
-        let isEditorReady = false;
-        let saveTimeout = null;
-
-        async function loadFiles() {
-            try {
-                const res = await fetch(`/api/room/${roomId}/file`);
-                const files = await res.json();
-                const container = document.getElementById('fileTree');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const f of files) {
-                    const div = document.createElement('div');
-                    div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
-                    div.innerHTML = `<div class="file-icon">${getFileIcon(f.name)}</div><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${f.name}</span>`;
-                    div.onclick = () => openFile(f.id, f.name);
-                    container.appendChild(div);
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        async function openFile(id, name) {
-            try {
-                const res = await fetch(`/api/room/${roomId}/file/${id}`);
-                if (!res.ok) throw new Error();
-                const file = await res.json();
-                
-                if (!openTabs.some(t => t.id === id)) {
-                    openTabs.push({ id, name, language: getLanguageFromFileName(name) });
-                }
-                currentFileId = id;
-                renderTabs();
-                loadFiles();
-                
-                if (editor && isEditorReady) {
-                    editor.setValue(file.content || '');
-                    monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFileName(name));
-                }
-            } catch(e) { showNotification('Ошибка открытия файла', true); }
-        }
-
-        async function createFile(name) {
-            if (!name) return;
-            const res = await fetch(`/api/room/${roomId}/file`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            if (res.ok) {
-                const newFile = await res.json();
-                await loadFiles();
-                await openFile(newFile.id, newFile.name);
+    async function closeTab(fileId) {
+        const index = openTabs.findIndex(t => t.id === fileId);
+        if (index === -1) return;
+        openTabs.splice(index, 1);
+        if (currentFileId === fileId) {
+            if (openTabs.length > 0) {
+                await openFile(openTabs[0].id, openTabs[0].name);
             } else {
-                showNotification('Ошибка создания файла', true);
+                currentFileId = null;
+                if (editor && isEditorReady) editor.setValue('');
+                loadFiles();
             }
         }
+        renderTabs();
+    }
 
-        function promptNewFile() {
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            modal.style.zIndex = '10000';
-            modal.style.display = 'flex';
-            modal.style.alignItems = 'center';
-            modal.style.justifyContent = 'center';
-            
-            modal.innerHTML = `
-                <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
-                    <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создать файл</h3>
-                    <input type="text" id="newFileName" placeholder="main.py" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button id="cancelBtn" style="flex:1; background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Отмена</button>
-                        <button id="createBtn" style="flex:1; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Создать</button>
-                    </div>
-                </div>
+    function renderTabs() {
+        const container = document.getElementById('tabsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const tab of openTabs) {
+            const tabDiv = document.createElement('div');
+            tabDiv.className = 'tab' + (currentFileId === tab.id ? ' active' : '');
+            tabDiv.innerHTML = `
+                ${getFileIcon(tab.name)}
+                <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span>
+                <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>
             `;
-            
-            document.body.appendChild(modal);
-            setTimeout(() => document.getElementById('newFileName').focus(), 100);
-            
-            document.getElementById('createBtn').onclick = () => {
-                let name = document.getElementById('newFileName').value.trim();
-                if (name) {
-                    if (!name.includes('.')) name += '.txt';
-                    createFile(name);
-                } else {
-                    showNotification('Введите имя файла', 'error');
-                }
-                modal.remove();
-            };
-            
-            document.getElementById('cancelBtn').onclick = () => modal.remove();
-            modal.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') modal.remove();
-            });
+            tabDiv.onclick = () => openFile(tab.id, tab.name);
+            container.appendChild(tabDiv);
         }
+    }
 
-        async function saveCurrentFile() {
-            if (!currentFileId || !editor || !isEditorReady) return;
-            const content = editor.getValue();
-            await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content })
-            });
-        }
+    function runCode() {
+        if (!editor || !isEditorReady) return;
+        const code = editor.getValue();
+        const lang = document.getElementById('languageSelect').value;
+        const out = document.getElementById('terminalOutput');
+        out.innerHTML += `$ Запуск (${lang})...\n`;
+        fetch('/api/terminal/run', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
+        }).then(r => r.json()).then(data => {
+            out.innerHTML += (data.output || data.error || '') + '\n';
+            out.scrollTop = out.scrollHeight;
+        });
+    }
 
-        async function closeTab(fileId) {
-            const index = openTabs.findIndex(t => t.id === fileId);
-            if (index === -1) return;
-            openTabs.splice(index, 1);
-            if (currentFileId === fileId) {
-                if (openTabs.length > 0) {
-                    await openFile(openTabs[0].id, openTabs[0].name);
-                } else {
-                    currentFileId = null;
-                    if (editor && isEditorReady) editor.setValue('');
-                    loadFiles();
-                }
-            }
-            renderTabs();
-        }
-
-        function renderTabs() {
-            const container = document.getElementById('tabsContainer');
+    async function loadChatHistory() {
+        try {
+            const res = await fetch(`/api/chat/${roomId}`);
+            const msgs = await res.json();
+            const container = document.getElementById('chatMessages');
             if (!container) return;
             container.innerHTML = '';
-            for (const tab of openTabs) {
-                const tabDiv = document.createElement('div');
-                tabDiv.className = 'tab' + (currentFileId === tab.id ? ' active' : '');
-                tabDiv.innerHTML = `
-                    ${getFileIcon(tab.name)}
-                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span>
-                    <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>
-                `;
-                tabDiv.onclick = () => openFile(tab.id, tab.name);
-                container.appendChild(tabDiv);
+            for (const m of msgs) {
+                const div = document.createElement('div');
+                div.className = `chat-message ${m.userName === 'Вы' ? 'me' : 'other'}`;
+                div.innerHTML = m.userName === 'Вы' ? m.text : `<b>${m.userName}:</b> ${m.text}`;
+                container.appendChild(div);
             }
-        }
+            container.scrollTop = container.scrollHeight;
+        } catch(e) {}
+    }
 
-        function runCode() {
-            if (!editor || !isEditorReady) return;
-            const code = editor.getValue();
-            const lang = document.getElementById('languageSelect').value;
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const text = input.value.trim();
+        if (!text) return;
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text })
+        }).then(() => { input.value = ''; loadChatHistory(); });
+    }
+
+    function sendSticker(sticker) {
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text: sticker })
+        }).then(() => loadChatHistory());
+    }
+
+    function toggleStickersPanel() {
+        const p = document.getElementById('stickersPanel');
+        p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    async function toggleUsersPanel() {
+        const panel = document.getElementById('usersPanel');
+        if (panel.style.display === 'none' || !panel.style.display) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: "get_participants" }));
+            }
+            panel.style.display = 'block';
+        } else {
+            panel.style.display = 'none';
+        }
+    }
+
+    function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
+    function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
+    function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
+    function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
+    function exitRoom() { window.location.href = '/dashboard'; }
+
+    function initEditor() {
+        const container = document.getElementById('editorContainer');
+        if (!container) return;
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+        require(['vs/editor/editor.main'], function () {
+            editor = monaco.editor.create(container, {
+                value: '',
+                language: 'python',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 12,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false
+            });
+            isEditorReady = true;
+            editor.onDidChangeModelContent(() => {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(saveCurrentFile, 1000);
+            });
+            loadFiles();
+        });
+    }
+
+    function toggleTerminal() {
+        const term = document.getElementById('terminal');
+        const btn = term.querySelector('.terminal-header button');
+        if (term.style.height === '30px') {
+            term.style.height = '150px';
+            btn.innerHTML = '▲ Свернуть';
+        } else {
+            term.style.height = '30px';
+            btn.innerHTML = '▼ Развернуть';
+        }
+    }
+
+    initEditor();
+    loadChatHistory();
+    setInterval(loadChatHistory, 3000);
+    connectWebSocket();
+
+    document.getElementById('terminalInput')?.addEventListener('keypress', e => {
+        if (e.key === 'Enter') {
+            const cmd = e.target.value;
+            e.target.value = '';
             const out = document.getElementById('terminalOutput');
-            out.innerHTML += `$ Запуск (${lang})...\n`;
+            out.innerHTML += `$ ${cmd}\n`;
             fetch('/api/terminal/run', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
+                body: JSON.stringify({ command: JSON.stringify({ language: 'bash', code: cmd }) })
             }).then(r => r.json()).then(data => {
                 out.innerHTML += (data.output || data.error || '') + '\n';
                 out.scrollTop = out.scrollHeight;
             });
         }
-
-        async function loadChatHistory() {
-            try {
-                const res = await fetch(`/api/chat/${roomId}`);
-                const msgs = await res.json();
-                const container = document.getElementById('chatMessages');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const m of msgs) {
-                    const div = document.createElement('div');
-                    div.className = `chat-message ${m.userName === 'Вы' ? 'me' : 'other'}`;
-                    div.innerHTML = m.userName === 'Вы' ? m.text : `<b>${m.userName}:</b> ${m.text}`;
-                    container.appendChild(div);
-                }
-                container.scrollTop = container.scrollHeight;
-            } catch(e) {}
-        }
-
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text })
-            }).then(() => { input.value = ''; loadChatHistory(); });
-        }
-
-        function sendSticker(sticker) {
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text: sticker })
-            }).then(() => loadChatHistory());
-        }
-
-        function toggleStickersPanel() {
-            const p = document.getElementById('stickersPanel');
-            p.style.display = p.style.display === 'none' ? 'flex' : 'none';
-        }
-
-        async function toggleUsersPanel() {
-            const panel = document.getElementById('usersPanel');
-            if (panel.style.display === 'none' || !panel.style.display) {
-                const res = await fetch(`/api/room/${roomId}/users`);
-                const users = await res.json();
-                const container = document.getElementById('usersList');
-                container.innerHTML = '';
-                for (const u of users) {
-                    const div = document.createElement('div');
-                    div.className = 'participant-item';
-                    div.onclick = () => showNotification('Профиль ' + u.name);
-                    div.innerHTML = `
-                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                        </div>
-                        <span class="participant-name">${u.name}</span>
-                        <span class="participant-cursor">${u.cursor}</span>
-                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(div);
-                }
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
-        }
-
-        function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
-        function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
-        function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
-        function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
-        function exitRoom() { window.location.href = '/dashboard'; }
-
-        function initEditor() {
-            const container = document.getElementById('editorContainer');
-            if (!container) return;
-            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
-            require(['vs/editor/editor.main'], function () {
-                editor = monaco.editor.create(container, {
-                    value: '',
-                    language: 'python',
-                    theme: 'vs-dark',
-                    automaticLayout: true,
-                    fontSize: 12,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false
-                });
-                isEditorReady = true;
-                editor.onDidChangeModelContent(() => {
-                    if (saveTimeout) clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(saveCurrentFile, 1000);
-                });
-                loadFiles();
-            });
-        }
-
-        function toggleTerminal() {
-            const term = document.getElementById('terminal');
-            const btn = term.querySelector('.terminal-header button');
-            if (term.style.height === '30px') {
-                term.style.height = '150px';
-                btn.innerHTML = '▲ Свернуть';
-            } else {
-                term.style.height = '30px';
-                btn.innerHTML = '▼ Развернуть';
-            }
-        }
-
-        initEditor();
-        loadChatHistory();
-        setInterval(loadChatHistory, 3000);
-
-        document.getElementById('terminalInput')?.addEventListener('keypress', e => {
-            if (e.key === 'Enter') {
-                const cmd = e.target.value;
-                e.target.value = '';
-                const out = document.getElementById('terminalOutput');
-                out.innerHTML += `$ ${cmd}\n`;
-                fetch('/api/terminal/run', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command: JSON.stringify({ language: 'bash', code: cmd }) })
-                }).then(r => r.json()).then(data => {
-                    out.innerHTML += (data.output || data.error || '') + '\n';
-                    out.scrollTop = out.scrollHeight;
-                });
-            }
-        });
-
-        const resizer = document.getElementById('resizer');
-        const terminal = document.getElementById('terminal');
-        let isResizing = false;
-        if (resizer) {
-            resizer.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                document.addEventListener('mousemove', resize);
-                document.addEventListener('mouseup', stopResize);
-            });
-        }
-        function resize(e) {
-            if (!isResizing) return;
-            const rect = document.querySelector('[style*="flex: 1; flex-direction: column;"]')?.getBoundingClientRect();
-            if (!rect) return;
-            let h = rect.bottom - e.clientY;
-            h = Math.max(30, Math.min(500, h));
-            terminal.style.height = h + 'px';
-        }
-        function stopResize() {
-            isResizing = false;
-            document.removeEventListener('mousemove', resize);
-            document.removeEventListener('mouseup', stopResize);
-        }
-
-        // ========== SignalR инициализация ==========
-        async function initSignalR() {
-    connection = new signalR.HubConnectionBuilder()
-        .withUrl("/roomHub")
-        .build();
-
-    connection.on("ParticipantList", (participants) => {
-        const container = document.getElementById('usersList');
-        if (!container) return;
-        container.innerHTML = '';
-        participants.forEach(u => {
-            const div = document.createElement('div');
-            div.className = 'participant-item';
-            div.onclick = () => showNotification('Профиль ' + u.name);
-            div.innerHTML = `
-                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                        ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                        : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                </div>
-                <span class="participant-name">${u.name}</span>
-                <span class="participant-cursor">${u.cursor}</span>
-                <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-            `;
-            container.appendChild(div);
-        });
     });
 
-    connection.on("UserMessage", (msg) => {
-        const out = document.getElementById('terminalOutput');
-        if (out) out.innerHTML += `${msg}\n`;
-    });
-
-    try {
-        await connection.start();
-        
-        const userId = @(userId ?? 0);
-        const roomId = @roomId;
-        const userName = "@(currentUser?.Name ?? "Гость")";
-        const avatar = "@(currentUser?.Avatar ?? "👤")";
-        const cursor = "@(currentUser?.Cursor ?? "⬤")";
-        
-        if (userId && roomId) {
-            await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-        }
-    } catch (err) {
-        console.error("SignalR error:", err);
+    const resizer = document.getElementById('resizer');
+    const terminal = document.getElementById('terminal');
+    let isResizing = false;
+    if (resizer) {
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+        });
     }
-}
-
-            connection.on("UserMessage", (msg) => {
-                const out = document.getElementById('terminalOutput');
-                if (out) out.innerHTML += `${msg}\n`;
-            });
-
-            try {
-                await connection.start();
-                const userId = @userId ?? 0;
-                const userName = "@(currentUser?.Name ?? "Гость")";
-                const avatar = "@(currentUser?.Avatar ?? "👤")";
-                const cursor = "@(currentUser?.Cursor ?? "⬤")";
-                if (userId && roomId) {
-                    await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-                }
-            } catch (err) {
-                console.error("SignalR error:", err);
-            }
-        }
-
-        initSignalR();
-    </script>
+    function resize(e) {
+        if (!isResizing) return;
+        const rect = document.querySelector('[style*="flex: 1; flex-direction: column;"]')?.getBoundingClientRect();
+        if (!rect) return;
+        let h = rect.bottom - e.clientY;
+        h = Math.max(30, Math.min(500, h));
+        terminal.style.height = h + 'px';
+    }
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+    }
+</script>
 }

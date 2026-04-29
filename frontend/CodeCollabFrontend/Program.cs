@@ -2,11 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using CodeCollabFrontend.Models;
 using CodeCollabFrontend.Services;
 using Microsoft.AspNetCore.Http.Features;
-using CodeCollabFrontend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -23,10 +21,8 @@ builder.Services.AddSession(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=codecollab.db"));
 builder.Services.AddControllers();
-builder.Services.AddSignalR();
-builder.Services.AddHttpClient<ApiService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiService>();
-builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 
@@ -36,7 +32,6 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(context);
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -51,5 +46,4 @@ app.MapRazorPages().WithStaticAssets();
 app.MapControllers();
 app.UseSession();
 app.UseStatusCodePagesWithReExecute("/Error404");
-app.MapHub<RoomHub>("/roomHub");
 app.Run();
