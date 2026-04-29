@@ -19,7 +19,6 @@
     
     var userId = HttpContext.Session.GetInt32("UserId");
     var currentUser = userId != null ? _context.Users.Find(userId) : null;
-    string userCursor = currentUser?.Cursor ?? "default";
 }
 
 @if (room == null)
@@ -210,7 +209,6 @@ else
         </div>
     </div>
 
-   
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
 <script>
     let roomId = @roomId;
@@ -219,52 +217,6 @@ else
     let avatar = "@(currentUser?.Avatar ?? "👤")";
     let cursor = "@(currentUser?.Cursor ?? "⬤")";
     let ws = null;
-
-    function connectWebSocket() {
-        const wsUrl = `ws://${window.location.hostname}:8001/ws/${roomId}/${userId}`;
-        ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-            console.log("WebSocket connected");
-            ws.send(JSON.stringify({
-                type: "join",
-                user_id: userId,
-                name: userName,
-                avatar: avatar,
-                cursor: cursor
-            }));
-        };
-
-        ws.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            if (msg.type === "participant_list") {
-                const container = document.getElementById('usersList');
-                if (!container) return;
-                container.innerHTML = '';
-                msg.users.forEach(user => {
-                    const div = document.createElement('div');
-                    div.className = 'participant-item';
-                    div.onclick = () => window.location.href = `/Profile?id=${user.user_id}`;
-                    div.innerHTML = `
-                        <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background-color:#1e1e3a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                            ${(!user.avatar || user.avatar.startsWith('👤') || !user.avatar.includes('/uploads/')) 
-                                ? `<span style="font-size:1rem;">${user.avatar || '👤'}</span>` 
-                                : `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;">`}
-                        </div>
-                        <span class="participant-name">${user.name}</span>
-                        <span class="participant-cursor">${user.cursor}</span>
-                        <span style="width:8px;height:8px;border-radius:50%;background-color: ${user.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(div);
-                });
-            }
-        };
-
-        ws.onclose = () => {
-            console.log("WebSocket disconnected, reconnecting...");
-            setTimeout(connectWebSocket, 3000);
-        };
-    }
 
     function showNotification(msg, isError) {
         const div = document.createElement('div');
@@ -319,14 +271,12 @@ else
             const res = await fetch(`/api/room/${roomId}/file/${id}`);
             if (!res.ok) throw new Error();
             const file = await res.json();
-            
             if (!openTabs.some(t => t.id === id)) {
                 openTabs.push({ id, name, language: getLanguageFromFileName(name) });
             }
             currentFileId = id;
             renderTabs();
             loadFiles();
-            
             if (editor && isEditorReady) {
                 editor.setValue(file.content || '');
                 monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFileName(name));
@@ -390,11 +340,7 @@ else
         for (const tab of openTabs) {
             const tabDiv = document.createElement('div');
             tabDiv.className = 'tab' + (currentFileId === tab.id ? ' active' : '');
-            tabDiv.innerHTML = `
-                ${getFileIcon(tab.name)}
-                <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span>
-                <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>
-            `;
+            tabDiv.innerHTML = `${getFileIcon(tab.name)}<span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span><span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>`;
             tabDiv.onclick = () => openFile(tab.id, tab.name);
             container.appendChild(tabDiv);
         }
@@ -457,7 +403,7 @@ else
         p.style.display = p.style.display === 'none' ? 'flex' : 'none';
     }
 
-    async function toggleUsersPanel() {
+    function toggleUsersPanel() {
         const panel = document.getElementById('usersPanel');
         if (panel.style.display === 'none' || !panel.style.display) {
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -508,6 +454,41 @@ else
             term.style.height = '30px';
             btn.innerHTML = '▼ Развернуть';
         }
+    }
+
+    function connectWebSocket() {
+        const wsUrl = `ws://${window.location.hostname}:8001/ws/${roomId}/${userId}`;
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+            ws.send(JSON.stringify({ type: "join", user_id: userId, name: userName, avatar: avatar, cursor: cursor }));
+        };
+        ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "participant_list") {
+                const container = document.getElementById('usersList');
+                if (!container) return;
+                container.innerHTML = '';
+                msg.users.forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'participant-item';
+                    div.onclick = () => window.location.href = `/Profile?id=${user.user_id}`;
+                    div.innerHTML = `
+                        <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;background-color:#1e1e3a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            ${(!user.avatar || user.avatar.startsWith('👤') || !user.avatar.includes('/uploads/')) ? `<span style="font-size:1rem;">${user.avatar || '👤'}</span>` : `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;">`}
+                        </div>
+                        <span class="participant-name">${user.name}</span>
+                        <span class="participant-cursor">${user.cursor}</span>
+                        <span style="width:8px;height:8px;border-radius:50%;background-color:#00ff00;"></span>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        };
+        ws.onclose = () => {
+            console.log("WebSocket disconnected, reconnecting...");
+            setTimeout(connectWebSocket, 3000);
+        };
     }
 
     initEditor();
