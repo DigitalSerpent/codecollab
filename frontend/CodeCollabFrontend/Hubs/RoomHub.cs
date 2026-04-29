@@ -16,7 +16,7 @@ public class RoomHub : Hub
     public async Task JoinRoom(string roomId, int userId, string userName, string avatar, string cursor)
     {
         var participant = await _db.RoomParticipants
-            .FirstOrDefaultAsync(p => p.RoomId.ToString() == roomId && p.UserId == userId);
+            .FirstOrDefaultAsync(p => p.RoomId == int.Parse(roomId) && p.UserId == userId);
 
         if (participant == null)
         {
@@ -33,7 +33,7 @@ public class RoomHub : Hub
 
         await _db.SaveChangesAsync();
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-
+        
         await SendUpdateToGroup(roomId);
     }
 
@@ -48,7 +48,6 @@ public class RoomHub : Hub
             await _db.SaveChangesAsync();
             await SendUpdateToGroup(participant.RoomId.ToString());
         }
-
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -56,14 +55,7 @@ public class RoomHub : Hub
     {
         var list = await _db.RoomParticipants
             .Where(p => p.RoomId.ToString() == roomId && p.IsOnline)
-            .Include(p => p.User)
-            .Select(p => new
-            {
-                p.UserId,
-                UserName = p.User.Name,
-                Avatar = p.User.Avatar,
-                Cursor = p.User.Cursor
-            })
+            .Select(p => new { p.UserId, p.UserName, p.Avatar, p.Cursor })
             .ToListAsync();
 
         await Clients.Group(roomId).SendAsync("ParticipantList", list);
