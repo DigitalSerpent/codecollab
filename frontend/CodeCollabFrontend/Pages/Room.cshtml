@@ -78,7 +78,21 @@ else
         .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
         .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
         
-        .floating-panel { display: none; position: fixed; bottom: 20px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
+        .floating-panel { 
+            display: none; 
+            position: fixed; 
+            bottom: 20px; 
+            left: 15px; 
+            width: 240px; 
+            background-color: #121628; 
+            border: 1px solid #00aaff; 
+            border-radius: 10px; 
+            padding: 10px; 
+            z-index: 200; 
+        }
+        .floating-panel.active {
+            display: block !important;
+        }
         .floating-panel.right { left: auto; right: 80px; }
         .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
@@ -405,17 +419,21 @@ else
 
     function toggleUsersPanel() {
         const panel = document.getElementById('usersPanel');
-        if (panel.style.display === 'none' || !panel.style.display) {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: "get_participants" }));
-            }
-            panel.style.display = 'block';
-        } else {
-            panel.style.display = 'none';
+        if (!panel) {
+            console.error("UsersPanel not found");
+            return;
+        }
+        const isActive = panel.classList.toggle('active');
+        if (isActive && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "get_participants" }));
         }
     }
 
-    function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
+    function closeUsersPanel() { 
+        const panel = document.getElementById('usersPanel');
+        if (panel) panel.classList.remove('active');
+    }
+
     function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
     function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
     function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
