@@ -1,88 +1,65 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import json
-import asyncio
-from typing import Dict, Set
+from typing import Dict
 
 app = FastAPI()
 
-# Хранилище активных комнат
-rooms: Dict[int, Dict[int, WebSocket]] = {}  # roomId -> {userId: websocket}
-users_info: Dict[int, dict] = {}  # userId -> {name, avatar, cursor}
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[int, Dict[int, WebSocket]] = {}
+        self.user_info: Dict[int, dict] = {}
 
-@app.post("/room_join")
-async def room_join(request: Request):
-    data = await request.json()
-    room_id = data["roomId"]
-    user_id = data["userId"]
-    user_info = {
-        "name": data["userName"],
-        "avatar": data["avatar"],
-        "cursor": data["cursor"],
-        "online": True
-    }
-    users_info[user_id] = user_info
-    
-    # Пока просто логируем, WebSocket клиент сам появится позже
-    print(f"User {user_id} joined room {room_id}")
-    return {"status": "ok"}
+    async def connect(self, room_id: int, user_id: int, websocket: WebSocket, user_data: dict):
+        await websocket.accept()
+        if room_id not in self.active_connections:
+            self.active_connections[room_id] = {}
+        self.active_connections[room_id][user_id] = websocket
+        self.user_info[user_id] = user_data
+        await self.send_participant_list(room_id, user_id)
 
-@app.post("/room_leave")
-async def room_leave(request: Request):
-    data = await request.json()
-    user_id = data["userId"]
-    if user_id in users_info:
-        del users_info[user_id]
-    print(f"User {user_id} left")
-    return {"status": "ok"}
+    def disconnect(self, room_id: int, user_id: int):
+        if room_id in self.active_connections:
+            self.active_connections[room_id].pop(user_id, None)
+        self.user_info.pop(user_id, None)
+
+    async def send_participant_list(self, room_id: int, current_user_id: int = None):
+        if room_id not in self.active_connections:
+            return
+        participants = []
+        for uid, ws in self.active_connections[room_id].items():
+            info = self.user_info.get(uid, {})
+            participants.append({
+                "user_id": uid,
+                "name": info.get("name", ""),
+                "avatar": info.get("avatar", "👤"),
+                "cursor": info.get("cursor", "⬤"),
+                "online": True
+            })
+        # Добавляем текущего пользователя, если его нет (для страницы)
+        if current_user_id and current_user_id not in [p["user_id"] for p in participants]:
+            info = self.user_info.get(current_user_id, {})
+            participants.append({
+                "user_id": current_user_id,
+                "name": info.get("name", ""),
+                "avatar": info.get("avatar", "👤"),
+                "cursor": info.get("cursor", "⬤"),
+                "online": True
+            })
+        message = json.dumps({"type": "participant_list", "users": participants})
+        for ws in self.active_connections[room_id].values():
+            await ws.send_text(message)
+
+manager = ConnectionManager()
 
 @app.websocket("/ws/{room_id}/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, room_id: int, user_id: int):
     await websocket.accept()
-    
-    # Сохраняем соединение
-    if room_id not in rooms:
-        rooms[room_id] = {}
-    rooms[room_id][user_id] = websocket
-    
-    # Отправляем новому пользователю список всех участников
-    participants = []
-    for uid, ws in rooms[room_id].items():
-        if uid != user_id and uid in users_info:
-            participants.append({
-                "userId": uid,
-                "name": users_info[uid]["name"],
-                "avatar": users_info[uid]["avatar"],
-                "cursor": users_info[uid]["cursor"],
-                "online": True
-            })
-    await websocket.send_json({"type": "participant_list", "users": participants})
-    
-    # Оповещаем всех о новом участнике
-    for uid, ws in rooms[room_id].items():
-        if uid != user_id:
-            await ws.send_json({
-                "type": "user_joined",
-                "user": {
-                    "userId": user_id,
-                    "name": users_info[user_id]["name"],
-                    "avatar": users_info[user_id]["avatar"],
-                    "cursor": users_info[user_id]["cursor"]
-                }
-            })
-    
     try:
+        data = await websocket.receive_text()
+        user_data = json.loads(data)
+        await manager.connect(room_id, user_id, websocket, user_data)
         while True:
-            data = await websocket.receive_text()
-            # Можно обработать курсоры, но пока игнорируем
+            await websocket.receive_text()
     except WebSocketDisconnect:
-        # Удаляем соединение
-        if room_id in rooms and user_id in rooms[room_id]:
-            del rooms[room_id][user_id]
-        if not rooms[room_id]:
-            del rooms[room_id]
-        
-        # Оповещаем остальных о выходе
-        if room_id in rooms:
-            for uid, ws in rooms[room_id].items():
-                await ws.send_json({"type": "user_left", "userId": user_id})
+        manager.disconnect(room_id, user_id)
+        await manager.send_participant_list(room_id)
