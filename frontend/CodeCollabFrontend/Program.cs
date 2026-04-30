@@ -23,6 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiService>();
+builder.Services.AddScoped<EmailService>();   // <-- добавили
 
 var app = builder.Build();
 
