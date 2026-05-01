@@ -31,20 +31,23 @@ else
     ViewData["Title"] = room.Name;
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style id="globalCursorStyle"></style>
-
+    
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
         
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
         body { 
-            margin: 0; 
-            padding: 0; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: #0a0e1c; 
             overflow: hidden;
-            height: 100vh;
         }
         
         /* Основной контейнер */
@@ -52,7 +55,7 @@ else
             display: flex;
             flex-direction: column;
             height: 100vh;
-            padding: 8px;
+            width: 100vw;
             overflow: hidden;
         }
         
@@ -65,6 +68,7 @@ else
             border-radius: 12px;
             border: 1px solid #00aaff;
             overflow: hidden;
+            margin: 8px;
         }
         
         /* Левая панель с файлами */
@@ -98,11 +102,13 @@ else
         
         /* Нижняя панель с иконками */
         .bottom-bar {
-            margin-top: 8px;
+            padding: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-shrink: 0;
+            background: #0a0e1c;
+            gap: 10px;
         }
         
         .icon-group {
@@ -114,25 +120,29 @@ else
             user-select: none; 
             flex: 1;
             overflow-y: auto;
+            padding: 6px;
         }
         
         .file-item { 
-            padding: 4px 6px; 
+            padding: 6px 8px; 
             cursor: pointer; 
             border-radius: 4px; 
             margin-bottom: 2px; 
             display: flex; 
             align-items: center; 
-            gap: 6px; 
+            gap: 8px; 
             font-size: 13px; 
+            color: #a0a0a0;
         }
         
         .file-item:hover { 
             background-color: #2a2a4a; 
+            color: white;
         }
         
         .file-item.active { 
             background-color: #0d3d5c; 
+            color: white;
         }
         
         .file-icon { 
@@ -146,16 +156,15 @@ else
             border: none; 
             color: #00aaff; 
             cursor: pointer; 
-            margin-top: 8px; 
-            padding: 5px; 
-            width: 100%; 
-            text-align: left; 
+            margin: 8px; 
+            padding: 6px; 
+            text-align: center; 
             font-size: 12px; 
+            border-radius: 4px;
         }
         
         .new-file-btn:hover { 
             background-color: #2a2a4a; 
-            border-radius: 4px; 
         }
         
         .tabs-container { 
@@ -195,6 +204,7 @@ else
             margin-left: auto; 
             opacity: 0.6; 
             font-size: 11px; 
+            cursor: pointer;
         }
         
         .tab-close:hover { 
@@ -210,6 +220,7 @@ else
             border-bottom: 1px solid #00aaff;
             padding: 4px 8px;
             flex-shrink: 0;
+            gap: 8px;
         }
         
         .resizer { 
@@ -219,22 +230,28 @@ else
             flex-shrink: 0;
         }
         
+        .resizer:hover {
+            background-color: #ffaa00;
+        }
+        
         .terminal { 
             background-color: #1e1e1e; 
             border-top: 1px solid #00aaff; 
             display: flex; 
             flex-direction: column;
             flex-shrink: 0;
+            min-height: 30px;
         }
         
         .terminal-header { 
-            height: 24px; 
+            height: 28px; 
             background-color: #2d2d2d; 
             display: flex; 
             align-items: center; 
             padding: 0 8px; 
             color: white; 
             font-size: 11px; 
+            flex-shrink: 0;
         }
         
         .terminal-output { 
@@ -245,6 +262,7 @@ else
             overflow-y: auto; 
             white-space: pre-wrap; 
             font-size: 11px; 
+            min-height: 50px;
         }
         
         .terminal-input-line { 
@@ -253,6 +271,7 @@ else
             padding: 4px 8px; 
             border-top: 1px solid #3c3c3c; 
             background-color: #1e1e1e; 
+            flex-shrink: 0;
         }
         
         .terminal-prompt { 
@@ -273,15 +292,16 @@ else
         }
         
         .chat-header { 
-            height: 32px; 
+            height: 36px; 
             background-color: #121628; 
             border-bottom: 1px solid #00aaff; 
             display: flex; 
             align-items: center; 
-            padding-left: 10px; 
+            padding: 0 10px; 
             color: white; 
             font-weight: bold; 
             font-size: 12px; 
+            flex-shrink: 0;
         }
         
         .chat-messages { 
@@ -291,11 +311,12 @@ else
             display: flex; 
             flex-direction: column; 
             gap: 5px; 
+            min-height: 0;
         }
         
         .chat-message { 
             max-width: 85%; 
-            padding: 5px 8px; 
+            padding: 5px 10px; 
             border-radius: 10px; 
             font-size: 12px; 
             word-wrap: break-word; 
@@ -318,6 +339,7 @@ else
             border-top: 1px solid #00aaff; 
             display: flex; 
             gap: 6px; 
+            flex-shrink: 0;
         }
         
         .chat-input { 
@@ -329,30 +351,39 @@ else
             border-radius: 6px; 
             resize: none; 
             font-size: 12px; 
+            font-family: inherit;
         }
         
         .chat-button { 
             background-color: #0a0e1c; 
             border: 1px solid #00aaff; 
             border-radius: 6px; 
-            padding: 6px; 
+            padding: 6px 8px; 
             cursor: pointer; 
             color: white; 
             font-size: 12px; 
+        }
+        
+        .chat-button:hover {
+            background-color: #1e1e3a;
         }
         
         .send-button { 
             background-color: #00aaff; 
             border: none; 
             border-radius: 6px; 
-            padding: 6px 10px; 
+            padding: 6px 12px; 
             cursor: pointer; 
             color: #0a0e1c; 
         }
         
+        .send-button:hover {
+            background-color: #0088cc;
+        }
+        
         .icon-button { 
-            width: 36px; 
-            height: 36px; 
+            width: 40px; 
+            height: 40px; 
             background-color: #121628; 
             border: 1px solid #00aaff; 
             border-radius: 8px; 
@@ -361,12 +392,14 @@ else
             justify-content: center; 
             cursor: pointer; 
             color: #a0a0a0; 
-            font-size: 16px; 
+            font-size: 18px; 
+            transition: all 0.2s;
         }
         
         .icon-button:hover { 
             background-color: #1e1e3a; 
             color: #00aaff; 
+            transform: scale(1.05);
         }
         
         .modal { 
@@ -385,7 +418,7 @@ else
         .modal-content { 
             background-color: #121628; 
             border-radius: 16px; 
-            padding: 20px; 
+            padding: 24px; 
             width: 320px; 
             border: 1px solid #00aaff; 
             text-align: center; 
@@ -393,14 +426,14 @@ else
         
         .modal-content h3 { 
             color: white; 
-            margin-bottom: 15px; 
+            margin-bottom: 20px; 
             font-size: 18px; 
         }
         
         .modal-buttons { 
             display: flex; 
-            gap: 8px; 
-            margin-top: 15px; 
+            gap: 12px; 
+            margin-top: 20px; 
         }
         
         .modal-button { 
@@ -408,9 +441,14 @@ else
             color: white; 
             border: none; 
             border-radius: 6px; 
-            padding: 8px; 
+            padding: 10px; 
             flex: 1; 
             cursor: pointer; 
+            font-size: 14px;
+        }
+        
+        .modal-button:hover {
+            background-color: #2a2a4a;
         }
         
         .modal-button.primary { 
@@ -418,41 +456,49 @@ else
             color: #0a0e1c; 
         }
         
+        .modal-button.primary:hover {
+            background-color: #0088cc;
+        }
+        
         .floating-panel { 
             display: none; 
             position: fixed; 
             bottom: 70px; 
             left: 15px; 
-            width: 260px; 
+            width: 280px; 
             background-color: #121628; 
             border: 1px solid #00aaff; 
             border-radius: 10px; 
-            padding: 10px; 
+            padding: 12px; 
             z-index: 200; 
+            max-height: 400px;
+            overflow-y: auto;
         }
         
         .floating-panel.right { 
             left: auto; 
-            right: 80px; 
+            right: 15px; 
         }
         
         .floating-panel h4 { 
             color: white; 
-            margin: 0 0 8px 0; 
+            margin: 0 0 12px 0; 
             font-size: 14px; 
             display: flex; 
             justify-content: space-between; 
+            align-items: center;
         }
         
         .participant-item { 
             display: flex; 
             align-items: center; 
-            gap: 8px; 
-            margin-bottom: 8px; 
+            gap: 10px; 
+            margin-bottom: 10px; 
             cursor: pointer; 
-            padding: 6px; 
-            border-radius: 5px; 
+            padding: 8px; 
+            border-radius: 6px; 
             font-size: 12px; 
+            transition: background 0.2s;
         }
         
         .participant-item:hover { 
@@ -460,8 +506,8 @@ else
         }
         
         .participant-avatar { 
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             overflow: hidden;
             background-color: #1e1e3a;
@@ -469,6 +515,7 @@ else
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            font-size: 18px;
         }
         
         .participant-name { 
@@ -477,13 +524,14 @@ else
         }
         
         .participant-cursor { 
-            font-size: 0.9rem; 
+            font-size: 14px; 
         }
         
         .participant-status { 
             width: 8px; 
             height: 8px; 
             border-radius: 50%; 
+            flex-shrink: 0;
         }
         
         .language-select { 
@@ -491,8 +539,9 @@ else
             color: white; 
             border: 1px solid #00aaff; 
             border-radius: 4px; 
-            padding: 4px 6px; 
+            padding: 4px 8px; 
             font-size: 12px; 
+            cursor: pointer;
         }
         
         #editorContainer {
@@ -503,23 +552,25 @@ else
         
         /* Стикеры */
         #stickersPanel {
-            padding: 6px;
+            padding: 8px;
             background-color: #0a0e1c;
-            gap: 5px;
+            gap: 8px;
             flex-wrap: wrap;
             border-top: 1px solid #1e1e3a;
         }
         
         #stickersPanel span {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             cursor: pointer;
-            padding: 3px;
+            padding: 4px;
+            transition: transform 0.2s;
         }
         
         #stickersPanel span:hover {
             transform: scale(1.2);
         }
         
+        /* Анимации */
         @@keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -529,15 +580,82 @@ else
             from { transform: translateX(0); opacity: 1; }
             to { transform: translateX(100%); opacity: 0; }
         }
+        
+        /* Скроллбары */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0d0d1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a4a;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3a3a5a;
+        }
+        
+        /* Приглашение */
+        .invite-container {
+            margin: 8px;
+            background-color: #0a0e1c;
+            padding: 8px 12px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        
+        .invite-link {
+            flex: 1;
+            background-color: #121628;
+            border: 1px solid #1e1e3a;
+            color: white;
+            border-radius: 4px;
+            padding: 6px 8px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+        
+        .invite-button {
+            background-color: #00aaff;
+            color: #0a0e1c;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .invite-button:hover {
+            background-color: #0088cc;
+        }
+        
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            z-index: 10000;
+            font-size: 13px;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
     </style>
 
     @if (userId == room.OwnerId)
     {
-        <div style="margin: 6px 12px 0 12px; background-color: #0a0e1c; padding: 5px 10px; border-radius: 6px; flex-shrink: 0;">
-            <div style="display: flex; gap: 6px; align-items: center;">
+        <div class="invite-container">
+            <div style="display: flex; gap: 8px; align-items: center;">
                 <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" 
-                       style="flex: 1; background-color: #121628; border: 1px solid #1e1e3a; color: white; border-radius: 4px; padding: 4px 6px; font-size: 11px;">
-                <button onclick="copyInviteLink()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; cursor: pointer;">Копировать</button>
+                       class="invite-link">
+                <button onclick="copyInviteLink()" class="invite-button">Копировать</button>
             </div>
         </div>
     }
@@ -546,7 +664,9 @@ else
         <div class="content-area">
             <!-- ЛЕВАЯ ПАНЕЛЬ -->
             <div class="file-panel">
-                <div style="padding: 8px; border-bottom: 1px solid #00aaff; font-weight: bold; color: white; font-size: 12px;">Файлы</div>
+                <div style="padding: 12px; border-bottom: 1px solid #00aaff; font-weight: bold; color: white; font-size: 13px;">
+                    <i class="fas fa-folder"></i> Файлы
+                </div>
                 <div id="fileTree" class="file-tree"></div>
                 <button class="new-file-btn" onclick="promptNewFile()">
                     <i class="fas fa-plus"></i> Новый файл
@@ -557,13 +677,15 @@ else
             <div class="center-area">
                 <div class="editor-toolbar">
                     <div id="tabsContainer" class="tabs-container"></div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
                         <select id="languageSelect" class="language-select">
                             <option value="python">Python</option>
                             <option value="javascript">JavaScript</option>
                             <option value="bash">Bash</option>
                         </select>
-                        <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;">▶ Run</button>
+                        <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-play"></i> Run
+                        </button>
                     </div>
                 </div>
 
@@ -573,10 +695,11 @@ else
 
                 <div id="terminal" class="terminal" style="height: 150px;">
                     <div class="terminal-header">
+                        <i class="fas fa-terminal" style="margin-right: 6px;"></i>
                         <span>Терминал</span>
                         <button onclick="toggleTerminal()" style="background: none; border: none; color: #ccc; margin-left: auto; cursor: pointer;">▲ Свернуть</button>
                     </div>
-                    <div id="terminalOutput" class="terminal-output"></div>
+                    <div id="terminalOutput" class="terminal-output">$ Добро пожаловать в терминал<br>$ Введите команду...</div>
                     <div class="terminal-input-line">
                         <span class="terminal-prompt">$</span>
                         <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
@@ -587,15 +710,17 @@ else
             <!-- ЧАТ -->
             <div class="chat-panel">
                 <div class="chat-header">
-                    <i class="fas fa-comments" style="margin-right: 6px;"></i> Чат
+                    <i class="fas fa-comments" style="margin-right: 6px;"></i> Чат комнаты
                 </div>
-                <div id="chatMessages" class="chat-messages"></div>
+                <div id="chatMessages" class="chat-messages">
+                    <div style="color: #888; text-align: center; padding: 20px;">Загрузка сообщений...</div>
+                </div>
                 <div id="stickersPanel" style="display: none;"></div>
                 <div class="chat-input-area">
-                    <button class="chat-button" onclick="toggleStickersPanel()">
+                    <button class="chat-button" onclick="toggleStickersPanel()" title="Стикеры">
                         <i class="fa-solid fa-icons"></i>
                     </button>
-                    <textarea id="chatInput" class="chat-input" rows="1" placeholder="Сообщение..."></textarea>
+                    <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напишите сообщение..."></textarea>
                     <button class="send-button" onclick="sendMessage()">
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -604,37 +729,48 @@ else
         </div>
 
         <div class="bottom-bar">
-            <div class="icon-button" onclick="toggleUsersPanel()">
+            <div class="icon-button" onclick="toggleUsersPanel()" title="Участники">
                 <i class="fas fa-users"></i>
             </div>
             <div class="icon-group">
-                <div class="icon-button" onclick="toggleSettingsPanel()">
+                <div class="icon-button" onclick="toggleSettingsPanel()" title="Настройки">
                     <i class="fas fa-gears"></i>
                 </div>
-                <div class="icon-button" onclick="openExitModal()">
-                    <i class="fas fa-arrow-right-from-bracket"></i>
+                <div class="icon-button" onclick="openExitModal()" title="Выйти">
+                    <i class="fas fa-sign-out-alt"></i>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="usersPanel" class="floating-panel">
-        <h4>Участники <span onclick="closeUsersPanel()" style="cursor:pointer;">✖</span></h4>
-        <div id="usersList" style="max-height: 300px; overflow-y: auto;"></div>
+        <h4>
+            <span><i class="fas fa-users"></i> Участники</span>
+            <span onclick="closeUsersPanel()" style="cursor:pointer;">✖</span>
+        </h4>
+        <div id="usersList" style="max-height: 300px; overflow-y: auto;">
+            <div style="color: #888; text-align: center; padding: 10px;">Загрузка...</div>
+        </div>
     </div>
 
     <div id="settingsPanel" class="floating-panel right">
-        <h4>Настройки</h4>
-        <p style="color:#a0a0a0; margin:4px 0; font-size:12px;">Макс. участников: 5</p>
-        <p style="color:#a0a0a0; margin:4px 0; font-size:12px;">Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
+        <h4>
+            <span><i class="fas fa-sliders-h"></i> Настройки</span>
+            <span onclick="toggleSettingsPanel()" style="cursor:pointer;">✖</span>
+        </h4>
+        <p style="color:#a0a0a0; margin:8px 0; font-size:12px;">Макс. участников: 5</p>
+        <p style="color:#a0a0a0; margin:8px 0; font-size:12px;">Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
+        <hr style="border-color: #1e1e3a; margin: 8px 0;">
+        <p style="color:#a0a0a0; margin:8px 0; font-size:11px;">ID комнаты: @room.Id</p>
     </div>
 
     <div id="exitModal" class="modal">
         <div class="modal-content">
-            <h3>Выйти из комнаты?</h3>
+            <h3><i class="fas fa-sign-out-alt"></i> Выйти из комнаты?</h3>
+            <p style="color: #a0a0a0; margin: 10px 0;">Все несохранённые изменения будут сохранены автоматически.</p>
             <div class="modal-buttons">
-                <button class="modal-button" onclick="closeExitModal()">Нет</button>
-                <button class="modal-button primary" onclick="exitRoom()">Да</button>
+                <button class="modal-button" onclick="closeExitModal()">Отмена</button>
+                <button class="modal-button primary" onclick="exitRoom()">Выйти</button>
             </div>
         </div>
     </div>
@@ -648,23 +784,51 @@ else
     let cursor = "@(currentUser?.Cursor ?? "⬤")";
     let ws = null;
     let participantsList = [];
+    let reconnectAttempts = 0;
+    let maxReconnectAttempts = 5;
+
+    // Получение участников через REST API (резервный вариант)
+    async function fetchParticipantsFromAPI() {
+        try {
+            const response = await fetch(`/api/room/${roomId}/users`);
+            if (response.ok) {
+                const users = await response.json();
+                updateUsersList(users);
+                return true;
+            }
+        } catch(e) {
+            console.error('API fetch error:', e);
+        }
+        return false;
+    }
 
     // Функция для получения списка участников через WebSocket
     function requestParticipantsList() {
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: "get_participants" }));
+        } else {
+            // Используем REST API как fallback
+            fetchParticipantsFromAPI();
         }
     }
 
     // Подключение WebSocket
     function connectWebSocket() {
+        // Используем ws вместо wss для локальной разработки
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsUrl = `${protocol}//${window.location.host}/ws/${roomId}/${userId}`;
+        const host = window.location.hostname;
+        const port = "8001"; // Порт Python WebSocket сервера
+        
+        // Пробуем подключиться к Python WebSocket серверу
+        const wsUrl = `ws://${host}:8001/ws/${roomId}/${userId}`;
+        
+        console.log("Connecting to WebSocket:", wsUrl);
         
         ws = new WebSocket(wsUrl);
         
         ws.onopen = () => {
-            console.log("WebSocket connected");
+            console.log("WebSocket connected successfully");
+            reconnectAttempts = 0;
             ws.send(JSON.stringify({ 
                 type: "join", 
                 user_id: userId, 
@@ -672,13 +836,13 @@ else
                 avatar: avatar, 
                 cursor: cursor 
             }));
-            // Запрашиваем список участников после подключения
             setTimeout(requestParticipantsList, 500);
         };
         
         ws.onmessage = (event) => {
             try {
                 const msg = JSON.parse(event.data);
+                console.log("WebSocket message:", msg);
                 
                 if (msg.type === "participant_list" || msg.type === "participants") {
                     participantsList = msg.users || msg.participants || [];
@@ -701,8 +865,20 @@ else
         };
         
         ws.onclose = () => {
-            console.log("WebSocket disconnected, reconnecting in 3 seconds...");
-            setTimeout(connectWebSocket, 3000);
+            console.log("WebSocket disconnected");
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                const delay = 3000 * reconnectAttempts;
+                console.log(`Reconnecting in ${delay/1000} seconds... (attempt ${reconnectAttempts})`);
+                setTimeout(connectWebSocket, delay);
+            } else {
+                console.log("Max reconnection attempts reached. Using REST API fallback.");
+                showNotification("WebSocket недоступен, использую REST API", true);
+                // Используем REST API как fallback
+                fetchParticipantsFromAPI();
+                // Периодически обновляем список через API
+                setInterval(fetchParticipantsFromAPI, 15000);
+            }
         };
         
         ws.onerror = (error) => {
@@ -715,67 +891,65 @@ else
         const container = document.getElementById('usersList');
         if (!container) return;
         
-        container.innerHTML = '';
-        
         if (!users || users.length === 0) {
             container.innerHTML = '<div style="color: #888; padding: 8px; text-align: center;">Нет участников</div>';
             return;
         }
         
+        container.innerHTML = '';
+        
         users.forEach(user => {
             const div = document.createElement('div');
             div.className = 'participant-item';
             div.onclick = () => {
-                if (user.user_id) {
-                    window.location.href = `/Profile?id=${user.user_id}`;
+                if (user.user_id || user.id) {
+                    const id = user.user_id || user.id;
+                    window.location.href = `/Profile?id=${id}`;
                 }
             };
             
-            // Проверяем, является ли пользователь текущим
-            const isCurrentUser = user.user_id === userId;
+            const isCurrentUser = (user.user_id === userId || user.id === userId);
+            const userNameText = user.name || user.userName || 'Аноним';
+            const userAvatar = user.avatar || '👤';
+            const userCursor = user.cursor || '⬤';
+            const isOnline = user.online !== false;
             
             div.innerHTML = `
                 <div class="participant-avatar">
-                    ${(!user.avatar || user.avatar.startsWith('👤') || !user.avatar.includes('/uploads/')) ? 
-                        `<span style="font-size: 1rem;">${user.avatar || '👤'}</span>` : 
-                        `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;">`}
+                    ${(!userAvatar || userAvatar === '👤' || !userAvatar.includes('/uploads/')) ? 
+                        `<span>${userAvatar}</span>` : 
+                        `<img src="${userAvatar}" style="width:100%;height:100%;object-fit:cover;">`}
                 </div>
-                <span class="participant-name">${user.name}${isCurrentUser ? ' (Вы)' : ''}</span>
-                <span class="participant-cursor">${user.cursor || '⬤'}</span>
-                <div class="participant-status" style="background-color: ${user.online ? '#00ff00' : '#888'};"></div>
+                <span class="participant-name">${escapeHtml(userNameText)}${isCurrentUser ? ' (Вы)' : ''}</span>
+                <span class="participant-cursor">${escapeHtml(userCursor)}</span>
+                <div class="participant-status" style="background-color: ${isOnline ? '#4CAF50' : '#888'};"></div>
             `;
             container.appendChild(div);
         });
     }
+    
+    // Функция для экранирования HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
-    // Обновление курсора удаленного пользователя
     function updateRemoteCursor(data) {
-        // Здесь можно реализовать отображение курсоров других пользователей в редакторе
         console.log("Cursor update:", data);
     }
 
     function showNotification(msg, isError) {
         const notif = document.createElement('div');
-        notif.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${isError ? '#c62828' : '#2e7d32'};
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            z-index: 10000;
-            font-size: 13px;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        `;
+        notif.className = 'notification';
+        notif.style.background = isError ? '#c62828' : '#2e7d32';
         notif.innerHTML = msg;
         document.body.appendChild(notif);
         
         setTimeout(() => {
             notif.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => notif.remove(), 300);
-        }, 2500);
+        }, 3000);
     }
 
     function copyInviteLink() {
@@ -836,16 +1010,19 @@ else
             if (!container) return;
             
             container.innerHTML = '';
+            if (files.length === 0) {
+                container.innerHTML = '<div style="color: #888; padding: 10px; text-align: center;">Нет файлов<br><small>Нажмите "Новый файл"</small></div>';
+            }
+            
             for (const f of files) {
                 const div = document.createElement('div');
                 div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
-                div.innerHTML = `<div class="file-icon">${getFileIcon(f.name)}</div><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${f.name}</span>`;
+                div.innerHTML = `<div class="file-icon">${getFileIcon(f.name)}</div><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(f.name)}</span>`;
                 div.onclick = () => openFile(f.id, f.name);
                 container.appendChild(div);
             }
         } catch(e) { 
             console.error('Error loading files:', e);
-            showNotification('Ошибка загрузки файлов', true);
         }
     }
 
@@ -865,9 +1042,13 @@ else
             loadFiles();
             
             if (editor && isEditorReady) {
-                editor.setValue(file.content || '');
+                const content = file.content || '';
+                editor.setValue(content);
                 monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFileName(name));
             }
+            
+            // Сохраняем последний открытый файл
+            localStorage.setItem(`lastFile_${roomId}`, id);
         } catch(e) { 
             console.error('Error opening file:', e);
             showNotification('Ошибка открытия файла', true);
@@ -952,12 +1133,16 @@ else
         if (!container) return;
         
         container.innerHTML = '';
+        if (openTabs.length === 0) {
+            container.innerHTML = '<div style="color: #888; padding: 6px; font-size: 11px;">Нет открытых файлов</div>';
+        }
+        
         for (const tab of openTabs) {
             const tabDiv = document.createElement('div');
             tabDiv.className = 'tab' + (currentFileId === tab.id ? ' active' : '');
             tabDiv.innerHTML = `
                 ${getFileIcon(tab.name)}
-                <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span>
+                <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(tab.name)}</span>
                 <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>
             `;
             tabDiv.onclick = () => openFile(tab.id, tab.name);
@@ -976,12 +1161,12 @@ else
         const out = document.getElementById('terminalOutput');
         
         if (!code.trim()) {
-            out.innerHTML += `$ Ошибка: Нет кода для выполнения\n`;
+            out.innerHTML += `\n$ Ошибка: Нет кода для выполнения\n`;
             out.scrollTop = out.scrollHeight;
             return;
         }
         
-        out.innerHTML += `$ Запуск (${lang})...\n`;
+        out.innerHTML += `\n$ Запуск (${lang})...\n`;
         
         fetch('/api/terminal/run', {
             method: 'POST',
@@ -1007,11 +1192,16 @@ else
             const container = document.getElementById('chatMessages');
             if (!container) return;
             
+            if (msgs.length === 0) {
+                container.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">Нет сообщений<br><small>Напишите первое сообщение!</small></div>';
+                return;
+            }
+            
             container.innerHTML = '';
             for (const m of msgs) {
                 const div = document.createElement('div');
                 div.className = `chat-message ${m.userId === userId ? 'me' : 'other'}`;
-                div.innerHTML = m.userId === userId ? m.text : `<b>${m.userName}:</b> ${m.text}`;
+                div.innerHTML = m.userId === userId ? escapeHtml(m.text) : `<b>${escapeHtml(m.userName)}:</b> ${escapeHtml(m.text)}`;
                 container.appendChild(div);
             }
             container.scrollTop = container.scrollHeight;
@@ -1049,7 +1239,7 @@ else
     function toggleStickersPanel() {
         const panel = document.getElementById('stickersPanel');
         if (panel.style.display === 'none' || !panel.style.display) {
-            const stickers = ['😊', '😂', '❤️', '🔥', '🎉', '🚀', '👍', '🎨', '💻', '🐍', '📁', '✨'];
+            const stickers = ['😊', '😂', '❤️', '🔥', '🎉', '🚀', '👍', '🎨', '💻', '🐍', '📁', '✨', '⭐', '💡', '🔧'];
             panel.innerHTML = stickers.map(s => `<span onclick="sendSticker('${s}')">${s}</span>`).join('');
             panel.style.display = 'flex';
         } else {
@@ -1061,7 +1251,7 @@ else
         const panel = document.getElementById('usersPanel');
         if (panel.style.display === 'none' || !panel.style.display) {
             panel.style.display = 'block';
-            requestParticipantsList(); // Обновляем список при открытии
+            requestParticipantsList();
         } else {
             panel.style.display = 'none';
         }
@@ -1085,9 +1275,12 @@ else
     }
     
     async function exitRoom() {
+        showNotification('Сохранение изменений...', false);
+        
         // Сохраняем текущий файл перед выходом
         if (currentFileId && editor && isEditorReady) {
             await saveCurrentFile();
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
         
         // Отправляем сообщение о выходе через WebSocket
@@ -1111,13 +1304,15 @@ else
         require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
         require(['vs/editor/editor.main'], function () {
             editor = monaco.editor.create(container, {
-                value: '',
-                language: 'python',
+                value: '// Добро пожаловать в редактор!\n// Создайте новый файл или откройте существующий.',
+                language: 'javascript',
                 theme: 'vs-dark',
                 automaticLayout: true,
-                fontSize: 12,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false
+                fontSize: 13,
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                lineNumbers: 'on',
+                renderWhitespace: 'selection'
             });
             
             isEditorReady = true;
@@ -1129,13 +1324,18 @@ else
             
             loadFiles();
             
-            // Загружаем последний открытый файл, если есть
-            const lastFile = localStorage.getItem(`lastFile_${roomId}`);
-            if (lastFile) {
-                try {
-                    const file = JSON.parse(lastFile);
-                    openFile(file.id, file.name);
-                } catch(e) {}
+            // Загружаем последний открытый файл
+            const lastFileId = localStorage.getItem(`lastFile_${roomId}`);
+            if (lastFileId) {
+                // Нужно получить имя файла по ID
+                fetch(`/api/room/${roomId}/file/${lastFileId}`)
+                    .then(res => res.json())
+                    .then(file => {
+                        if (file && file.name) {
+                            openFile(lastFileId, file.name);
+                        }
+                    })
+                    .catch(() => {});
             }
         });
     }
@@ -1143,7 +1343,7 @@ else
     function toggleTerminal() {
         const term = document.getElementById('terminal');
         const btn = term.querySelector('.terminal-header button');
-        if (term.style.height === '30px') {
+        if (term.style.height === '30px' || term.style.height === '30px') {
             term.style.height = '150px';
             btn.innerHTML = '▲ Свернуть';
         } else {
@@ -1152,25 +1352,31 @@ else
         }
     }
 
+    // Нажатие Enter в чате
+    document.getElementById('chatInput')?.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
     // Инициализация
     initEditor();
     loadChatHistory();
-    setInterval(loadChatHistory, 3000);
+    setInterval(loadChatHistory, 5000);
     connectWebSocket();
     
     // Периодически обновляем список участников
     setInterval(() => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            requestParticipantsList();
-        }
-    }, 10000);
-
-    // Сохраняем последний открытый файл
+        requestParticipantsList();
+    }, 15000);
+    
+    // Периодическое сохранение для надёжности
     setInterval(() => {
-        if (currentFileId) {
-            localStorage.setItem(`lastFile_${roomId}`, JSON.stringify({ id: currentFileId, name: '' }));
+        if (currentFileId && editor && isEditorReady) {
+            saveCurrentFile();
         }
-    }, 5000);
+    }, 30000);
 
     // Обработка ввода в терминале
     document.getElementById('terminalInput')?.addEventListener('keypress', e => {
@@ -1178,7 +1384,7 @@ else
             const cmd = e.target.value;
             e.target.value = '';
             const out = document.getElementById('terminalOutput');
-            out.innerHTML += `$ ${cmd}\n`;
+            out.innerHTML += `\n$ ${cmd}\n`;
             
             fetch('/api/terminal/run', {
                 method: 'POST',
@@ -1187,7 +1393,7 @@ else
             })
             .then(r => r.json())
             .then(data => {
-                out.innerHTML += (data.output || data.error || '') + '\n';
+                out.innerHTML += (data.output || data.error || 'Команда выполнена\n');
                 out.scrollTop = out.scrollHeight;
             })
             .catch(err => {
@@ -1227,5 +1433,12 @@ else
         document.removeEventListener('mousemove', resize);
         document.removeEventListener('mouseup', stopResize);
     }
+    
+    // Обработка изменения размера окна
+    window.addEventListener('resize', () => {
+        if (editor) {
+            editor.layout();
+        }
+    });
 </script>
 }
