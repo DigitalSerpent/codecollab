@@ -519,6 +519,16 @@ else
         #stickersPanel span:hover {
             transform: scale(1.2);
         }
+        
+        @@keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @@keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
     </style>
 
     @if (userId == room.OwnerId)
@@ -767,20 +777,6 @@ else
             setTimeout(() => notif.remove(), 300);
         }, 2500);
     }
-
-    // Добавляем анимации
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
 
     function copyInviteLink() {
         const inp = document.getElementById('inviteLink');
