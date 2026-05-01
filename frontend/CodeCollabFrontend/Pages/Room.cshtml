@@ -647,12 +647,15 @@ else
             const roomId = @roomId;
             const userId = @(userId ?? 0);
             const userName = "@(currentUser?.Name ?? "Гость")";
+            const avatar = "@(currentUser?.Avatar ?? "👤")";
+            const cursor = "@(currentUser?.Cursor ?? "⬤")";
             
             // Состояние
             let editor = null;
             let currentFileId = null;
             let openTabs = [];
             let saveTimer = null;
+            let ws = null;
             
             // Утилиты
             function showToast(msg, isError = false) {
@@ -695,6 +698,68 @@ else
                     'md': 'markdown'
                 };
                 return map[ext] || 'text';
+            }
+            
+            // WebSocket подключение
+            function connectWebSocket() {
+                const wsUrl = `ws://code-collab.ru:8000/ws/${roomId}/${userId}`;
+                console.log('🔌 Подключение к WebSocket:', wsUrl);
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    console.log("✅ WebSocket подключен!");
+                    ws.send(JSON.stringify({ 
+                        name: userName, 
+                        avatar: avatar, 
+                        cursor: cursor 
+                    }));
+                };
+                
+                ws.onmessage = (event) => {
+                    console.log("📨 Получено:", event.data);
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === "participant_list") {
+                            updateUsersList(msg.users);
+                        }
+                    } catch(e) {
+                        console.error("Ошибка парсинга:", e);
+                    }
+                };
+                
+                ws.onclose = () => {
+                    console.log("❌ WebSocket отключен, переподключение через 3 секунды...");
+                    setTimeout(connectWebSocket, 3000);
+                };
+                
+                ws.onerror = (error) => {
+                    console.error("⚠️ Ошибка WebSocket:", error);
+                };
+            }
+            
+            // Обновление списка участников
+            function updateUsersList(users) {
+                const container = document.getElementById('usersList');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div style="color: #888; padding: 10px; text-align: center;">Нет участников</div>';
+                    return;
+                }
+                
+                for (const user of users) {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.onclick = () => window.location.href = `/Profile?id=${user.user_id}`;
+                    div.innerHTML = `
+                        <div class="user-avatar">${user.avatar || '👤'}</div>
+                        <div class="user-name">${escapeHtml(user.name)} ${user.user_id === userId ? '(Вы)' : ''}</div>
+                        <div class="user-status" style="background: ${user.online ? '#4CAF50' : '#888'}"></div>
+                    `;
+                    container.appendChild(div);
+                }
             }
             
             // Файлы
@@ -751,8 +816,9 @@ else
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ content })
                     });
+                    console.log('Файл сохранен');
                 } catch(e) {
-                    console.error('Save error:', e);
+                    console.error('Ошибка сохранения:', e);
                 }
             }
             
@@ -781,6 +847,8 @@ else
             
             function renderTabs() {
                 const container = document.getElementById('tabsBar');
+                if (!container) return;
+                
                 container.innerHTML = '';
                 
                 for (const tab of openTabs) {
@@ -847,25 +915,12 @@ else
                 });
             }
             
-            // Участники
-            async function loadUsers() {
+            // Участники (REST API резервный)
+            async function loadUsersRest() {
                 try {
                     const res = await fetch(`/api/room/${roomId}/users`);
                     const users = await res.json();
-                    const container = document.getElementById('usersList');
-                    container.innerHTML = '';
-                    
-                    for (const user of users) {
-                        const div = document.createElement('div');
-                        div.className = 'user-item';
-                        div.onclick = () => window.location.href = `/Profile?id=${user.user_id || user.id}`;
-                        div.innerHTML = `
-                            <div class="user-avatar">${user.avatar || '👤'}</div>
-                            <div class="user-name">${escapeHtml(user.name)} ${user.user_id === userId ? '(Вы)' : ''}</div>
-                            <div class="user-status" style="background: #4CAF50"></div>
-                        `;
-                        container.appendChild(div);
-                    }
+                    updateUsersList(users);
                 } catch(e) {}
             }
             
@@ -873,7 +928,9 @@ else
                 const panel = document.getElementById('usersModal');
                 if (panel.style.display === 'none' || !panel.style.display) {
                     panel.style.display = 'block';
-                    loadUsers();
+                    if (!ws || ws.readyState !== WebSocket.OPEN) {
+                        loadUsersRest();
+                    }
                 } else {
                     panel.style.display = 'none';
                 }
@@ -934,9 +991,12 @@ else
             
             // Инициализация редактора
             function initEditor() {
+                const container = document.getElementById('editor');
+                if (!container) return;
+                
                 require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
                 require(['vs/editor/editor.main'], function() {
-                    editor = monaco.editor.create(document.getElementById('editor'), {
+                    editor = monaco.editor.create(container, {
                         value: '// Откройте файл для редактирования\n',
                         language: 'javascript',
                         theme: 'vs-dark',
@@ -970,7 +1030,7 @@ else
                 return div.innerHTML;
             }
             
-            // Обработчики
+            // Обработчики событий
             document.getElementById('chatInput')?.addEventListener('keypress', e => {
                 if (e.key === 'Enter') sendChatMessage();
             });
@@ -996,11 +1056,17 @@ else
                 }
             });
             
-            // Запуск
+            // Запуск всего
             initEditor();
             loadChat();
+            connectWebSocket(); // Подключаем WebSocket
+            
             setInterval(loadChat, 5000);
-            setInterval(loadUsers, 10000);
+            setInterval(() => {
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    loadUsersRest();
+                }
+            }, 10000);
         </script>
     </body>
     </html>
