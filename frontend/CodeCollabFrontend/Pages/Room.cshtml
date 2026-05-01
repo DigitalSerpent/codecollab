@@ -33,160 +33,608 @@ else
     <html>
     <head>
         <meta charset="utf-8">
-        <title>@room.Name — Code Collab</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>@room.Name - CodeCollab</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { background: #0a0e1c; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+            body, html { 
+                width: 100%; 
+                height: 100%; 
+                overflow: hidden;
+                background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
             
-            /* Хедер (один) */
-            .header { background: #05070f; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #00aaff; flex-shrink: 0; }
-            .logo { font-size: 1.8rem; font-weight: bold; color: white; }
-            .user { display: flex; align-items: center; gap: 15px; color: white; }
-            .avatar { width: 40px; height: 40px; border-radius: 50%; background: #00aaff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+            /* Анимированная кнопка */
+            @@keyframes pulse {
+                0% { box-shadow: 0 0 0 0 rgba(0, 170, 255, 0.4); }
+                70% { box-shadow: 0 0 0 20px rgba(0, 170, 255, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(0, 170, 255, 0); }
+            }
             
-            /* Основной контейнер */
-            .workspace { flex: 1; display: flex; padding: 12px; gap: 12px; overflow: hidden; min-height: 0; }
+            .app {
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                padding: 12px;
+                gap: 12px;
+                background: transparent;
+            }
             
-            /* Левая панель — файлы */
-            .files { width: 200px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
-            .panel-title { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; font-weight: bold; color: white; }
-            .file-list { flex: 1; overflow-y: auto; padding: 8px; }
-            .file-item { padding: 6px 10px; cursor: pointer; border-radius: 6px; margin-bottom: 4px; color: #ccc; display: flex; align-items: center; gap: 8px; font-size: 13px; }
-            .file-item:hover { background: #1e1e3a; color: white; }
-            .file-item.active { background: #0d3d5c; color: white; }
-            .new-file-btn { margin: 8px; padding: 8px; background: #00aaff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+            /* Хедер с ссылкой */
+            .header {
+                background: rgba(18, 22, 40, 0.7);
+                backdrop-filter: blur(8px);
+                border-radius: 16px;
+                padding: 12px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border: 1px solid rgba(0, 170, 255, 0.3);
+                flex-shrink: 0;
+            }
             
-            /* Центр */
-            .center { flex: 1; display: flex; flex-direction: column; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; overflow: hidden; min-width: 0; }
-            .invite-bar { background: #0a0e1c; padding: 6px 12px; margin: 8px 12px 0 12px; border-radius: 8px; display: flex; gap: 8px; }
-            .invite-input { flex: 1; background: #121628; border: 1px solid #1e1e3a; color: white; border-radius: 6px; padding: 6px; font-size: 11px; }
-            .copy-btn { background: #00aaff; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
-            .tabs { display: flex; background: #121628; border-bottom: 1px solid #00aaff; overflow-x: auto; padding: 0 8px; gap: 4px; }
-            .tab { padding: 8px 14px; background: #0d0d1a; color: #ccc; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-            .tab.active { background: #1e1e3a; color: white; border-bottom: 2px solid #00aaff; }
-            .tab-close { margin-left: 8px; opacity: 0.6; cursor: pointer; }
-            .toolbar { display: flex; justify-content: space-between; padding: 6px 12px; background: #121628; border-bottom: 1px solid #00aaff; }
-            .lang-select { background: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
-            .run-btn { background: #00aaff; border: none; border-radius: 6px; padding: 4px 16px; cursor: pointer; font-weight: bold; }
+            .room-title {
+                color: white;
+                font-size: 18px;
+                font-weight: bold;
+                display: flex;
+            .room-title i {
+            align-items: center;
+            gap: 10px;
+        }
+        
+            .invite-link {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                background: rgba(10, 14, 28, 0.8);
+                padding: 6px 12px;
+                border-radius: 10px;
+            }
+            
+            .invite-link input {
+                background: #0a0e1c;
+                border: 1px solid #00aaff;
+                color: white;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 12px;
+                width: 350px;
+                font-family: monospace;
+            }
+            
+            .invite-link button {
+                background: #00aaff;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: 0.3s;
+            }
+            
+            .invite-link button:hover {
+                background: #ffffff;
+                box-shadow: 0 0 15px #00aaff;
+            }
+            
+            /* Основная рабочая область */
+            .main-row {
+                flex: 1;
+                display: flex;
+                gap: 12px;
+                min-height: 0;
+            }
+            
+            /* Левая панель (файлы) */
+            .sidebar {
+                width: 220px;
+                background: rgba(13, 13, 26, 0.8);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(0, 170, 255, 0.3);
+                border-radius: 16px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .sidebar-header {
+                padding: 12px 15px;
+                background: rgba(18, 22, 40, 0.9);
+                border-bottom: 1px solid rgba(0, 170, 255, 0.5);
+                color: white;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            
+            .file-list {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+            }
+            
+            .file-item {
+                padding: 8px 12px;
+                cursor: pointer;
+                border-radius: 10px;
+                margin-bottom: 5px;
+                color: #ccc;
+                font-size: 13px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                transition: 0.2s;
+            }
+            
+            .file-item:hover { background: rgba(30, 30, 58, 0.8); color: white; }
+            .file-item.active { background: rgba(0, 170, 255, 0.2); color: white; border-left: 3px solid #00aaff; }
+            
+            .new-file-btn {
+                margin: 10px;
+                padding: 8px;
+                background: #00aaff;
+                border: none;
+                border-radius: 10px;
+                color: #0a0e1c;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: bold;
+                transition: 0.3s;
+            }
+            
+            .new-file-btn:hover {
+                background: #ffffff;
+                box-shadow: 0 0 15px #00aaff;
+            }
+            
+            /* Центральная область */
+            .center {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                background: rgba(13, 13, 26, 0.8);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(0, 170, 255, 0.3);
+                border-radius: 16px;
+                overflow: hidden;
+            }
+            
+            .tabs-bar {
+                display: flex;
+                background: rgba(18, 22, 40, 0.9);
+                border-bottom: 1px solid rgba(0, 170, 255, 0.5);
+                overflow-x: auto;
+                padding: 0 10px;
+                gap: 5px;
+            }
+            
+            .tab {
+                padding: 10px 18px;
+                background: rgba(13, 13, 26, 0.6);
+                color: #ccc;
+                cursor: pointer;
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+                transition: 0.2s;
+            }
+            
+            .tab.active {
+                background: rgba(0, 170, 255, 0.2);
+                color: white;
+                border-bottom: 2px solid #00aaff;
+            }
+            
+            .tab:hover { background: rgba(30, 30, 58, 0.8); }
+            
+            .tab-close {
+                margin-left: 8px;
+                cursor: pointer;
+                opacity: 0.6;
+            }
+            
+            .tab-close:hover { opacity: 1; }
+            
+            .toolbar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 15px;
+                background: rgba(18, 22, 40, 0.9);
+                border-bottom: 1px solid rgba(0, 170, 255, 0.5);
+                gap: 10px;
+            }
+            
+            .lang-select {
+                background: #0a0e1c;
+                color: white;
+                border: 1px solid #00aaff;
+                border-radius: 8px;
+                padding: 5px 12px;
+                font-size: 12px;
+                cursor: pointer;
+            }
+            
+            .run-btn {
+                background: #00aaff;
+                color: #0a0e1c;
+                border: none;
+                border-radius: 8px;
+                padding: 5px 18px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: bold;
+                transition: 0.3s;
+            }
+            
+            .run-btn:hover {
+                background: #ffffff;
+                box-shadow: 0 0 15px #00aaff;
+            }
+            
             .editor { flex: 1; min-height: 0; }
-            .terminal { height: 130px; background: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; flex-shrink: 0; }
-            .terminal-header { padding: 4px 12px; background: #2d2d2d; color: white; font-size: 11px; display: flex; justify-content: space-between; }
-            .terminal-output { flex: 1; overflow-y: auto; padding: 6px; color: #ccc; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
-            .terminal-line { display: flex; padding: 4px 10px; background: #1e1e1e; border-top: 1px solid #3c3c3c; }
-            .terminal-prompt { color: #00aaff; margin-right: 8px; }
-            .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; }
             
-            /* Правая панель — чат */
-            .chat { width: 260px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
-            .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-            .message { max-width: 85%; padding: 6px 12px; border-radius: 12px; font-size: 12px; }
-            .message-mine { background: #b198b3; color: #0a0e1c; align-self: flex-end; }
-            .message-other { background: #86a1b5; color: white; align-self: flex-start; }
-            .chat-input-area { display: flex; padding: 10px; gap: 8px; border-top: 1px solid #00aaff; }
-            .chat-input { flex: 1; padding: 8px; background: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; }
-            .chat-send { padding: 8px 14px; background: #00aaff; border: none; border-radius: 8px; cursor: pointer; }
+            .terminal {
+                height: 140px;
+                background: rgba(30, 30, 46, 0.95);
+                border-top: 1px solid rgba(0, 170, 255, 0.5);
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .terminal-header {
+                padding: 6px 15px;
+                background: rgba(45, 45, 45, 0.9);
+                color: white;
+                font-size: 11px;
+                display: flex;
+                justify-content: space-between;
+            }
+            
+            .terminal-output {
+                flex: 1;
+                overflow-y: auto;
+                padding: 8px;
+                color: #ccc;
+                font-family: monospace;
+                font-size: 11px;
+                white-space: pre-wrap;
+            }
+            
+            .terminal-input-line {
+                display: flex;
+                padding: 6px 12px;
+                background: rgba(30, 30, 46, 0.95);
+                border-top: 1px solid #3c3c3c;
+            }
+            
+            .terminal-prompt {
+                color: #00aaff;
+                margin-right: 8px;
+                font-weight: bold;
+            }
+            
+            .terminal-input {
+                flex: 1;
+                background: none;
+                border: none;
+                color: #ccc;
+                outline: none;
+                font-family: monospace;
+                font-size: 11px;
+            }
+            
+            /* Правая панель (чат) */
+            .chat-panel {
+                width: 280px;
+                background: rgba(13, 13, 26, 0.8);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(0, 170, 255, 0.3);
+                border-radius: 16px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            
+            .chat-header {
+                padding: 12px 15px;
+                background: rgba(18, 22, 40, 0.9);
+                border-bottom: 1px solid rgba(0, 170, 255, 0.5);
+                color: white;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            
+            .chat-messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 12px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .message {
+                max-width: 85%;
+                padding: 8px 12px;
+                border-radius: 12px;
+                font-size: 12px;
+                word-wrap: break-word;
+            }
+            
+            .message-mine {
+                background: #00aaff;
+                color: #0a0e1c;
+                align-self: flex-end;
+            }
+            
+            .message-other {
+                background: rgba(134, 161, 181, 0.3);
+                color: white;
+                align-self: flex-start;
+            }
+            
+            .chat-input-area {
+                display: flex;
+                padding: 12px;
+                gap: 10px;
+                border-top: 1px solid rgba(0, 170, 255, 0.5);
+            }
+            
+            .chat-input {
+                flex: 1;
+                padding: 8px 12px;
+                background: #0a0e1c;
+                border: 1px solid rgba(0, 170, 255, 0.5);
+                color: white;
+                border-radius: 10px;
+                font-size: 12px;
+            }
+            
+            .send-btn {
+                padding: 8px 15px;
+                background: #00aaff;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                color: #0a0e1c;
+                transition: 0.3s;
+            }
+            
+            .send-btn:hover {
+                background: #ffffff;
+                box-shadow: 0 0 15px #00aaff;
+            }
             
             /* Нижние иконки */
-            .bottom { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
-            .bottom-btn { width: 48px; height: 48px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 20px; }
-            .bottom-btn:hover { background: #1e1e3a; color: #00aaff; }
+            .bottom-bar {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                flex-shrink: 0;
+            }
             
-            .floating { display: none; position: fixed; bottom: 80px; left: 20px; width: 260px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; padding: 12px; z-index: 200; max-height: 350px; overflow-y: auto; }
-            .floating-title { color: white; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: bold; }
-            .participant { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
-            .participant:hover { background: #1e1e3a; }
-            .participant-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-            .participant-name { flex: 1; color: white; font-size: 13px; }
-            .participant-status { width: 8px; height: 8px; border-radius: 50%; }
+            .bottom-btn {
+                width: 50px;
+                height: 50px;
+                background: rgba(18, 22, 40, 0.7);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(0, 170, 255, 0.3);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: #a0a0a0;
+                font-size: 22px;
+                transition: 0.3s;
+            }
             
-            .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
-            .modal-card { background: #121628; border-radius: 16px; padding: 24px; width: 320px; border: 1px solid #00aaff; text-align: center; }
-            .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-            .modal-btn { flex:1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
+            .bottom-btn:hover {
+                background: #00aaff;
+                color: #0a0e1c;
+                border-color: #00aaff;
+                transform: translateY(-2px);
+            }
+            
+            /* Модалки */
+            .modal-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0, 0, 0, 0.9);
+                backdrop-filter: blur(8px);
+                z-index: 100000;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .modal-window {
+                background: rgba(18, 22, 40, 0.95);
+                backdrop-filter: blur(12px);
+                border-radius: 20px;
+                padding: 30px;
+                width: 350px;
+                border: 1px solid #00aaff;
+                text-align: center;
+                box-shadow: 0 0 30px rgba(0, 170, 255, 0.3);
+            }
+            
+            .modal-window h3 { color: white; margin-bottom: 20px; font-size: 20px; }
+            .modal-buttons { display: flex; gap: 15px; margin-top: 25px; }
+            .modal-btn {
+                flex: 1;
+                padding: 10px;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 14px;
+                transition: 0.3s;
+            }
             .modal-cancel { background: #1e1e3a; color: white; }
-            .modal-confirm { background: #00aaff; color: #0a0e1c; }
+            .modal-confirm { background: #00aaff; color: #0a0e1c; font-weight: bold; }
+            .modal-confirm:hover, .modal-cancel:hover { transform: scale(1.02); box-shadow: 0 0 15px #00aaff; }
             
-            .toast { position: fixed; top: 20px; right: 20px; padding: 10px 18px; border-radius: 8px; z-index: 10000; }
+            .floating-users {
+                display: none;
+                position: fixed;
+                bottom: 80px;
+                left: 20px;
+                width: 300px;
+                background: rgba(18, 22, 40, 0.95);
+                backdrop-filter: blur(12px);
+                border: 1px solid #00aaff;
+                border-radius: 16px;
+                padding: 15px;
+                z-index: 100000;
+                max-height: 400px;
+                overflow-y: auto;
+                box-shadow: 0 0 30px rgba(0, 170, 255, 0.3);
+            }
+            
+            .users-title {
+                color: white;
+                margin-bottom: 15px;
+                display: flex;
+                justify-content: space-between;
+                font-size: 16px;
+                font-weight: bold;
+                padding-bottom: 10px;
+                border-bottom: 1px solid rgba(0, 170, 255, 0.5);
+            }
+            
+            .user-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                cursor: pointer;
+                border-radius: 10px;
+                margin-bottom: 8px;
+                transition: 0.2s;
+            }
+            
+            .user-item:hover { background: rgba(0, 170, 255, 0.2); }
+            .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+            .user-name { flex: 1; color: white; font-size: 14px; font-weight: 500; }
+            .user-cursor { font-size: 16px; }
+            .user-status { width: 10px; height: 10px; border-radius: 50%; }
+            
+            .toast {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 24px;
+                border-radius: 10px;
+                z-index: 1000000;
+                font-size: 13px;
+                animation: slideIn 0.3s ease;
+                background: #2e7d32;
+                color: white;
+            }
+            
+            @@keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            ::-webkit-scrollbar { width: 6px; height: 6px; }
+            ::-webkit-scrollbar-track { background: #0a0e1c; border-radius: 3px; }
+            ::-webkit-scrollbar-thumb { background: #00aaff; border-radius: 3px; }
         </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
     </head>
     <body>
-        <!-- Хедер (один) -->
-        <div class="header">
-            <div class="logo">Code Collab</div>
-            <div class="user">
-                <span>@(currentUser?.Name ?? "Гость")</span>
-                <div class="avatar">@(currentUser?.Avatar ?? "👤")</div>
-            </div>
-        </div>
-        
-        <div class="workspace">
-            <!-- ФАЙЛЫ -->
-            <div class="files">
-                <div class="panel-title"><i class="fas fa-folder"></i> Файлы</div>
-                <div id="fileTree" class="file-list"></div>
-                <button class="new-file-btn" onclick="createNewFile()">+ Новый файл</button>
-            </div>
-            
-            <!-- ЦЕНТР -->
-            <div class="center">
+        <div class="app">
+            <!-- ХЕДЕР С ССЫЛКОЙ -->
+            <div class="header">
+                <div class="room-title">
+                    <i class="fas fa-code" style="color: #00aaff;"></i>
+                    <span>@room.Name</span>
+                </div>
                 @if (userId == room.OwnerId)
                 {
-                    <div class="invite-bar">
-                        <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" class="invite-input">
-                        <button class="copy-btn" onclick="copyInvite()">Копировать</button>
+                    <div class="invite-link">
+                        <input type="text" id="inviteLink" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")">
+                        <button onclick="copyInvite()"><i class="fas fa-copy"></i> Копировать</button>
                     </div>
                 }
-                <div id="tabsBar" class="tabs"></div>
-                <div class="toolbar">
-                    <select id="langSelect" class="lang-select">
-                        <option value="python">Python</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="bash">Bash</option>
-                    </select>
-                    <button class="run-btn" onclick="runCode()">Запустить</button>
+            </div>
+            
+            <div class="main-row">
+                <!-- ЛЕВАЯ ПАНЕЛЬ: ФАЙЛЫ -->
+                <div class="sidebar">
+                    <div class="sidebar-header"><i class="fas fa-folder-open"></i> Файлы</div>
+                    <div id="fileList" class="file-list"></div>
+                    <button class="new-file-btn" onclick="createNewFile()"><i class="fas fa-plus"></i> Новый файл</button>
                 </div>
-                <div id="editor" class="editor"></div>
-                <div class="terminal">
-                    <div class="terminal-header">
-                        <span><i class="fas fa-terminal"></i> Терминал</span>
-                        <button onclick="toggleTerminal()" style="background:none; border:none; color:#ccc; cursor:pointer;">▼</button>
+                
+                <!-- ЦЕНТР: РЕДАКТОР -->
+                <div class="center">
+                    <div id="tabsBar" class="tabs-bar"></div>
+                    <div class="toolbar">
+                        <select id="langSelect" class="lang-select">
+                            <option value="python">🐍 Python</option>
+                            <option value="javascript">📜 JavaScript</option>
+                            <option value="html">🌐 HTML</option>
+                            <option value="css">🎨 CSS</option>
+                        </select>
+                        <button class="run-btn" onclick="runCode()"><i class="fas fa-play"></i> Запустить</button>
                     </div>
-                    <div id="terminalOut" class="terminal-output">$ Готов к работе\n</div>
-                    <div class="terminal-line">
-                        <span class="terminal-prompt">$</span>
-                        <input type="text" id="terminalInput" class="terminal-input" placeholder="команда...">
+                    <div id="editor" class="editor"></div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <span><i class="fas fa-terminal"></i> Терминал</span>
+                            <button onclick="toggleTerminal()" style="background:none; border:none; color:#ccc; cursor:pointer;">▲</button>
+                        </div>
+                        <div id="terminalOut" class="terminal-output">$ Добро пожаловать в CodeCollab! 👋\n$ Здесь вы можете писать код вместе с друзьями\n</div>
+                        <div class="terminal-input-line">
+                            <span class="terminal-prompt">$</span>
+                            <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ПРАВАЯ ПАНЕЛЬ: ЧАТ -->
+                <div class="chat-panel">
+                    <div class="chat-header"><i class="fas fa-comments"></i> Чат комнаты</div>
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Напишите сообщение...">
+                        <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
             </div>
             
-            <!-- ЧАТ -->
-            <div class="chat">
-                <div class="panel-title"><i class="fas fa-comments"></i> Чат</div>
-                <div id="chatMessages" class="chat-messages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="chatInput" class="chat-input" placeholder="Сообщение...">
-                    <button class="chat-send" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+            <!-- НИЖНИЕ ИКОНКИ -->
+            <div class="bottom-bar">
+                <div class="bottom-btn" onclick="toggleUsers()" title="Участники">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="bottom-btn" onclick="openExitModal()" title="Выйти">
+                    <i class="fas fa-sign-out-alt"></i>
                 </div>
             </div>
         </div>
         
-        <!-- НИЖНИЕ ИКОНКИ -->
-        <div class="bottom">
-            <div class="bottom-btn" onclick="toggleUsers()"><i class="fas fa-users"></i></div>
-            <div class="bottom-btn" onclick="openExitModal()"><i class="fas fa-sign-out-alt"></i></div>
-        </div>
-        
-        <!-- ПАНЕЛЬ УЧАСТНИКОВ -->
-        <div id="usersPanel" class="floating">
-            <div class="floating-title">Участники <span onclick="closeUsers()" style="cursor:pointer;">✖</span></div>
+        <!-- МОДАЛЬНЫЕ ОКНА -->
+        <div id="usersModal" class="floating-users">
+            <div class="users-title">
+                <span><i class="fas fa-users"></i> Участники</span>
+                <span onclick="closeUsers()" style="cursor:pointer;">✖</span>
+            </div>
             <div id="usersList"></div>
         </div>
         
-        <div id="exitModal" class="modal">
-            <div class="modal-card">
-                <h3 style="color:white;">Выйти из комнаты?</h3>
+        <div id="exitModal" class="modal-overlay">
+            <div class="modal-window">
+                <h3><i class="fas fa-sign-out-alt"></i> Выйти из комнаты?</h3>
+                <p style="color: #ccc;">Изменения автоматически сохранятся</p>
                 <div class="modal-buttons">
                     <button class="modal-btn modal-cancel" onclick="closeExitModal()">Отмена</button>
                     <button class="modal-btn modal-confirm" onclick="exitRoom()">Выйти</button>
@@ -207,47 +655,80 @@ else
             let saveTimer = null;
             let ws = null;
             
-            function showToast(msg, isErr = false) {
+            function showToast(msg, isError = false) {
                 const toast = document.createElement('div');
                 toast.className = 'toast';
-                toast.style.background = isErr ? '#c62828' : '#2e7d32';
-                toast.style.color = 'white';
-                toast.innerText = msg;
+                toast.style.background = isError ? '#c62828' : '#2e7d32';
+                toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
             }
             
             function copyInvite() {
-                const inp = document.getElementById('inviteLink');
-                if (inp) { inp.select(); document.execCommand('copy'); showToast('Ссылка скопирована'); }
+                const input = document.getElementById('inviteLink');
+                if (input) { input.select(); document.execCommand('copy'); showToast('Ссылка скопирована!'); }
             }
             
-            function getIcon(name) {
-                const e = name.split('.').pop();
-                const icons = { py:'<i class="fab fa-python"></i>', js:'<i class="fab fa-js"></i>', html:'<i class="fab fa-html5"></i>', css:'<i class="fab fa-css3-alt"></i>', md:'<i class="fas fa-markdown"></i>' };
-                return icons[e] || '<i class="fas fa-file-code"></i>';
+            // WebSocket подключение
+            function connectWebSocket() {
+                const wsUrl = `ws://${window.location.hostname}:8000/ws/${roomId}/${userId}`;
+                console.log('🔌 WebSocket:', wsUrl);
+                
+                ws = new WebSocket(wsUrl);
+                ws.onopen = () => {
+                    console.log('✅ WebSocket подключен');
+                    ws.send(JSON.stringify({ name: userName, avatar: userAvatar, cursor: userCursor }));
+                };
+                ws.onmessage = (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'participant_list') updateUsersList(data.users);
+                    } catch(e) {}
+                };
+                ws.onclose = () => setTimeout(connectWebSocket, 3000);
+                ws.onerror = () => console.log('⚠️ WebSocket ошибка');
             }
             
-            function getLang(name) {
-                const e = name.split('.').pop();
-                const map = { py:'python', js:'javascript', html:'html', css:'css', md:'markdown', txt:'text', sh:'bash' };
-                return map[e] || 'text';
+            function updateUsersList(users) {
+                const container = document.getElementById('usersList');
+                if (!container) return;
+                container.innerHTML = '';
+                
+                // Добавляем текущего пользователя, если его нет в списке
+                const hasCurrentUser = users.some(u => u.user_id === userId);
+                if (!hasCurrentUser) {
+                    users.unshift({ user_id: userId, name: userName, avatar: userAvatar, cursor: userCursor, online: true });
+                }
+                
+                for (const u of users) {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
+                    div.innerHTML = `
+                        <div class="user-avatar">${u.avatar || '👤'}</div>
+                        <div class="user-name">${escapeHtml(u.name)} ${u.user_id === userId ? '<span style="color:#00aaff;">(Вы)</span>' : ''}</div>
+                        <div class="user-cursor">${u.cursor || '⬤'}</div>
+                        <div class="user-status" style="background: ${u.online ? '#4caf50' : '#888'}"></div>
+                    `;
+                    container.appendChild(div);
+                }
             }
             
+            // Файлы
             async function loadFiles() {
                 try {
                     const res = await fetch(`/api/room/${roomId}/file`);
                     const files = await res.json();
-                    const container = document.getElementById('fileTree');
+                    const container = document.getElementById('fileList');
                     container.innerHTML = '';
                     for (const f of files) {
                         const div = document.createElement('div');
-                        div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
-                        div.innerHTML = `${getIcon(f.name)} <span style="flex:1;">${escapeHtml(f.name)}</span>`;
+                        div.className = `file-item ${currentFileId === f.id ? 'active' : ''}`;
+                        div.innerHTML = `<i class="fas fa-file-code"></i> ${escapeHtml(f.name)}`;
                         div.onclick = () => openFile(f.id, f.name);
                         container.appendChild(div);
                     }
-                } catch(e) {}
+                } catch(e) { console.error(e); }
             }
             
             async function openFile(id, name) {
@@ -260,18 +741,22 @@ else
                     loadFiles();
                     if (editor) {
                         editor.setValue(file.content || '');
-                        monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
+                        const ext = name.split('.').pop();
+                        const langMap = { py:'python', js:'javascript', html:'html', css:'css', txt:'text' };
+                        monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'text');
                     }
-                } catch(e) { showToast('Ошибка открытия', true); }
+                    localStorage.setItem(`lastFile_${roomId}`, id);
+                } catch(e) { showToast('Ошибка открытия файла', true); }
             }
             
             function renderTabs() {
                 const container = document.getElementById('tabsBar');
+                if (!container) return;
                 container.innerHTML = '';
                 for (const t of openTabs) {
                     const tab = document.createElement('div');
                     tab.className = `tab ${currentFileId === t.id ? 'active' : ''}`;
-                    tab.innerHTML = `${getIcon(t.name)} ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
+                    tab.innerHTML = `<i class="fas fa-file"></i> ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
                     tab.onclick = () => openFile(t.id, t.name);
                     container.appendChild(tab);
                 }
@@ -288,19 +773,21 @@ else
                 renderTabs();
             }
             
-            async function saveFile() {
+            async function saveCurrentFile() {
                 if (!currentFileId || !editor) return;
                 try {
+                    const content = editor.getValue();
                     await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ Content: editor.getValue() })
+                        body: JSON.stringify({ Content: content })
                     });
-                } catch(e) {}
+                    console.log('✅ Файл сохранен');
+                } catch(e) { console.error('Save error:', e); }
             }
             
             async function createNewFile() {
-                let name = prompt('Имя файла:', 'newfile.txt');
+                let name = prompt('Имя файла (например, script.py):');
                 if (!name) return;
                 if (!name.includes('.')) name += '.txt';
                 try {
@@ -313,15 +800,18 @@ else
                         const file = await res.json();
                         await loadFiles();
                         await openFile(file.id, file.name);
+                        showToast(`Файл ${name} создан`);
                     }
                 } catch(e) { showToast('Ошибка создания', true); }
             }
             
+            // Чат
             async function loadChat() {
                 try {
                     const res = await fetch(`/api/chat/${roomId}`);
                     const msgs = await res.json();
                     const container = document.getElementById('chatMessages');
+                    if (!container) return;
                     container.innerHTML = '';
                     for (const m of msgs) {
                         const div = document.createElement('div');
@@ -333,7 +823,7 @@ else
                 } catch(e) {}
             }
             
-            function sendChatMessage() {
+            function sendMessage() {
                 const input = document.getElementById('chatInput');
                 const text = input.value.trim();
                 if (!text) return;
@@ -344,83 +834,69 @@ else
                 }).then(() => { input.value = ''; loadChat(); });
             }
             
+            // Запуск кода
             function runCode() {
                 if (!editor) return;
                 const code = editor.getValue();
                 const lang = document.getElementById('langSelect').value;
-                const out = document.getElementById('terminalOut');
-                out.innerHTML += `\n$ Запуск ${lang}...\n`;
+                const output = document.getElementById('terminalOut');
+                output.innerHTML += `\n$ 🚀 Запуск ${lang}...\n`;
                 fetch('/api/terminal/run', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
                 }).then(r => r.json()).then(data => {
-                    out.innerHTML += (data.output || data.error || 'Выполнено\n');
-                    out.scrollTop = out.scrollHeight;
+                    output.innerHTML += (data.output || data.error || '✅ Выполнено\n');
+                    output.scrollTop = output.scrollHeight;
                 });
             }
             
             function toggleTerminal() {
                 const term = document.querySelector('.terminal');
                 const btn = term.querySelector('.terminal-header button');
-                if (term.style.height === '35px') { term.style.height = '130px'; btn.innerHTML = '▼'; }
-                else { term.style.height = '35px'; btn.innerHTML = '▲'; }
-            }
-            
-            function connectWebSocket() {
-                const url = `ws://${window.location.hostname}:8000/ws/${roomId}/${userId}`;
-                ws = new WebSocket(url);
-                ws.onopen = () => ws.send(JSON.stringify({ name: userName, avatar: userAvatar, cursor: userCursor }));
-                ws.onmessage = (e) => {
-                    try {
-                        const data = JSON.parse(e.data);
-                        if (data.type === 'participant_list') updateUsers(data.users);
-                    } catch(e) {}
-                };
-                ws.onclose = () => setTimeout(connectWebSocket, 3000);
-            }
-            
-            function updateUsers(users) {
-                const container = document.getElementById('usersList');
-                container.innerHTML = '';
-                for (const u of users) {
-                    const div = document.createElement('div');
-                    div.className = 'participant';
-                    div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
-                    div.innerHTML = `<div class="participant-avatar">${u.avatar || '👤'}</div>
-                                    <div class="participant-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
-                                    <div class="participant-status" style="background:${u.online ? '#4caf50' : '#888'}"></div>`;
-                    container.appendChild(div);
+                if (term.style.height === '35px') {
+                    term.style.height = '140px';
+                    btn.innerHTML = '▲';
+                } else {
+                    term.style.height = '35px';
+                    btn.innerHTML = '▼';
                 }
             }
             
+            // Участники (REST fallback)
             async function loadUsersRest() {
                 try {
                     const res = await fetch(`/api/room/${roomId}/users`);
                     const users = await res.json();
-                    updateUsers(users);
+                    updateUsersList(users);
                 } catch(e) {}
             }
             
             function toggleUsers() {
-                const panel = document.getElementById('usersPanel');
+                const panel = document.getElementById('usersModal');
                 if (panel.style.display === 'none' || !panel.style.display) {
                     panel.style.display = 'block';
                     if (!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest();
                 } else panel.style.display = 'none';
             }
             
-            function closeUsers() { document.getElementById('usersPanel').style.display = 'none'; }
+            function closeUsers() { document.getElementById('usersModal').style.display = 'none'; }
             function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
             function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
-            async function exitRoom() { if (currentFileId && editor) await saveFile(); window.location.href = '/dashboard'; }
             
+            async function exitRoom() {
+                if (currentFileId && editor) await saveCurrentFile();
+                window.location.href = '/dashboard';
+            }
+            
+            // Редактор Monaco
             function initEditor() {
                 const container = document.getElementById('editor');
+                if (!container) return;
                 require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
                 require(['vs/editor/editor.main'], function() {
                     editor = monaco.editor.create(container, {
-                        value: '// Создайте или откройте файл',
+                        value: '// Откройте или создайте файл для редактирования\n// Приятного кодинга! 💻\n',
                         language: 'javascript',
                         theme: 'vs-dark',
                         automaticLayout: true,
@@ -429,21 +905,30 @@ else
                     });
                     editor.onDidChangeModelContent(() => {
                         if (saveTimer) clearTimeout(saveTimer);
-                        saveTimer = setTimeout(saveFile, 1000);
+                        saveTimer = setTimeout(saveCurrentFile, 1000);
                     });
                     loadFiles();
+                    
+                    const lastFile = localStorage.getItem(`lastFile_${roomId}`);
+                    if (lastFile) {
+                        fetch(`/api/room/${roomId}/file/${lastFile}`)
+                            .then(res => res.json())
+                            .then(file => { if(file && file.name) openFile(lastFile, file.name); });
+                    }
                 });
             }
             
-            function escapeHtml(s) { return s.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+            function escapeHtml(str) {
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
             
-            initEditor();
-            loadChat();
-            connectWebSocket();
-            setInterval(loadChat, 5000);
-            setInterval(() => { if(!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest(); }, 10000);
-            
-            document.getElementById('chatInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') sendChatMessage(); });
+            // Обработчики
+            document.getElementById('chatInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(); });
             document.getElementById('terminalInput')?.addEventListener('keypress', e => {
                 if(e.key === 'Enter') {
                     const cmd = e.target.value;
@@ -460,6 +945,13 @@ else
                     });
                 }
             });
+            
+            // Запуск
+            initEditor();
+            loadChat();
+            connectWebSocket();
+            setInterval(loadChat, 5000);
+            setInterval(() => { if(!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest(); }, 10000);
         </script>
     </body>
     </html>
