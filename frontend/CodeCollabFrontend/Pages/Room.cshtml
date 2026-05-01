@@ -79,7 +79,7 @@ else
         .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
         .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
         
-        .floating-panel { display: none; position: fixed; bottom: 80px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
+        .floating-panel { display: none; position: fixed; bottom: 20px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
         .floating-panel.right { left: auto; right: 80px; }
         .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
@@ -103,7 +103,7 @@ else
         </div>
     }
 
-    <div style="display: flex; flex-direction: column; height: calc(100vh - 100px); padding: 8px; padding-right: 50px;">
+    <div style="display: flex; flex-direction: column; height: calc(100vh - 80px); padding: 8px;">
 
         <div style="display: flex; flex: 1; min-height: 0; background-color: #121628; border-radius: 12px; border: 1px solid #00aaff; overflow: hidden;">
 
@@ -217,7 +217,6 @@ else
     let userName = "@(currentUser?.Name ?? "Гость")";
     let avatar = "@(currentUser?.Avatar ?? "👤")";
     let cursor = "@(currentUser?.Cursor ?? "⬤")";
-    let ws = null;
 
     function showNotification(msg, isError) {
         const div = document.createElement('div');
@@ -314,7 +313,7 @@ else
         await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content })
+            body: JSON.stringify({ content: content })   // ✅ поле "content" с маленькой буквы
         });
     }
 
