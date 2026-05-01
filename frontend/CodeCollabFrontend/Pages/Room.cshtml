@@ -1,473 +1,466 @@
-@page
-@model CodeCollabFrontend.Pages.ProfileModel
-@{
-    Layout = null;
-}
+@page "/room/{id}"
+@using Microsoft.EntityFrameworkCore
 @using CodeCollabFrontend.Models
 @inject AppDbContext _context
 @using Microsoft.AspNetCore.Http
+
 @{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (userId == null)
+    #nullable disable
+    if (!int.TryParse((string)RouteData.Values["id"], out int roomId))
     {
-        HttpContext.Response.Redirect("/Login");
+        <h2 style="color: white;">Неверный ID комнаты</h2>
         return;
     }
 
-    var user = _context.Users.Find(userId);
-    if (user == null)
-    {
-        HttpContext.Response.Redirect("/Login");
-        return;
-    }
+    var room = _context.Rooms
+        .Include(r => r.RoomParticipants)
+            .ThenInclude(rp => rp.User)
+        .FirstOrDefault(r => r.Id == roomId);
+    
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var currentUser = userId != null ? _context.Users.Find(userId) : null;
 }
 
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8" />
-    <title>Профиль | Code Collab</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
-            font-family: 'Segoe UI', 'Inter', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            position: relative;
-        }
-        .sphere {
-            position: fixed;
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, rgba(0,170,255,0.1), transparent);
-            border-radius: 50%;
-            pointer-events: none;
-            animation: floatSphere 20s infinite ease-in-out;
-            z-index: 0;
-        }
-        @@keyframes floatSphere {
-            0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-            20% { opacity: 0.5; }
-            80% { opacity: 0.5; }
-            100% { transform: translateY(-20vh) translateX(50px); opacity: 0; }
-        }
-        .profile-container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 40px; }
-        .profile-card { background: rgba(10, 14, 28, 0.6); backdrop-filter: blur(12px); border-radius: 32px; border: 1px solid rgba(0, 170, 255, 0.4); box-shadow: 0 0 50px rgba(0, 170, 255, 0.2); overflow: hidden; }
-        .cover {
-            height: 200px;
-            background: linear-gradient(45deg, #00aaff20, #00aaff05);
-            position: relative;
-            cursor: pointer;
-            background-size: cover;
-            background-position: center;
-        }
-        .cover-hint {
-            position: absolute;
-            bottom: 10px;
-            right: 20px;
-            color: white;
-            font-size: 12px;
-            background: rgba(0,0,0,0.5);
-            padding: 4px 8px;
-            border-radius: 20px;
-        }
-        .avatar-wrapper { position: relative; margin-top: -70px; text-align: center; }
-        .avatar {
-            width: 140px; height: 140px; background: #121628; border-radius: 50%; border: 3px solid #00aaff;
-            box-shadow: 0 0 20px #00aaff; display: inline-flex; align-items: center; justify-content: center;
-            font-size: 4.5rem; cursor: pointer; transition: 0.2s; overflow: hidden;
-        }
-        .avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .info { text-align: center; padding: 20px 30px 10px; }
-        .name { font-size: 32px; font-weight: bold; color: white; margin-bottom: 8px; }
-        .name input { background: none; border: none; color: white; font-size: 32px; text-align: center; width: 100%; outline: none; }
-        .email { color: #a0a0a0; font-size: 14px; margin-bottom: 10px; }
-        .section { padding: 20px 30px; border-top: 1px solid rgba(0, 170, 255, 0.2); }
-        .section-title { color: #00aaff; font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .social-list { display: flex; flex-direction: column; gap: 10px; }
-        .social-row { display: flex; align-items: center; gap: 10px; }
-        .social-row input { flex: 1; padding: 10px; background: rgba(10, 14, 28, 0.8); border: 1px solid #2a2a4a; border-radius: 12px; color: white; }
-        .social-row button { background: none; border: none; color: #ff4444; cursor: pointer; font-size: 14px; }
-        .add-social { background: rgba(0, 170, 255, 0.2); border: 1px dashed #00aaff; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; color: #00aaff; margin-top: 10px; }
-        .actions { display: flex; gap: 15px; padding: 20px 30px; }
-        .btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-align: center; }
-        .btn-primary { background: #00aaff; color: #0a0e1c; }
-        .btn-primary:hover { background: white; box-shadow: 0 0 20px #00aaff; }
-        .btn-secondary { background: #1e1e3a; color: white; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: #121628; border-radius: 24px; padding: 30px; width: 90%; max-width: 1000px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; }
-        .footer { text-align: center; padding: 20px; color: #a0a0a0; font-size: 12px; border-top: 1px solid rgba(0,170,255,0.2); }
-        .cursor-workspace { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
-        .preview-area { flex: 1; min-width: 260px; text-align: center; }
-        .preview-box { background: #0a0e1c; border-radius: 24px; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; border: 1px solid #00aaff; margin: 0 auto; box-shadow: 0 0 20px rgba(0,170,255,0.2); position: relative; }
-        .premium-badge { position: absolute; top: 10px; right: 10px; background: linear-gradient(45deg, #00aaff, #88ccff); border-radius: 20px; padding: 4px 8px; font-size: 12px; color: white; font-weight: bold; box-shadow: 0 0 15px #00aaff; animation: angelGlow 2s infinite; }
-        @@keyframes angelGlow { 0% { box-shadow: 0 0 5px #00aaff; } 50% { box-shadow: 0 0 25px #88ccff; } 100% { box-shadow: 0 0 5px #00aaff; } }
-        .controls-area { margin-top: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .size-control { display: flex; align-items: center; gap: 15px; }
-        .size-control input { flex: 1; }
-        .cursors-grid { flex: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; max-width: 500px; margin: 0 auto; max-height: 400px; overflow-y: auto; padding: 10px; }
-        .cursor-option { background: #1a1e30; border: 1px solid #2a2a4a; border-radius: 16px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; position: relative; }
-        .cursor-option:hover, .cursor-option.selected { border-color: #00aaff; box-shadow: 0 0 15px #00aaff; transform: scale(1.05); }
-        .cursor-option.premium { border-color: #88ccff; background: #2a2a3a; }
-        .cursor-option.premium::after { content: "🔒"; position: absolute; top: -5px; right: -5px; font-size: 12px; background: #00aaff; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: white; }
-        .cursor-option img { width: 48px; height: 48px; object-fit: contain; }
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #121628; border-left: 4px solid #00aaff; padding: 12px 20px; border-radius: 8px; color: white; z-index: 9999; animation: slideIn 0.3s ease; box-shadow: 0 0 20px rgba(0,170,255,0.3); }
-        @@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
-</head>
-<body>
-
-<div id="spheresContainer"></div>
-
-<div class="profile-container">
-    <div class="profile-card">
-        <div id="cover" class="cover" onclick="changeCover()" style="background-image: url('@(string.IsNullOrEmpty(user.CoverUrl) ? "none" : user.CoverUrl)'); background-size: cover; background-position: center;">
-            <div class="cover-hint">Нажми, чтобы изменить фон</div>
-        </div>
-
-        <div class="avatar-wrapper">
-            <div class="avatar" onclick="openAvatarUpload()">
-                @if (!string.IsNullOrEmpty(user.Avatar) && !user.Avatar.StartsWith("👤") && user.Avatar.Contains("/uploads/"))
-                {
-                    <img src="@user.Avatar" alt="avatar">
-                }
-                else
-                {
-                    <span>@user.Avatar</span>
-                }
+@if (room == null)
+{
+    <h2 style="color: white;">Комната не найдена</h2>
+}
+else
+{
+    Layout = null;
+    
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>@room.Name — Code Collab</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { background: #0a0e1c; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+            
+            /* Хедер (один) */
+            .header { background: #05070f; padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #00aaff; flex-shrink: 0; }
+            .logo { font-size: 1.8rem; font-weight: bold; color: white; }
+            .user { display: flex; align-items: center; gap: 15px; color: white; }
+            .avatar { width: 40px; height: 40px; border-radius: 50%; background: #00aaff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+            
+            /* Основной контейнер */
+            .workspace { flex: 1; display: flex; padding: 12px; gap: 12px; overflow: hidden; min-height: 0; }
+            
+            /* Левая панель — файлы */
+            .files { width: 200px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+            .panel-title { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; font-weight: bold; color: white; }
+            .file-list { flex: 1; overflow-y: auto; padding: 8px; }
+            .file-item { padding: 6px 10px; cursor: pointer; border-radius: 6px; margin-bottom: 4px; color: #ccc; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+            .file-item:hover { background: #1e1e3a; color: white; }
+            .file-item.active { background: #0d3d5c; color: white; }
+            .new-file-btn { margin: 8px; padding: 8px; background: #00aaff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+            
+            /* Центр */
+            .center { flex: 1; display: flex; flex-direction: column; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; overflow: hidden; min-width: 0; }
+            .invite-bar { background: #0a0e1c; padding: 6px 12px; margin: 8px 12px 0 12px; border-radius: 8px; display: flex; gap: 8px; }
+            .invite-input { flex: 1; background: #121628; border: 1px solid #1e1e3a; color: white; border-radius: 6px; padding: 6px; font-size: 11px; }
+            .copy-btn { background: #00aaff; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+            .tabs { display: flex; background: #121628; border-bottom: 1px solid #00aaff; overflow-x: auto; padding: 0 8px; gap: 4px; }
+            .tab { padding: 8px 14px; background: #0d0d1a; color: #ccc; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+            .tab.active { background: #1e1e3a; color: white; border-bottom: 2px solid #00aaff; }
+            .tab-close { margin-left: 8px; opacity: 0.6; cursor: pointer; }
+            .toolbar { display: flex; justify-content: space-between; padding: 6px 12px; background: #121628; border-bottom: 1px solid #00aaff; }
+            .lang-select { background: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+            .run-btn { background: #00aaff; border: none; border-radius: 6px; padding: 4px 16px; cursor: pointer; font-weight: bold; }
+            .editor { flex: 1; min-height: 0; }
+            .terminal { height: 130px; background: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; flex-shrink: 0; }
+            .terminal-header { padding: 4px 12px; background: #2d2d2d; color: white; font-size: 11px; display: flex; justify-content: space-between; }
+            .terminal-output { flex: 1; overflow-y: auto; padding: 6px; color: #ccc; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
+            .terminal-line { display: flex; padding: 4px 10px; background: #1e1e1e; border-top: 1px solid #3c3c3c; }
+            .terminal-prompt { color: #00aaff; margin-right: 8px; }
+            .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; }
+            
+            /* Правая панель — чат */
+            .chat { width: 260px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+            .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+            .message { max-width: 85%; padding: 6px 12px; border-radius: 12px; font-size: 12px; }
+            .message-mine { background: #b198b3; color: #0a0e1c; align-self: flex-end; }
+            .message-other { background: #86a1b5; color: white; align-self: flex-start; }
+            .chat-input-area { display: flex; padding: 10px; gap: 8px; border-top: 1px solid #00aaff; }
+            .chat-input { flex: 1; padding: 8px; background: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; }
+            .chat-send { padding: 8px 14px; background: #00aaff; border: none; border-radius: 8px; cursor: pointer; }
+            
+            /* Нижние иконки */
+            .bottom { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
+            .bottom-btn { width: 48px; height: 48px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 20px; }
+            .bottom-btn:hover { background: #1e1e3a; color: #00aaff; }
+            
+            .floating { display: none; position: fixed; bottom: 80px; left: 20px; width: 260px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; padding: 12px; z-index: 200; max-height: 350px; overflow-y: auto; }
+            .floating-title { color: white; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: bold; }
+            .participant { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+            .participant:hover { background: #1e1e3a; }
+            .participant-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+            .participant-name { flex: 1; color: white; font-size: 13px; }
+            .participant-status { width: 8px; height: 8px; border-radius: 50%; }
+            
+            .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+            .modal-card { background: #121628; border-radius: 16px; padding: 24px; width: 320px; border: 1px solid #00aaff; text-align: center; }
+            .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+            .modal-btn { flex:1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
+            .modal-cancel { background: #1e1e3a; color: white; }
+            .modal-confirm { background: #00aaff; color: #0a0e1c; }
+            
+            .toast { position: fixed; top: 20px; right: 20px; padding: 10px 18px; border-radius: 8px; z-index: 10000; }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
+    </head>
+    <body>
+        <!-- Хедер (один) -->
+        <div class="header">
+            <div class="logo">Code Collab</div>
+            <div class="user">
+                <span>@(currentUser?.Name ?? "Гость")</span>
+                <div class="avatar">@(currentUser?.Avatar ?? "👤")</div>
             </div>
         </div>
-
-        <div class="info">
-            <div class="name">
-                <input type="text" id="userName" value="@user.Name">
-            </div>
-            <div class="email">@user.Email</div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">
-                <span>🌐</span> Социальные сети
-            </div>
-            <div id="socialList" class="social-list"></div>
-            <div class="add-social" onclick="addSocialField()">
-                + Добавить соцсеть
-            </div>
-        </div>
-
-        <div class="section">
-            <button class="btn btn-primary" onclick="openCursorModal()">Конструктор курсора</button>
-        </div>
-
-        <div class="actions">
-            <button class="btn btn-primary" onclick="saveProfile()">Сохранить</button>
-            <button class="btn btn-secondary" onclick="window.location.href='/Dashboard'">Назад</button>
-        </div>
-
-        <div class="footer">
-            📅 Дата регистрации: @user.CreatedAt.ToString("dd.MM.yyyy")
-        </div>
-    </div>
-</div>
-
-<!-- Скрытая форма загрузки аватара -->
-<form id="avatarForm" method="post" enctype="multipart/form-data" style="display: none;">
-    <input type="file" id="avatarFileInput" name="avatarFile" accept="image/jpeg,image/png,image/gif,image.webp" />
-</form>
-
-<!-- Скрытая форма загрузки обложки -->
-<form id="coverForm" method="post" enctype="multipart/form-data" style="display: none;">
-    <input type="file" id="coverFileInput" name="coverFile" accept="image/jpeg,image/png,image/gif,image.webp" />
-</form>
-
-<!-- Модалка курсора -->
-<div id="cursorModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color: white; margin-bottom: 20px; text-align: center;">Конструктор курсора</h3>
         
-        <div class="cursor-workspace">
-            <div class="preview-area">
-                <div class="preview-box">
-                    <img id="previewImg" src="/cursors/handpointing.svg" style="width: 64px; height: 64px; object-fit: contain;">
-                    <div id="premiumBadge" class="premium-badge" style="display: none;">⭐ PREMIUM</div>
+        <div class="workspace">
+            <!-- ФАЙЛЫ -->
+            <div class="files">
+                <div class="panel-title"><i class="fas fa-folder"></i> Файлы</div>
+                <div id="fileTree" class="file-list"></div>
+                <button class="new-file-btn" onclick="createNewFile()">+ Новый файл</button>
+            </div>
+            
+            <!-- ЦЕНТР -->
+            <div class="center">
+                @if (userId == room.OwnerId)
+                {
+                    <div class="invite-bar">
+                        <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" class="invite-input">
+                        <button class="copy-btn" onclick="copyInvite()">Копировать</button>
+                    </div>
+                }
+                <div id="tabsBar" class="tabs"></div>
+                <div class="toolbar">
+                    <select id="langSelect" class="lang-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="bash">Bash</option>
+                    </select>
+                    <button class="run-btn" onclick="runCode()">Запустить</button>
                 </div>
-                <div class="controls-area">
-                    <div class="size-control">
-                        <span style="color: white;">Размер</span>
-                        <input type="range" id="cursorSize" min="16" max="48" value="32" step="2">
+                <div id="editor" class="editor"></div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <span><i class="fas fa-terminal"></i> Терминал</span>
+                        <button onclick="toggleTerminal()" style="background:none; border:none; color:#ccc; cursor:pointer;">▼</button>
+                    </div>
+                    <div id="terminalOut" class="terminal-output">$ Готов к работе\n</div>
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">$</span>
+                        <input type="text" id="terminalInput" class="terminal-input" placeholder="команда...">
                     </div>
                 </div>
             </div>
-
-            <div class="cursors-grid" id="cursorGrid"></div>
+            
+            <!-- ЧАТ -->
+            <div class="chat">
+                <div class="panel-title"><i class="fas fa-comments"></i> Чат</div>
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Сообщение...">
+                    <button class="chat-send" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- НИЖНИЕ ИКОНКИ -->
+        <div class="bottom">
+            <div class="bottom-btn" onclick="toggleUsers()"><i class="fas fa-users"></i></div>
+            <div class="bottom-btn" onclick="openExitModal()"><i class="fas fa-sign-out-alt"></i></div>
+        </div>
+        
+        <!-- ПАНЕЛЬ УЧАСТНИКОВ -->
+        <div id="usersPanel" class="floating">
+            <div class="floating-title">Участники <span onclick="closeUsers()" style="cursor:pointer;">✖</span></div>
+            <div id="usersList"></div>
+        </div>
+        
+        <div id="exitModal" class="modal">
+            <div class="modal-card">
+                <h3 style="color:white;">Выйти из комнаты?</h3>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-cancel" onclick="closeExitModal()">Отмена</button>
+                    <button class="modal-btn modal-confirm" onclick="exitRoom()">Выйти</button>
+                </div>
+            </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; gap: 15px; margin-top: 30px;">
-            <button class="btn btn-primary" onclick="applyCursor()">Применить</button>
-            <button class="btn btn-secondary" onclick="closeCursorModal()">Отмена</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    let socialFields = [];
-
-    function renderSocials() {
-        const container = document.getElementById('socialList');
-        container.innerHTML = '';
-        socialFields.forEach((field, index) => {
-            const row = document.createElement('div');
-            row.className = 'social-row';
-            row.innerHTML = `
-                <input type="text" placeholder="Название" value="${field.name || ''}" data-index="${index}" data-type="name">
-                <input type="text" placeholder="Ссылка" value="${field.url || ''}" data-index="${index}" data-type="url">
-                <button onclick="removeSocialField(${index})"><i class="fas fa-times"></i></button>
-            `;
-            container.appendChild(row);
-        });
-        document.querySelectorAll('.social-row input').forEach(inp => {
-            inp.addEventListener('change', (e) => {
-                const idx = e.target.getAttribute('data-index');
-                const type = e.target.getAttribute('data-type');
-                if (type === 'name') socialFields[idx].name = e.target.value;
-                else socialFields[idx].url = e.target.value;
+        <script>
+            const roomId = @roomId;
+            const userId = @(userId ?? 0);
+            const userName = "@(currentUser?.Name ?? "Гость")";
+            const userAvatar = "@(currentUser?.Avatar ?? "👤")";
+            const userCursor = "@(currentUser?.Cursor ?? "⬤")";
+            
+            let editor = null;
+            let currentFileId = null;
+            let openTabs = [];
+            let saveTimer = null;
+            let ws = null;
+            
+            function showToast(msg, isErr = false) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.style.background = isErr ? '#c62828' : '#2e7d32';
+                toast.style.color = 'white';
+                toast.innerText = msg;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+            
+            function copyInvite() {
+                const inp = document.getElementById('inviteLink');
+                if (inp) { inp.select(); document.execCommand('copy'); showToast('Ссылка скопирована'); }
+            }
+            
+            function getIcon(name) {
+                const e = name.split('.').pop();
+                const icons = { py:'<i class="fab fa-python"></i>', js:'<i class="fab fa-js"></i>', html:'<i class="fab fa-html5"></i>', css:'<i class="fab fa-css3-alt"></i>', md:'<i class="fas fa-markdown"></i>' };
+                return icons[e] || '<i class="fas fa-file-code"></i>';
+            }
+            
+            function getLang(name) {
+                const e = name.split('.').pop();
+                const map = { py:'python', js:'javascript', html:'html', css:'css', md:'markdown', txt:'text', sh:'bash' };
+                return map[e] || 'text';
+            }
+            
+            async function loadFiles() {
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file`);
+                    const files = await res.json();
+                    const container = document.getElementById('fileTree');
+                    container.innerHTML = '';
+                    for (const f of files) {
+                        const div = document.createElement('div');
+                        div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
+                        div.innerHTML = `${getIcon(f.name)} <span style="flex:1;">${escapeHtml(f.name)}</span>`;
+                        div.onclick = () => openFile(f.id, f.name);
+                        container.appendChild(div);
+                    }
+                } catch(e) {}
+            }
+            
+            async function openFile(id, name) {
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file/${id}`);
+                    const file = await res.json();
+                    if (!openTabs.some(t => t.id === id)) openTabs.push({ id, name });
+                    currentFileId = id;
+                    renderTabs();
+                    loadFiles();
+                    if (editor) {
+                        editor.setValue(file.content || '');
+                        monaco.editor.setModelLanguage(editor.getModel(), getLang(name));
+                    }
+                } catch(e) { showToast('Ошибка открытия', true); }
+            }
+            
+            function renderTabs() {
+                const container = document.getElementById('tabsBar');
+                container.innerHTML = '';
+                for (const t of openTabs) {
+                    const tab = document.createElement('div');
+                    tab.className = `tab ${currentFileId === t.id ? 'active' : ''}`;
+                    tab.innerHTML = `${getIcon(t.name)} ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
+                    tab.onclick = () => openFile(t.id, t.name);
+                    container.appendChild(tab);
+                }
+            }
+            
+            async function closeTab(id) {
+                const idx = openTabs.findIndex(t => t.id === id);
+                if (idx === -1) return;
+                openTabs.splice(idx, 1);
+                if (currentFileId === id) {
+                    if (openTabs.length) await openFile(openTabs[0].id, openTabs[0].name);
+                    else { currentFileId = null; if(editor) editor.setValue(''); loadFiles(); }
+                }
+                renderTabs();
+            }
+            
+            async function saveFile() {
+                if (!currentFileId || !editor) return;
+                try {
+                    await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ Content: editor.getValue() })
+                    });
+                } catch(e) {}
+            }
+            
+            async function createNewFile() {
+                let name = prompt('Имя файла:', 'newfile.txt');
+                if (!name) return;
+                if (!name.includes('.')) name += '.txt';
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    if (res.ok) {
+                        const file = await res.json();
+                        await loadFiles();
+                        await openFile(file.id, file.name);
+                    }
+                } catch(e) { showToast('Ошибка создания', true); }
+            }
+            
+            async function loadChat() {
+                try {
+                    const res = await fetch(`/api/chat/${roomId}`);
+                    const msgs = await res.json();
+                    const container = document.getElementById('chatMessages');
+                    container.innerHTML = '';
+                    for (const m of msgs) {
+                        const div = document.createElement('div');
+                        div.className = `message ${m.userId === userId ? 'message-mine' : 'message-other'}`;
+                        div.innerHTML = m.userId === userId ? escapeHtml(m.text) : `<b>${escapeHtml(m.userName)}:</b> ${escapeHtml(m.text)}`;
+                        container.appendChild(div);
+                    }
+                    container.scrollTop = container.scrollHeight;
+                } catch(e) {}
+            }
+            
+            function sendChatMessage() {
+                const input = document.getElementById('chatInput');
+                const text = input.value.trim();
+                if (!text) return;
+                fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roomId, userId, userName, text })
+                }).then(() => { input.value = ''; loadChat(); });
+            }
+            
+            function runCode() {
+                if (!editor) return;
+                const code = editor.getValue();
+                const lang = document.getElementById('langSelect').value;
+                const out = document.getElementById('terminalOut');
+                out.innerHTML += `\n$ Запуск ${lang}...\n`;
+                fetch('/api/terminal/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
+                }).then(r => r.json()).then(data => {
+                    out.innerHTML += (data.output || data.error || 'Выполнено\n');
+                    out.scrollTop = out.scrollHeight;
+                });
+            }
+            
+            function toggleTerminal() {
+                const term = document.querySelector('.terminal');
+                const btn = term.querySelector('.terminal-header button');
+                if (term.style.height === '35px') { term.style.height = '130px'; btn.innerHTML = '▼'; }
+                else { term.style.height = '35px'; btn.innerHTML = '▲'; }
+            }
+            
+            function connectWebSocket() {
+                const url = `ws://${window.location.hostname}:8000/ws/${roomId}/${userId}`;
+                ws = new WebSocket(url);
+                ws.onopen = () => ws.send(JSON.stringify({ name: userName, avatar: userAvatar, cursor: userCursor }));
+                ws.onmessage = (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'participant_list') updateUsers(data.users);
+                    } catch(e) {}
+                };
+                ws.onclose = () => setTimeout(connectWebSocket, 3000);
+            }
+            
+            function updateUsers(users) {
+                const container = document.getElementById('usersList');
+                container.innerHTML = '';
+                for (const u of users) {
+                    const div = document.createElement('div');
+                    div.className = 'participant';
+                    div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
+                    div.innerHTML = `<div class="participant-avatar">${u.avatar || '👤'}</div>
+                                    <div class="participant-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
+                                    <div class="participant-status" style="background:${u.online ? '#4caf50' : '#888'}"></div>`;
+                    container.appendChild(div);
+                }
+            }
+            
+            async function loadUsersRest() {
+                try {
+                    const res = await fetch(`/api/room/${roomId}/users`);
+                    const users = await res.json();
+                    updateUsers(users);
+                } catch(e) {}
+            }
+            
+            function toggleUsers() {
+                const panel = document.getElementById('usersPanel');
+                if (panel.style.display === 'none' || !panel.style.display) {
+                    panel.style.display = 'block';
+                    if (!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest();
+                } else panel.style.display = 'none';
+            }
+            
+            function closeUsers() { document.getElementById('usersPanel').style.display = 'none'; }
+            function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
+            function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
+            async function exitRoom() { if (currentFileId && editor) await saveFile(); window.location.href = '/dashboard'; }
+            
+            function initEditor() {
+                const container = document.getElementById('editor');
+                require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+                require(['vs/editor/editor.main'], function() {
+                    editor = monaco.editor.create(container, {
+                        value: '// Создайте или откройте файл',
+                        language: 'javascript',
+                        theme: 'vs-dark',
+                        automaticLayout: true,
+                        fontSize: 13,
+                        minimap: { enabled: false }
+                    });
+                    editor.onDidChangeModelContent(() => {
+                        if (saveTimer) clearTimeout(saveTimer);
+                        saveTimer = setTimeout(saveFile, 1000);
+                    });
+                    loadFiles();
+                });
+            }
+            
+            function escapeHtml(s) { return s.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+            
+            initEditor();
+            loadChat();
+            connectWebSocket();
+            setInterval(loadChat, 5000);
+            setInterval(() => { if(!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest(); }, 10000);
+            
+            document.getElementById('chatInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') sendChatMessage(); });
+            document.getElementById('terminalInput')?.addEventListener('keypress', e => {
+                if(e.key === 'Enter') {
+                    const cmd = e.target.value;
+                    e.target.value = '';
+                    const out = document.getElementById('terminalOut');
+                    out.innerHTML += `\n$ ${cmd}\n`;
+                    fetch('/api/terminal/run', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ command: JSON.stringify({ language: 'bash', code: cmd }) })
+                    }).then(r => r.json()).then(data => {
+                        out.innerHTML += (data.output || data.error || '');
+                        out.scrollTop = out.scrollHeight;
+                    });
+                }
             });
-        });
-    }
-
-    function addSocialField() {
-        socialFields.push({ name: '', url: '' });
-        renderSocials();
-    }
-
-    function removeSocialField(index) {
-        socialFields.splice(index, 1);
-        renderSocials();
-    }
-
-    function loadSocials() {
-        fetch('/Profile/GetSocials')
-            .then(res => res.json())
-            .then(data => {
-                if (data.socials) socialFields = data.socials;
-                renderSocials();
-            })
-            .catch(() => {});
-    }
-
-    // ========== АВАТАР ==========
-    function openAvatarUpload() {
-        const input = document.getElementById('avatarFileInput');
-        input.onchange = function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const formData = new FormData();
-                formData.append('avatarFile', e.target.files[0]);
-                
-                fetch('/Profile/UploadAvatar', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        showToast(data.message || 'Ошибка загрузки', 'error');
-                    }
-                })
-                .catch(() => showToast('Ошибка загрузки', 'error'));
-            }
-        };
-        input.click();
-    }
-
-    // ========== ОБЛОЖКА ==========
-    function changeCover() {
-        const input = document.getElementById('coverFileInput');
-        input.onchange = function(e) {
-            if (e.target.files && e.target.files[0]) {
-                const formData = new FormData();
-                formData.append('coverFile', e.target.files[0]);
-                
-                fetch('/Profile/UploadCover', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        showToast(data.message || 'Ошибка загрузки', 'error');
-                    }
-                })
-                .catch(() => showToast('Ошибка загрузки', 'error'));
-            }
-        };
-        input.click();
-    }
-
-    // ========== СОХРАНЕНИЕ ПРОФИЛЯ ==========
-    function saveProfile() {
-        const newName = document.getElementById('userName').value;
-        
-        fetch('/Profile/UpdateProfile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: newName,
-                socials: socialFields,
-                cursorData: localStorage.getItem('globalCursor')
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Профиль сохранён', 'success');
-            } else {
-                showToast('Ошибка сохранения', 'error');
-            }
-        })
-        .catch(() => showToast('Ошибка сохранения', 'error'));
-    }
-
-    // ========== КУРСОРЫ ==========
-    const freeCursors = ["o", "default", "handopen", "handpointing", "resizenorth", "resizenorthwest", "textcursor"];
-    const premiumCursors = ["tr", "y", "e", "t", "ee", "g", "fk", "ct", "p", "u", "i"];
-    let allCursors = [
-        ...freeCursors.map(name => ({ type: 'svg', name: name, premium: false })),
-        ...premiumCursors.map(name => ({ type: 'svg', name: name, premium: true }))
-    ];
-    let selectedCursor = allCursors[0];
-
-    function renderCursors() {
-        const grid = document.getElementById('cursorGrid');
-        if (!grid) return;
-        grid.innerHTML = '';
-        allCursors.forEach(cursor => {
-            const option = document.createElement('div');
-            option.className = 'cursor-option';
-            if (cursor.premium) option.classList.add('premium');
-            if (cursor.name === selectedCursor.name) option.classList.add('selected');
-            const imgSrc = `/cursors/${cursor.name}.svg`;
-            option.innerHTML = `<img src="${imgSrc}" alt="${cursor.name}" onerror="this.parentElement.innerText='${cursor.name}'">`;
-            option.onclick = () => {
-                document.querySelectorAll('.cursor-option').forEach(c => c.classList.remove('selected'));
-                option.classList.add('selected');
-                selectedCursor = cursor;
-                updatePreview();
-            };
-            grid.appendChild(option);
-        });
-        updatePreview();
-    }
-
-    function updatePreview() {
-        const preview = document.getElementById('previewImg');
-        const size = document.getElementById('cursorSize').value;
-        preview.src = `/cursors/${selectedCursor.name}.svg`;
-        preview.style.width = size + 'px';
-        preview.style.height = size + 'px';
-        const badge = document.getElementById('premiumBadge');
-        badge.style.display = selectedCursor.premium ? 'flex' : 'none';
-    }
-
-    function openCursorModal() {
-        renderCursors();
-        document.getElementById('cursorModal').style.display = 'flex';
-    }
-
-    function closeCursorModal() {
-        document.getElementById('cursorModal').style.display = 'none';
-    }
-
-    function saveCursorToLocalStorage(name, size) {
-        const cursorData = `svg:${name} ${size}`;
-        localStorage.setItem('globalCursor', cursorData);
-        window.dispatchEvent(new StorageEvent('storage', {
-            key: 'globalCursor',
-            newValue: cursorData
-        }));
-    }
-
-    function applyCursorFromStorage() {
-        const cursorData = localStorage.getItem('globalCursor');
-        if (!cursorData || !cursorData.startsWith('svg:')) return;
-        
-        const parts = cursorData.split(' ');
-        const name = parts[0].split(':')[1];
-        let targetSize = parseInt(parts[1]) || 32;
-        targetSize = Math.min(targetSize, 128);
-        
-        fetch(`/cursors/${name}.svg`)
-            .then(response => response.text())
-            .then(svgText => {
-                let resizedSvg = svgText
-                    .replace(/width="\d+"/, `width="${targetSize}"`)
-                    .replace(/height="\d+"/, `height="${targetSize}"`);
-                if (!resizedSvg.includes('viewBox')) {
-                    resizedSvg = resizedSvg.replace('<svg', `<svg viewBox="0 0 ${targetSize} ${targetSize}"`);
-                }
-                const blob = new Blob([resizedSvg], { type: 'image/svg+xml' });
-                const url = URL.createObjectURL(blob);
-                
-                let style = document.getElementById('globalCursorStyle');
-                if (!style) {
-                    style = document.createElement('style');
-                    style.id = 'globalCursorStyle';
-                    document.head.appendChild(style);
-                }
-                style.textContent = `* { cursor: url('${url}') 0 0, auto !important; }`;
-                setTimeout(() => URL.revokeObjectURL(url), 10000);
-            })
-            .catch(err => console.error('Ошибка загрузки курсора:', err));
-    }
-
-    function applyCursor() {
-        const size = parseInt(document.getElementById('cursorSize').value);
-        saveCursorToLocalStorage(selectedCursor.name, size);
-        applyCursorFromStorage();
-        showToast('✓ Курсор применён', 'success');
-        closeCursorModal();
-    }
-
-    function showToast(message, type) {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
-        if (type === 'success') toast.style.borderLeftColor = '#00ff00';
-        if (type === 'error') toast.style.borderLeftColor = '#ff0000';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    function createSpheres() {
-        const container = document.getElementById('spheresContainer');
-        for (let i = 0; i < 20; i++) {
-            const sphere = document.createElement('div');
-            sphere.className = 'sphere';
-            sphere.style.left = Math.random() * 100 + '%';
-            sphere.style.width = sphere.style.height = (40 + Math.random() * 80) + 'px';
-            sphere.style.animationDelay = Math.random() * 20 + 's';
-            sphere.style.animationDuration = 15 + Math.random() * 20 + 's';
-            container.appendChild(sphere);
-        }
-    }
-
-    applyCursorFromStorage();
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'globalCursor') {
-            applyCursorFromStorage();
-        }
-    });
-
-    document.getElementById('cursorSize').addEventListener('input', () => updatePreview());
-
-    loadSocials();
-    createSpheres();
-    document.getElementById('cursorSize').value = 32;
-</script>
-
-</body>
-</html>
+        </script>
+    </body>
+    </html>
+}
