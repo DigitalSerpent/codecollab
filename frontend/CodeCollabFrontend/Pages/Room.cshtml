@@ -79,7 +79,7 @@ else
         .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
         .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
         
-        .floating-panel { display: none; position: fixed; bottom: 80px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
+        .floating-panel { display: none; position: fixed; bottom: 70px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
         .floating-panel.right { left: auto; right: 80px; }
         .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
@@ -119,26 +119,20 @@ else
             <!-- ЦЕНТР -->
             <div style="display: flex; flex: 1; flex-direction: column; min-width: 0;">
 
-                <div style="display: flex; align-items: center; justify-content: space-between; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; padding: 4px 8px;">
-                    <div id="tabsContainer" class="tabs-container" style="flex: 1; min-width: 0;"></div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 8px;">
-                        <select id="languageSelect" class="language-select">
-                            <option value="python">Python</option>
-                            <option value="javascript">JavaScript</option>
-                            <option value="bash">Bash</option>
-                        </select>
-                        <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;">▶ Run</button>
-                    </div>
+                <div id="tabsContainer" class="tabs-container"></div>
+
+                <!-- Кнопка Run -->
+                <div style="display: flex; justify-content: flex-end; padding: 8px; background-color: #0d0d1a; border-bottom: 1px solid #00aaff;">
+                    <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 5px 15px; cursor: pointer;">▶ Run</button>
                 </div>
 
                 <div id="editorContainer" style="flex: 1; background-color: #0d0d1a; min-height: 0;"></div>
 
                 <div id="resizer" class="resizer"></div>
 
-                <div id="terminal" class="terminal" style="height: 150px; flex-shrink: 0;">
+                <div id="terminal" class="terminal" style="height: 120px; flex-shrink: 0;">
                     <div class="terminal-header">
                         <span>Терминал</span>
-                        <button onclick="toggleTerminal()" style="background: none; border: none; color: #ccc; margin-left: auto; cursor: pointer;">▲ Свернуть</button>
                     </div>
                     <div id="terminalOutput" class="terminal-output"></div>
                     <div class="terminal-input-line">
@@ -211,11 +205,7 @@ else
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
-        // ========== SignalR ==========
-        let connection = null;
-        
         function showNotification(msg, isError) {
             const div = document.createElement('div');
             div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
@@ -302,47 +292,10 @@ else
         }
 
         function promptNewFile() {
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            modal.style.zIndex = '10000';
-            modal.style.display = 'flex';
-            modal.style.alignItems = 'center';
-            modal.style.justifyContent = 'center';
-            
-            modal.innerHTML = `
-                <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
-                    <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создать файл</h3>
-                    <input type="text" id="newFileName" placeholder="main.py" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button id="cancelBtn" style="flex:1; background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Отмена</button>
-                        <button id="createBtn" style="flex:1; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Создать</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            setTimeout(() => document.getElementById('newFileName').focus(), 100);
-            
-            document.getElementById('createBtn').onclick = () => {
-                let name = document.getElementById('newFileName').value.trim();
-                if (name) {
-                    if (!name.includes('.')) name += '.txt';
-                    createFile(name);
-                } else {
-                    showNotification('Введите имя файла', 'error');
-                }
-                modal.remove();
-            };
-            
-            document.getElementById('cancelBtn').onclick = () => modal.remove();
-            modal.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') modal.remove();
-            });
+            let name = prompt('Имя файла (например, script.py, readme.md, file.txt):');
+            if (!name) return;
+            if (!name.includes('.')) name = name + '.txt';
+            createFile(name);
         }
 
         async function saveCurrentFile() {
@@ -391,13 +344,12 @@ else
         function runCode() {
             if (!editor || !isEditorReady) return;
             const code = editor.getValue();
-            const lang = document.getElementById('languageSelect').value;
             const out = document.getElementById('terminalOutput');
-            out.innerHTML += `$ Запуск (${lang})...\n`;
+            out.innerHTML += `$ Запуск...\n`;
             fetch('/api/terminal/run', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
+                body: JSON.stringify({ command: JSON.stringify({ language: 'python', code }) })
             }).then(r => r.json()).then(data => {
                 out.innerHTML += (data.output || data.error || '') + '\n';
                 out.scrollTop = out.scrollHeight;
@@ -446,33 +398,33 @@ else
         }
 
         async function toggleUsersPanel() {
-            const panel = document.getElementById('usersPanel');
-            if (panel.style.display === 'none' || !panel.style.display) {
-                const res = await fetch(`/api/room/${roomId}/users`);
-                const users = await res.json();
-                const container = document.getElementById('usersList');
-                container.innerHTML = '';
-                for (const u of users) {
-                    const div = document.createElement('div');
-                    div.className = 'participant-item';
-                    div.onclick = () => showNotification('Профиль ' + u.name);
-                    div.innerHTML = `
-                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                        </div>
-                        <span class="participant-name">${u.name}</span>
-                        <span class="participant-cursor">${u.cursor}</span>
-                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(div);
-                }
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
+    const panel = document.getElementById('usersPanel');
+    if (panel.style.display === 'none' || !panel.style.display) {
+        const res = await fetch(`/api/room/${roomId}/users`);
+        const users = await res.json();
+        const container = document.getElementById('usersList');
+        container.innerHTML = '';
+        for (const u of users) {
+            const div = document.createElement('div');
+            div.className = 'participant-item';
+            div.onclick = () => showNotification('Профиль ' + u.name);
+            div.innerHTML = `
+                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
+                        ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
+                        : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
+                </div>
+                <span style="flex: 1; color: white; font-size: 0.9rem;">${u.name}</span>
+                <span style="font-size: 1rem;">${u.cursor}</span>
+                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${u.online ? '#00ff00' : '#888'};"></span>
+            `;
+            container.appendChild(div);
         }
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+}
 
         function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
         function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
@@ -501,18 +453,6 @@ else
                 });
                 loadFiles();
             });
-        }
-
-        function toggleTerminal() {
-            const term = document.getElementById('terminal');
-            const btn = term.querySelector('.terminal-header button');
-            if (term.style.height === '30px') {
-                term.style.height = '150px';
-                btn.innerHTML = '▲ Свернуть';
-            } else {
-                term.style.height = '30px';
-                btn.innerHTML = '▼ Развернуть';
-            }
         }
 
         initEditor();
@@ -551,7 +491,7 @@ else
             const rect = document.querySelector('[style*="flex: 1; flex-direction: column;"]')?.getBoundingClientRect();
             if (!rect) return;
             let h = rect.bottom - e.clientY;
-            h = Math.max(30, Math.min(500, h));
+            h = Math.max(80, Math.min(300, h));
             terminal.style.height = h + 'px';
         }
         function stopResize() {
@@ -559,76 +499,5 @@ else
             document.removeEventListener('mousemove', resize);
             document.removeEventListener('mouseup', stopResize);
         }
-
-        // ========== SignalR инициализация ==========
-        async function initSignalR() {
-    connection = new signalR.HubConnectionBuilder()
-        .withUrl("/roomHub")
-        .build();
-
-    connection.on("ParticipantList", (participants) => {
-        const container = document.getElementById('usersList');
-        if (!container) return;
-        container.innerHTML = '';
-        participants.forEach(u => {
-            const div = document.createElement('div');
-            div.className = 'participant-item';
-            div.onclick = () => showNotification('Профиль ' + u.name);
-            div.innerHTML = `
-                <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                        ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                        : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                </div>
-                <span class="participant-name">${u.name}</span>
-                <span class="participant-cursor">${u.cursor}</span>
-                <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-            `;
-            container.appendChild(div);
-        });
-    });
-
-    connection.on("UserMessage", (msg) => {
-        const out = document.getElementById('terminalOutput');
-        if (out) out.innerHTML += `${msg}\n`;
-    });
-
-    try {
-        await connection.start();
-        
-        const userId = @(userId ?? 0);
-        const roomId = @roomId;
-        const userName = "@(currentUser?.Name ?? "Гость")";
-        const avatar = "@(currentUser?.Avatar ?? "👤")";
-        const cursor = "@(currentUser?.Cursor ?? "⬤")";
-        
-        if (userId && roomId) {
-            await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-        }
-    } catch (err) {
-        console.error("SignalR error:", err);
-    }
-}
-
-            connection.on("UserMessage", (msg) => {
-                const out = document.getElementById('terminalOutput');
-                if (out) out.innerHTML += `${msg}\n`;
-            });
-
-            try {
-                await connection.start();
-                const userId = @userId ?? 0;
-                const userName = "@(currentUser?.Name ?? "Гость")";
-                const avatar = "@(currentUser?.Avatar ?? "👤")";
-                const cursor = "@(currentUser?.Cursor ?? "⬤")";
-                if (userId && roomId) {
-                    await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-                }
-            } catch (err) {
-                console.error("SignalR error:", err);
-            }
-        }
-
-        initSignalR();
     </script>
 }
