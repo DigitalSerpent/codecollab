@@ -1,613 +1,286 @@
 @page "/room/{id}"
-@using Microsoft.EntityFrameworkCore
-@using CodeCollabFrontend.Models
-@inject AppDbContext _context
-@using Microsoft.AspNetCore.Http
-
+@model RoomModel
 @{
-    #nullable disable
-    if (!int.TryParse((string)RouteData.Values["id"], out int roomId))
-    {
-        <h2 style="color: white;">Неверный ID комнаты</h2>
-        return;
-    }
-
-    var room = _context.Rooms
-        .Include(r => r.RoomParticipants)
-            .ThenInclude(rp => rp.User)
-        .FirstOrDefault(r => r.Id == roomId);
-    
-    var userId = HttpContext.Session.GetInt32("UserId");
-    var currentUser = userId != null ? _context.Users.Find(userId) : null;
-    string userCursor = currentUser?.Cursor ?? "default";
+    var roomId = (string)RouteData.Values["id"];
 }
-
-@if (room == null)
-{
-    <h2 style="color: white;">Комната не найдена</h2>
-}
-else
-{
-    ViewData["Title"] = room.Name;
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style id="globalCursorStyle"></style>
-
-    <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0e1c; overflow: hidden; }
-        .file-tree { user-select: none; }
-        .file-item { padding: 4px 6px; cursor: pointer; border-radius: 4px; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; font-size: 13px; }
-        .file-item:hover { background-color: #2a2a4a; }
-        .file-item.active { background-color: #0d3d5c; }
-        .file-icon { width: 20px; text-align: center; font-size: 13px; }
-        .new-file-btn { background: none; border: none; color: #00aaff; cursor: pointer; margin-top: 8px; padding: 5px; width: 100%; text-align: left; font-size: 12px; }
-        .new-file-btn:hover { background-color: #2a2a4a; border-radius: 4px; }
-        
-        .tabs-container { display: flex; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; overflow-x: auto; white-space: nowrap; min-height: 32px; }
-        .tab { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background-color: #0d0d1a; color: #a0a0a0; cursor: pointer; border-right: 1px solid #1e1e3a; min-width: 100px; font-size: 12px; }
-        .tab.active { background-color: #1e1e3a; color: white; border-bottom: 2px solid #00aaff; }
-        .tab:hover { background-color: #2a2a4a; }
-        .tab-close { margin-left: auto; opacity: 0.6; font-size: 11px; }
-        .tab-close:hover { opacity: 1; color: #ff8888; }
-        
-        .resizer { height: 3px; background-color: #00aaff; cursor: ns-resize; }
-        .terminal { background-color: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; }
-        .terminal-header { height: 24px; background-color: #2d2d2d; display: flex; align-items: center; padding: 0 8px; color: white; font-size: 11px; }
-        .terminal-output { flex: 1; padding: 6px; color: #ccc; font-family: monospace; overflow-y: auto; white-space: pre-wrap; font-size: 11px; }
-        .terminal-input-line { display: flex; align-items: center; padding: 4px 8px; border-top: 1px solid #3c3c3c; background-color: #1e1e1e; }
-        .terminal-prompt { color: #00aaff; font-weight: bold; margin-right: 6px; font-size: 12px; }
-        .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; font-size: 11px; }
-        
-        .chat-panel { width: 240px; background-color: #0d0d1a; border-left: 1px solid #00aaff; display: flex; flex-direction: column; }
-        .chat-header { height: 32px; background-color: #121628; border-bottom: 1px solid #00aaff; display: flex; align-items: center; padding-left: 10px; color: white; font-weight: bold; font-size: 12px; }
-        .chat-messages { flex: 1; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .chat-message { max-width: 85%; padding: 5px 8px; border-radius: 10px; font-size: 12px; word-wrap: break-word; }
-        .chat-message.me { background-color: #b198b3; color: #0a0e1c; align-self: flex-end; }
-        .chat-message.other { background-color: #86a1b5; color: white; align-self: flex-start; }
-        .chat-input-area { padding: 8px; border-top: 1px solid #00aaff; display: flex; gap: 6px; }
-        .chat-input { flex: 1; padding: 6px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 6px; resize: none; font-size: 12px; }
-        .chat-button { background-color: #0a0e1c; border: 1px solid #00aaff; border-radius: 6px; padding: 6px; cursor: pointer; color: white; font-size: 12px; }
-        .send-button { background-color: #00aaff; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; color: #0a0e1c; }
-        
-        .icon-button { width: 36px; height: 36px; background-color: #121628; border: 1px solid #00aaff; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 16px; }
-        .icon-button:hover { background-color: #1e1e3a; color: #00aaff; }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background-color: #121628; border-radius: 16px; padding: 20px; width: 320px; border: 1px solid #00aaff; text-align: center; }
-        .modal-content h3 { color: white; margin-bottom: 15px; font-size: 18px; }
-        .modal-buttons { display: flex; gap: 8px; margin-top: 15px; }
-        .modal-button { background-color: #1e1e3a; color: white; border: none; border-radius: 6px; padding: 8px; flex: 1; cursor: pointer; }
-        .modal-button.primary { background-color: #00aaff; color: #0a0e1c; }
-        
-        .floating-panel { display: none; position: fixed; bottom: 80px; left: 15px; width: 240px; background-color: #121628; border: 1px solid #00aaff; border-radius: 10px; padding: 10px; z-index: 200; }
-        .floating-panel.right { left: auto; right: 80px; }
-        .floating-panel h4 { color: white; margin: 0 0 8px 0; font-size: 14px; display: flex; justify-content: space-between; }
-        .participant-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 5px; font-size: 12px; }
-        .participant-item:hover { background-color: #1e1e3a; }
-        .participant-avatar { font-size: 1rem; }
-        .participant-name { flex: 1; color: white; }
-        .participant-cursor { font-size: 0.9rem; }
-        .participant-status { width: 7px; height: 7px; border-radius: 50%; }
-        
-        .language-select { background-color: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 4px; padding: 4px 6px; font-size: 12px; }
-    </style>
-
-    @if (userId == room.OwnerId)
-    {
-        <div style="margin: 6px 12px 0 12px; background-color: #0a0e1c; padding: 5px 10px; border-radius: 6px;">
-            <div style="display: flex; gap: 6px; align-items: center;">
-                <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" 
-                       style="flex: 1; background-color: #121628; border: 1px solid #1e1e3a; color: white; border-radius: 4px; padding: 4px 6px; font-size: 11px;">
-                <button onclick="copyInviteLink()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px;">Копировать</button>
-            </div>
-        </div>
-    }
-
-    <div style="display: flex; flex-direction: column; height: calc(100vh - 100px); padding: 8px; padding-right: 50px;">
-
-        <div style="display: flex; flex: 1; min-height: 0; background-color: #121628; border-radius: 12px; border: 1px solid #00aaff; overflow: hidden;">
-
-            <!-- ЛЕВАЯ ПАНЕЛЬ -->
-            <div style="width: 200px; background-color: #0d0d1a; border-right: 1px solid #00aaff; display: flex; flex-direction: column;">
-                <div style="padding: 8px; border-bottom: 1px solid #00aaff; font-weight: bold; color: white; font-size: 12px;">Файлы</div>
-                <div id="fileTree" style="flex: 1; padding: 6px; overflow-y: auto;"></div>
-                <button class="new-file-btn" onclick="promptNewFile()">
-                    <i class="fas fa-plus"></i> Новый файл
-                </button>
-            </div>
-
-            <!-- ЦЕНТР -->
-            <div style="display: flex; flex: 1; flex-direction: column; min-width: 0;">
-
-                <div style="display: flex; align-items: center; justify-content: space-between; background-color: #0d0d1a; border-bottom: 1px solid #00aaff; padding: 4px 8px;">
-                    <div id="tabsContainer" class="tabs-container" style="flex: 1; min-width: 0;"></div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 8px;">
-                        <select id="languageSelect" class="language-select">
-                            <option value="python">Python</option>
-                            <option value="javascript">JavaScript</option>
-                            <option value="bash">Bash</option>
-                        </select>
-                        <button onclick="runCode()" style="background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;">▶ Run</button>
-                    </div>
-                </div>
-
-                <div id="editorContainer" style="flex: 1; background-color: #0d0d1a; min-height: 0;"></div>
-
-                <div id="resizer" class="resizer"></div>
-
-                <div id="terminal" class="terminal" type="height: 150px; flex-shrink: 0;">
-                    <div class="terminal-header">
-                        <span>Терминал</span>
-                        <button onclick="toggleTerminal()" style="background: none; border: none; color: #ccc; margin-left: auto; cursor: pointer;">▲ Свернуть</button>
-                    </div>
-                    <div id="terminalOutput" class="terminal-output"></div>
-                    <div class="terminal-input-line">
-                        <span class="terminal-prompt">$</span>
-                        <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
-                    </div>
-                </div>
-            </div>
-
-            <!-- ЧАТ -->
-            <div class="chat-panel">
-                <div class="chat-header">
-                    <i class="fas fa-comments" style="margin-right: 6px;"></i> Чат
-                </div>
-                <div id="chatMessages" class="chat-messages"></div>
-                <div id="stickersPanel" style="display: none; padding: 6px; background-color: #0a0e1c; gap: 5px; flex-wrap: wrap; border-top: 1px solid #1e1e3a;">
-                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('😊')">😊</span>
-                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('😂')">😂</span>
-                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('❤️')">❤️</span>
-                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('🔥')">🔥</span>
-                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('🎉')">🎉</span>
-                    <span style="font-size: 1.2rem; cursor: pointer;" onclick="sendSticker('🚀')">🚀</span>
-                </div>
-                <div class="chat-input-area">
-                    <button class="chat-button" onclick="toggleStickersPanel()">
-                        <i class="fa-solid fa-icons"></i>
-                    </button>
-                    <textarea id="chatInput" class="chat-input" rows="1" placeholder="Сообщение..."></textarea>
-                    <button class="send-button" onclick="sendMessage()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top: 8px; display: flex; justify-content: space-between;">
-            <div class="icon-button" onclick="toggleUsersPanel()">
-                <i class="fas fa-users"></i>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="icon-button" onclick="toggleSettingsPanel()">
-                    <i class="fas fa-gears"></i>
-                </div>
-                <div class="icon-button" onclick="openExitModal()">
-                    <i class="fas fa-arrow-right-from-bracket"></i>
-                </div>
-            </div>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Комната @roomId</title>
+<style>
+html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; display: flex; flex-direction: column; background: #1e1e1e; color: #ccc; }
+#header { background: #333; color: #fff; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+#main { flex: 1; display: flex; overflow: hidden; }
+#sidebar { width: 220px; background: #252526; display: flex; flex-direction: column; border-right: 1px solid #3e3e42; }
+#fileTree { flex: 1; padding: 8px; overflow-y: auto; }
+#fileTree button { display: block; width: 100%; margin-bottom: 4px; background: #2d2d30; color: #ccc; border: none; padding: 6px; text-align: left; cursor: pointer; }
+#fileTree button:hover { background: #3e3e42; }
+#tabs { display: flex; background: #2d2d30; border-bottom: 1px solid #3e3e42; overflow-x: auto; }
+.tab { padding: 6px 12px; cursor: pointer; background: #2d2d30; border-right: 1px solid #3e3e42; white-space: nowrap; }
+.tab.active { background: #1e1e1e; border-bottom: 2px solid #007acc; }
+.tab .close { margin-left: 8px; cursor: pointer; color: #ccc; }
+#editorContainer { flex: 1; display: flex; flex-direction: column; }
+#editor { flex: 1; }
+#bottomPanel { display: flex; height: 200px; border-top: 1px solid #3e3e42; }
+#chat { width: 30%; background: #252526; display: flex; flex-direction: column; border-right: 1px solid #3e3e42; }
+#chatHistory { flex: 1; padding: 5px; overflow-y: auto; font-size: 12px; }
+#chatInputPanel { display: flex; padding: 5px; gap: 5px; }
+#chatInput { flex: 1; resize: none; background: #1e1e1e; color: #ccc; border: 1px solid #3e3e42; }
+#terminal { flex: 1; display: flex; flex-direction: column; background: #1e1e1e; }
+#terminalOutput { flex: 1; padding: 5px; overflow-y: auto; font-family: monospace; font-size: 12px; color: #0f0; }
+.terminal-line { display: flex; align-items: center; padding: 2px 5px; }
+.terminal-prompt { color: #0f0; margin-right: 8px; }
+#terminalInput { background: none; border: none; color: #0f0; font-family: monospace; flex: 1; outline: none; }
+#bottomButtons { display: flex; gap: 10px; margin-right: 10px; }
+button { cursor: pointer; background: #3e3e42; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; }
+button:hover { background: #007acc; }
+.modal { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: #2d2d30; border: 1px solid #007acc; padding: 16px; z-index: 1000; width: 300px; }
+.modal.show { display: block; }
+.overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); z-index: 999; }
+.overlay.show { display: block; }
+</style>
+</head>
+<body>
+<div id="header">
+    <span>Комната: @roomId</span>
+    <div id="bottomButtons">
+        <button id="btnParticipants">👥 Участники</button>
+        <button id="btnSettings">⚙️ Настройки</button>
+        <button id="btnExit">🚪 Выйти</button>
+    </div>
+</div>
+<div id="main">
+    <div id="sidebar">
+        <div id="fileTree"></div>
+        <button id="btnNewFile">+ Новый файл</button>
+    </div>
+    <div id="editorContainer">
+        <div id="tabs"></div>
+        <div id="editor"></div>
+    </div>
+</div>
+<div id="bottomPanel">
+    <div id="chat">
+        <div id="chatHistory"></div>
+        <div id="chatInputPanel">
+            <textarea id="chatInput" rows="2" placeholder="Сообщение..."></textarea>
+            <button id="btnSend">➤</button>
         </div>
     </div>
-
-    <div id="usersPanel" class="floating-panel">
-        <h4>Участники <span onclick="closeUsersPanel()" style="cursor:pointer;">✖</span></h4>
-        <div id="usersList" style="max-height: 250px; overflow-y: auto;"></div>
-    </div>
-
-    <div id="settingsPanel" class="floating-panel right">
-        <h4>Настройки</h4>
-        <p style="color:#a0a0a0; margin:4px 0; font-size:12px;">Макс. участников: 5</p>
-        <p style="color:#a0a0a0; margin:4px 0; font-size:12px;">Создана: @room.CreatedAt.ToString("dd.MM.yyyy")</p>
-    </div>
-
-    <div id="exitModal" class="modal">
-        <div class="modal-content">
-            <h3>Выйти из комнаты?</h3>
-            <div class="modal-buttons">
-                <button class="modal-button" onclick="closeExitModal()">Нет</button>
-                <button class="modal-button primary" onclick="exitRoom()">Да</button>
-            </div>
+    <div id="terminal">
+        <div id="terminalOutput"></div>
+        <div class="terminal-line">
+            <span class="terminal-prompt">$</span>
+            <input type="text" id="terminalInput" placeholder="команда..." />
         </div>
     </div>
+</div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-    <script>
-        // ========== SignalR ==========
-        let connection = null;
-        
-        function showNotification(msg, isError) {
-            const div = document.createElement('div');
-            div.innerHTML = `<div style="position:fixed;top:20px;right:20px;background:${isError ? '#c62828' : '#2e7d32'};color:white;padding:6px 14px;border-radius:6px;z-index:10000;font-size:12px;">${msg}</div>`;
-            document.body.appendChild(div);
-            setTimeout(() => div.remove(), 2500);
-        }
+<div class="overlay" id="modalOverlay"></div>
+<div id="participantsModal" class="modal">
+    <h3 style="margin:0 0 10px 0">Участники</h3>
+    <ul id="participantsList" style="max-height:200px; overflow:auto;"></ul>
+    <button id="closeParticipants">Закрыть</button>
+</div>
 
-        function copyInviteLink() {
-            const inp = document.getElementById('inviteLink');
-            if (inp) { inp.select(); document.execCommand('copy'); showNotification('Ссылка скопирована'); }
-        }
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.40.0/min/vs/loader.js"></script>
+<script>
+    const roomId = "@roomId";
+    let editor;
+    let currentFile = null;
+    let openFiles = {};
 
-        function getLanguageFromFileName(name) {
-            const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
-            const map = { 'py': 'python', 'js': 'javascript', 'ts': 'typescript', 'html': 'html', 'css': 'css', 'json': 'json', 'md': 'markdown', 'txt': 'text', 'sh': 'bash', 'bash': 'bash' };
-            return map[ext] || 'text';
-        }
-
-        function getFileIcon(name) {
-            if (name.toLowerCase() === 'readme.md') return '<i class="fas fa-book"></i>';
-            const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
-            const icons = { 'py': '<i class="fab fa-python"></i>', 'js': '<i class="fab fa-js"></i>', 'html': '<i class="fab fa-html5"></i>', 'css': '<i class="fab fa-css3-alt"></i>', 'json': '<i class="fas fa-brackets-curly"></i>', 'md': '<i class="fas fa-markdown"></i>', 'txt': '<i class="fas fa-file-alt"></i>', 'sh': '<i class="fas fa-terminal"></i>' };
-            return icons[ext] || '<i class="fas fa-file-code"></i>';
-        }
-
-        let editor = null;
-        let currentFileId = null;
-        let openTabs = [];
-        let roomId = @roomId;
-        let isEditorReady = false;
-        let saveTimeout = null;
-
-        async function loadFiles() {
-            try {
-                const res = await fetch(`/api/room/${roomId}/file`);
-                const files = await res.json();
-                const container = document.getElementById('fileTree');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const f of files) {
-                    const div = document.createElement('div');
-                    div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
-                    div.innerHTML = `<div class="file-icon">${getFileIcon(f.name)}</div><span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${f.name}</span>`;
-                    div.onclick = () => openFile(f.id, f.name);
-                    container.appendChild(div);
-                }
-            } catch(e) { console.error(e); }
-        }
-
-        async function openFile(id, name) {
-            try {
-                const res = await fetch(`/api/room/${roomId}/file/${id}`);
-                if (!res.ok) throw new Error();
-                const file = await res.json();
-                
-                if (!openTabs.some(t => t.id === id)) {
-                    openTabs.push({ id, name, language: getLanguageFromFileName(name) });
-                }
-                currentFileId = id;
-                renderTabs();
-                loadFiles();
-                
-                if (editor && isEditorReady) {
-                    editor.setValue(file.content || '');
-                    monaco.editor.setModelLanguage(editor.getModel(), getLanguageFromFileName(name));
-                }
-            } catch(e) { showNotification('Ошибка открытия файла', true); }
-        }
-
-        async function createFile(name) {
-            if (!name) return;
-            const res = await fetch(`/api/room/${roomId}/file`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            if (res.ok) {
-                const newFile = await res.json();
-                await loadFiles();
-                await openFile(newFile.id, newFile.name);
-            } else {
-                showNotification('Ошибка создания файла', true);
-            }
-        }
-
-        function promptNewFile() {
-            const modal = document.createElement('div');
-            modal.style.position = 'fixed';
-            modal.style.top = '0';
-            modal.style.left = '0';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
-            modal.style.zIndex = '10000';
-            modal.style.display = 'flex';
-            modal.style.alignItems = 'center';
-            modal.style.justifyContent = 'center';
-            
-            modal.innerHTML = `
-                <div style="background-color: #121628; border-radius: 20px; padding: 30px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff;">
-                    <h3 style="color: white; margin-bottom: 20px; text-align: center;">Создать файл</h3>
-                    <input type="text" id="newFileName" placeholder="main.py" style="width: 100%; padding: 10px; background-color: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="display: flex; gap: 10px;">
-                        <button id="cancelBtn" style="flex:1; background-color: #1e1e3a; color: white; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Отмена</button>
-                        <button id="createBtn" style="flex:1; background-color: #00aaff; color: #0a0e1c; border: none; border-radius: 8px; padding: 10px; cursor: pointer;">Создать</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            setTimeout(() => document.getElementById('newFileName').focus(), 100);
-            
-            document.getElementById('createBtn').onclick = () => {
-                let name = document.getElementById('newFileName').value.trim();
-                if (name) {
-                    if (!name.includes('.')) name += '.txt';
-                    createFile(name);
-                } else {
-                    showNotification('Введите имя файла', 'error');
-                }
-                modal.remove();
-            };
-            
-            document.getElementById('cancelBtn').onclick = () => modal.remove();
-            modal.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') modal.remove();
-            });
-        }
-
-        async function saveCurrentFile() {
-            if (!currentFileId || !editor || !isEditorReady) return;
-            const content = editor.getValue();
-            await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content })
-            });
-        }
-
-        async function closeTab(fileId) {
-            const index = openTabs.findIndex(t => t.id === fileId);
-            if (index === -1) return;
-            openTabs.splice(index, 1);
-            if (currentFileId === fileId) {
-                if (openTabs.length > 0) {
-                    await openFile(openTabs[0].id, openTabs[0].name);
-                } else {
-                    currentFileId = null;
-                    if (editor && isEditorReady) editor.setValue('');
-                    loadFiles();
-                }
-            }
-            renderTabs();
-        }
-
-        function renderTabs() {
-            const container = document.getElementById('tabsContainer');
-            if (!container) return;
-            container.innerHTML = '';
-            for (const tab of openTabs) {
-                const tabDiv = document.createElement('div');
-                tabDiv.className = 'tab' + (currentFileId === tab.id ? ' active' : '');
-                tabDiv.innerHTML = `
-                    ${getFileIcon(tab.name)}
-                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${tab.name}</span>
-                    <span class="tab-close" onclick="event.stopPropagation(); closeTab(${tab.id})">✖</span>
-                `;
-                tabDiv.onclick = () => openFile(tab.id, tab.name);
-                container.appendChild(tabDiv);
-            }
-        }
-
-        function runCode() {
-            if (!editor || !isEditorReady) return;
-            const code = editor.getValue();
-            const lang = document.getElementById('languageSelect').value;
-            const out = document.getElementById('terminalOutput');
-            out.innerHTML += `$ Запуск (${lang})...\n`;
-            fetch('/api/terminal/run', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
-            }).then(r => r.json()).then(data => {
-                out.innerHTML += (data.output || data.error || '') + '\n';
-                out.scrollTop = out.scrollHeight;
-            });
-        }
-
-        async function loadChatHistory() {
-            try {
-                const res = await fetch(`/api/chat/${roomId}`);
-                const msgs = await res.json();
-                const container = document.getElementById('chatMessages');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const m of msgs) {
-                    const div = document.createElement('div');
-                    div.className = `chat-message ${m.userName === 'Вы' ? 'me' : 'other'}`;
-                    div.innerHTML = m.userName === 'Вы' ? m.text : `<b>${m.userName}:</b> ${m.text}`;
-                    container.appendChild(div);
-                }
-                container.scrollTop = container.scrollHeight;
-            } catch(e) {}
-        }
-
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text })
-            }).then(() => { input.value = ''; loadChatHistory(); });
-        }
-
-        function sendSticker(sticker) {
-            fetch('/api/chat/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomId, userId: 1, userName: 'Вы', text: sticker })
-            }).then(() => loadChatHistory());
-        }
-
-        function toggleStickersPanel() {
-            const p = document.getElementById('stickersPanel');
-            p.style.display = p.style.display === 'none' ? 'flex' : 'none';
-        }
-
-        async function toggleUsersPanel() {
-            const panel = document.getElementById('usersPanel');
-            if (panel.style.display === 'none' || !panel.style.display) {
-                const res = await fetch(`/api/room/${roomId}/users`);
-                const users = await res.json();
-                const container = document.getElementById('usersList');
-                container.innerHTML = '';
-                for (const u of users) {
-                    const div = document.createElement('div');
-                    div.className = 'participant-item';
-                    div.onclick = () => showNotification('Профиль ' + u.name);
-                    div.innerHTML = `
-                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                        </div>
-                        <span class="participant-name">${u.name}</span>
-                        <span class="participant-cursor">${u.cursor}</span>
-                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(div);
-                }
-                panel.style.display = 'block';
-            } else {
-                panel.style.display = 'none';
-            }
-        }
-
-        function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
-        function toggleSettingsPanel() { const p = document.getElementById('settingsPanel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
-        function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
-        function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
-        function exitRoom() { window.location.href = '/dashboard'; }
-
-        function initEditor() {
-            const container = document.getElementById('editorContainer');
-            if (!container) return;
-            require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
-            require(['vs/editor/editor.main'], function () {
-                editor = monaco.editor.create(container, {
-                    value: '',
-                    language: 'python',
-                    theme: 'vs-dark',
-                    automaticLayout: true,
-                    fontSize: 12,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false
-                });
-                isEditorReady = true;
-                editor.onDidChangeModelContent(() => {
-                    if (saveTimeout) clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(saveCurrentFile, 1000);
-                });
-                loadFiles();
-            });
-        }
-
-        function toggleTerminal() {
-            const term = document.getElementById('terminal');
-            const btn = term.querySelector('.terminal-header button');
-            if (term.style.height === '30px') {
-                term.style.height = '150px';
-                btn.innerHTML = '▲ Свернуть';
-            } else {
-                term.style.height = '30px';
-                btn.innerHTML = '▼ Развернуть';
-            }
-        }
-
-        initEditor();
-        loadChatHistory();
-        setInterval(loadChatHistory, 3000);
-
-        document.getElementById('terminalInput')?.addEventListener('keypress', e => {
-            if (e.key === 'Enter') {
-                const cmd = e.target.value;
-                e.target.value = '';
-                const out = document.getElementById('terminalOutput');
-                out.innerHTML += `$ ${cmd}\n`;
-                fetch('/api/terminal/run', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command: JSON.stringify({ language: 'bash', code: cmd }) })
-                }).then(r => r.json()).then(data => {
-                    out.innerHTML += (data.output || data.error || '') + '\n';
-                    out.scrollTop = out.scrollHeight;
-                });
-            }
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.40.0/min/vs' } });
+    require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('editor'), {
+            value: '',
+            language: 'javascript',
+            theme: 'vs-dark',
+            automaticLayout: true
         });
+        editor.onDidChangeModelContent(() => {
+            if (currentFile) saveCurrentFile();
+        });
+    });
 
-        const resizer = document.getElementById('resizer');
-        const terminal = document.getElementById('terminal');
-        let isResizing = false;
-        if (resizer) {
-            resizer.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                document.addEventListener('mousemove', resize);
-                document.addEventListener('mouseup', stopResize);
-            });
-        }
-        function resize(e) {
-            if (!isResizing) return;
-            const rect = document.querySelector('[style*="flex: 1; flex-direction: column;"]')?.getBoundingClientRect();
-            if (!rect) return;
-            let h = rect.bottom - e.clientY;
-            h = Math.max(30, Math.min(500, h));
-            terminal.style.height = h + 'px';
-        }
-        function stopResize() {
-            isResizing = false;
-            document.removeEventListener('mousemove', resize);
-            document.removeEventListener('mouseup', stopResize);
-        }
+    async function saveCurrentFile() {
+        if (!currentFile) return;
+        await fetch(`/api/room/${roomId}/file/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: currentFile, content: editor.getValue() })
+        });
+    }
 
-        // ========== SignalR инициализация ==========
-        async function initSignalR() {
-            connection = new signalR.HubConnectionBuilder()
-                .withUrl("/roomHub")
-                .build();
+    async function loadFileList() {
+        const res = await fetch(`/api/room/${roomId}/file/list`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return data.files || [];
+    }
 
-            connection.on("ParticipantList", (participants) => {
-                const container = document.getElementById('usersList');
-                if (!container) return;
-                container.innerHTML = '';
-                participants.forEach(u => {
-                    const div = document.createElement('div');
-                    div.className = 'participant-item';
-                    div.onclick = () => showNotification('Профиль ' + u.name);
-                    div.innerHTML = `
-                        <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background-color: #1e1e3a; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            ${(!u.avatar || u.avatar.startsWith('👤') || !u.avatar.includes('/uploads/')) 
-                                ? `<span style="font-size: 1rem;">${u.avatar || '👤'}</span>` 
-                                : `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`}
-                        </div>
-                        <span class="participant-name">${u.name}</span>
-                        <span class="participant-cursor">${u.cursor}</span>
-                        <span class="participant-status" style="background-color: ${u.online ? '#00ff00' : '#888'};"></span>
-                    `;
-                    container.appendChild(div);
-                });
-            });
+    async function loadFileContent(filename) {
+        const res = await fetch(`/api/room/${roomId}/file/get?name=${encodeURIComponent(filename)}`);
+        if (!res.ok) return '';
+        const data = await res.json();
+        return data.content || '';
+    }
 
-            connection.on("UserMessage", (msg) => {
-                const out = document.getElementById('terminalOutput');
-                if (out) out.innerHTML += `${msg}\n`;
-            });
+    async function refreshFileTree() {
+        const files = await loadFileList();
+        const container = document.getElementById('fileTree');
+        container.innerHTML = '';
+        files.forEach(f => {
+            const btn = document.createElement('button');
+            btn.textContent = f;
+            btn.onclick = () => openFile(f);
+            container.appendChild(btn);
+        });
+    }
 
-            try {
-                await connection.start();
-                const userId = @userId ?? 0;
-                const roomId = @roomId;
-                const userName = "@(currentUser?.Name ?? "Гость")";
-                const avatar = "@(currentUser?.Avatar ?? "👤")";
-                const cursor = "@(currentUser?.Cursor ?? "⬤")";
-                if (userId && roomId) {
-                    await connection.invoke("JoinRoom", roomId, userId, userName, avatar, cursor);
-                }
-            } catch (err) {
-                console.error("SignalR error:", err);
+    async function openFile(filename) {
+        addTab(filename);
+        currentFile = filename;
+        const content = await loadFileContent(filename);
+        editor.setValue(content);
+        highlightActiveTab(filename);
+    }
+
+    function addTab(filename) {
+        if (document.querySelector(`.tab[data-file="${filename}"]`)) return;
+        const tabsDiv = document.getElementById('tabs');
+        const tab = document.createElement('div');
+        tab.className = 'tab';
+        tab.dataset.file = filename;
+        tab.innerHTML = `${filename} <span class="close" data-file="${filename}">✖</span>`;
+        tab.querySelector('.close').onclick = (e) => {
+            e.stopPropagation();
+            closeTab(filename);
+        };
+        tab.onclick = () => openFile(filename);
+        tabsDiv.appendChild(tab);
+    }
+
+    function highlightActiveTab(filename) {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.file === filename) tab.classList.add('active');
+        });
+    }
+
+    async function closeTab(filename) {
+        const tab = document.querySelector(`.tab[data-file="${filename}"]`);
+        if (tab) tab.remove();
+        if (currentFile === filename) {
+            const firstTab = document.querySelector('.tab');
+            if (firstTab) {
+                await openFile(firstTab.dataset.file);
+            } else {
+                currentFile = null;
+                editor.setValue('');
             }
         }
+        await fetch(`/api/room/${roomId}/file/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename })
+        });
+        refreshFileTree();
+    }
 
-        initSignalR();
-    </script>
-}
+    document.getElementById('btnNewFile').onclick = async () => {
+        const name = prompt('Имя файла:', 'newfile.js');
+        if (!name) return;
+        const res = await fetch(`/api/room/${roomId}/file/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+            await refreshFileTree();
+            await openFile(name);
+        } else alert('Ошибка создания');
+    };
+
+    async function sendMessage() {
+        const text = document.getElementById('chatInput').value.trim();
+        if (!text) return;
+        await fetch(`/api/room/${roomId}/chat/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        });
+        document.getElementById('chatInput').value = '';
+        loadChatHistory();
+    }
+
+    async function loadChatHistory() {
+        const res = await fetch(`/api/room/${roomId}/chat/messages`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const container = document.getElementById('chatHistory');
+        container.innerHTML = '';
+        (data.messages || []).forEach(msg => {
+            const div = document.createElement('div');
+            div.innerHTML = `<b>${msg.sender}:</b> ${msg.message}`;
+            container.appendChild(div);
+        });
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function executeCommand() {
+        const cmd = document.getElementById('terminalInput').value.trim();
+        if (!cmd) return;
+        const out = document.getElementById('terminalOutput');
+        out.innerHTML += `<div>$ ${cmd}</div>`;
+        document.getElementById('terminalInput').value = '';
+        fetch(`/api/room/${roomId}/terminal/exec`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: cmd })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.output) out.innerHTML += `<div>${data.output}</div>`;
+            out.scrollTop = out.scrollHeight;
+        });
+    }
+
+    async function loadParticipants() {
+        const res = await fetch(`/api/room/${roomId}/participants`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = document.getElementById('participantsList');
+        list.innerHTML = '';
+        (data.participants || []).forEach(p => {
+            const li = document.createElement('li');
+            li.textContent = p.name;
+            list.appendChild(li);
+        });
+    }
+
+    document.getElementById('btnParticipants').onclick = async () => {
+        await loadParticipants();
+        document.getElementById('participantsModal').classList.add('show');
+        document.getElementById('modalOverlay').classList.add('show');
+    };
+    document.getElementById('closeParticipants').onclick = () => {
+        document.getElementById('participantsModal').classList.remove('show');
+        document.getElementById('modalOverlay').classList.remove('show');
+    };
+    document.getElementById('modalOverlay').onclick = () => {
+        document.getElementById('participantsModal').classList.remove('show');
+        document.getElementById('modalOverlay').classList.remove('show');
+    };
+    document.getElementById('btnSend').onclick = sendMessage;
+    document.getElementById('terminalInput').addEventListener('keypress', e => { if(e.key === 'Enter') executeCommand(); });
+    document.getElementById('btnExit').onclick = () => { if(confirm('Выйти из комнаты?')) window.location.href = '/'; };
+    document.getElementById('btnSettings').onclick = () => alert('Настройки пока не реализованы');
+
+    refreshFileTree();
+    loadChatHistory();
+    setInterval(loadChatHistory, 3000);
+</script>
+</body>
+</html>
