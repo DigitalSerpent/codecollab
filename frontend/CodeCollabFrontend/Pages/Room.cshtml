@@ -19,6 +19,7 @@
     
     var userId = HttpContext.Session.GetInt32("UserId");
     var currentUser = userId != null ? _context.Users.Find(userId) : null;
+    string userCursor = currentUser?.Cursor ?? "default";
 }
 
 @if (room == null)
@@ -27,160 +28,169 @@
 }
 else
 {
-    Layout = null;
-    
+    ViewData["Title"] = room.Name;
+
     <!DOCTYPE html>
-    <html>
+    <html lang="ru">
     <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>@room.Name - CodeCollab</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>@room.Name — Code Collab</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body, html { width: 100%; height: 100%; overflow: hidden; background: #0a0e1c; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            body { background: #0a0e1c; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
             
-            .app { height: 100vh; display: flex; flex-direction: column; padding: 8px; gap: 8px; background: #0a0e1c; }
-            .main-row { flex: 1; display: flex; gap: 8px; min-height: 0; }
+            /* Хедер */
+            .header { background: #05070f; padding: 8px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #00aaff; z-index: 10; }
+            .logo { font-size: 1.5rem; font-weight: bold; color: white; }
+            .user-info { display: flex; align-items: center; gap: 12px; color: white; }
+            .avatar { width: 32px; height: 32px; border-radius: 50%; background: #00aaff; display: flex; align-items: center; justify-content: center; }
             
-            /* Левая панель */
-            .sidebar { width: 200px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
-            .sidebar-header { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; color: white; font-size: 13px; font-weight: bold; }
+            /* Основной контейнер */
+            .main-container { flex: 1; display: flex; padding: 12px; gap: 12px; overflow: hidden; }
+            
+            /* Левая панель — файлы */
+            .files-panel { width: 220px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+            .panel-header { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; color: white; font-weight: bold; }
             .file-list { flex: 1; overflow-y: auto; padding: 8px; }
-            .file-item { padding: 6px 10px; cursor: pointer; border-radius: 6px; margin-bottom: 4px; color: #ccc; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+            .file-item { padding: 6px 10px; cursor: pointer; border-radius: 6px; margin-bottom: 4px; color: #ccc; font-size: 13px; display: flex; align-items: center; gap: 8px; }
             .file-item:hover { background: #1e1e3a; color: white; }
             .file-item.active { background: #0d3d5c; color: white; }
-            .new-file-btn { margin: 8px; padding: 8px; background: #00aaff; border: none; border-radius: 6px; color: #0a0e1c; cursor: pointer; font-size: 12px; font-weight: bold; }
+            .new-file-btn { margin: 8px; padding: 8px; background: #00aaff; border: none; border-radius: 6px; color: #0a0e1c; cursor: pointer; font-weight: bold; }
             
-            /* Центр */
-            .center { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 10px; overflow: hidden; }
+            /* Центр — редактор */
+            .editor-area { flex: 1; display: flex; flex-direction: column; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; overflow: hidden; }
+            .invite-bar { background: #0a0e1c; padding: 6px 12px; margin: 8px 12px 0 12px; border-radius: 8px; display: flex; gap: 8px; align-items: center; }
+            .invite-input { flex: 1; background: #121628; border: 1px solid #1e1e3a; color: white; border-radius: 6px; padding: 6px; font-size: 12px; }
+            .copy-btn { background: #00aaff; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: bold; }
             .tabs-bar { display: flex; background: #121628; border-bottom: 1px solid #00aaff; overflow-x: auto; padding: 0 8px; gap: 4px; }
             .tab { padding: 8px 16px; background: #0d0d1a; color: #ccc; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
             .tab.active { background: #1e1e3a; color: white; border-bottom: 2px solid #00aaff; }
-            .tab-close { margin-left: 8px; cursor: pointer; opacity: 0.6; }
-            .tab-close:hover { opacity: 1; }
-            .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: #121628; border-bottom: 1px solid #00aaff; gap: 8px; }
-            .lang-select { background: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
-            .run-btn { background: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 4px 16px; cursor: pointer; font-size: 12px; font-weight: bold; }
-            .editor { flex: 1; min-height: 0; }
-            .terminal { height: 130px; background: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; }
-            .terminal-header { padding: 5px 12px; background: #2d2d2d; color: white; font-size: 11px; display: flex; justify-content: space-between; }
+            .tab-close { margin-left: 8px; opacity: 0.6; cursor: pointer; }
+            .toolbar { display: flex; justify-content: space-between; padding: 6px 12px; background: #121628; border-bottom: 1px solid #00aaff; }
+            .lang-select { background: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 6px; padding: 4px 10px; }
+            .run-btn { background: #00aaff; border: none; border-radius: 6px; padding: 4px 16px; cursor: pointer; font-weight: bold; }
+            .editor-container { flex: 1; min-height: 0; }
+            .terminal { height: 140px; background: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; }
+            .terminal-header { padding: 4px 12px; background: #2d2d2d; color: white; font-size: 11px; display: flex; justify-content: space-between; }
             .terminal-output { flex: 1; overflow-y: auto; padding: 6px; color: #ccc; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
-            .terminal-input-line { display: flex; padding: 5px 10px; background: #1e1e1e; border-top: 1px solid #3c3c3c; }
-            .terminal-prompt { color: #00aaff; margin-right: 8px; font-weight: bold; font-size: 11px; }
-            .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; font-size: 11px; }
+            .terminal-input-line { display: flex; padding: 4px 10px; background: #1e1e1e; border-top: 1px solid #3c3c3c; }
+            .terminal-prompt { color: #00aaff; margin-right: 8px; font-weight: bold; }
+            .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; }
             
-            /* Правая панель */
-            .chat-panel { width: 260px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
-            .chat-header { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; color: white; font-size: 13px; font-weight: bold; }
+            /* Правая панель — чат */
+            .chat-panel { width: 260px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+            .chat-header { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; color: white; font-weight: bold; }
             .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
             .message { max-width: 85%; padding: 6px 12px; border-radius: 12px; font-size: 12px; word-wrap: break-word; }
             .message-mine { background: #b198b3; color: #0a0e1c; align-self: flex-end; }
             .message-other { background: #86a1b5; color: white; align-self: flex-start; }
             .chat-input-area { display: flex; padding: 10px; gap: 8px; border-top: 1px solid #00aaff; }
-            .chat-input { flex: 1; padding: 8px; background: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; font-size: 12px; }
-            .send-btn { padding: 8px 14px; background: #00aaff; border: none; border-radius: 8px; cursor: pointer; color: #0a0e1c; }
+            .chat-input { flex: 1; padding: 8px; background: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; }
+            .send-btn { padding: 8px 14px; background: #00aaff; border: none; border-radius: 8px; cursor: pointer; }
             
             /* Нижние иконки */
-            .bottom-bar { display: flex; justify-content: space-between; gap: 10px; }
-            .bottom-btn { width: 44px; height: 44px; background: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 20px; }
+            .bottom-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 100; }
+            .bottom-btn { width: 48px; height: 48px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 20px; transition: 0.2s; }
             .bottom-btn:hover { background: #1e1e3a; color: #00aaff; }
             
-            /* Модалки */
-            .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 100000; align-items: center; justify-content: center; }
-            .modal-window { background: #121628; border-radius: 16px; padding: 25px; width: 320px; border: 1px solid #00aaff; text-align: center; }
-            .modal-window h3 { color: white; margin-bottom: 15px; }
+            .floating-panel { display: none; position: fixed; bottom: 80px; left: 20px; width: 260px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; padding: 12px; z-index: 200; max-height: 350px; overflow-y: auto; }
+            .panel-title { color: white; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: bold; }
+            .participant { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+            .participant:hover { background: #1e1e3a; }
+            .participant-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+            .participant-name { flex: 1; color: white; font-size: 13px; }
+            .participant-status { width: 8px; height: 8px; border-radius: 50%; }
+            
+            .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+            .modal-card { background: #121628; border-radius: 16px; padding: 24px; width: 320px; border: 1px solid #00aaff; text-align: center; }
             .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-            .modal-btn { flex:1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+            .modal-btn { flex:1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
             .modal-cancel { background: #1e1e3a; color: white; }
             .modal-confirm { background: #00aaff; color: #0a0e1c; }
             
-            .floating-users { display: none; position: fixed; bottom: 70px; left: 20px; width: 280px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; padding: 15px; z-index: 100000; max-height: 400px; overflow-y: auto; }
-            .users-title { color: white; margin-bottom: 12px; display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; }
-            .user-item { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
-            .user-item:hover { background: #1e1e3a; }
-            .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-            .user-name { flex: 1; color: white; font-size: 13px; }
-            .user-status { width: 8px; height: 8px; border-radius: 50%; }
-            
-            .toast { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 8px; z-index: 1000000; font-size: 13px; }
+            .toast { position: fixed; top: 20px; right: 20px; padding: 10px 18px; border-radius: 8px; z-index: 10000; font-size: 13px; }
         </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
     </head>
     <body>
-        <div class="app">
-            <!-- Ссылка-приглашение (только для владельца) -->
-            @if (userId == room.OwnerId)
-            {
-                <div style="background: #0a0e1c; padding: 6px 10px; border-radius: 8px;">
-                    <div style="display: flex; gap: 8px;">
-                        <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" style="flex:1; background:#121628; border:1px solid #1e1e3a; color:white; border-radius:6px; padding:6px; font-size:11px;">
-                        <button onclick="copyInvite()" style="background:#00aaff; border:none; border-radius:6px; padding:6px 12px; cursor:pointer;">Копировать</button>
-                    </div>
-                </div>
-            }
-            
-            <div class="main-row">
-                <!-- ЛЕВАЯ ПАНЕЛЬ: ФАЙЛЫ -->
-                <div class="sidebar">
-                    <div class="sidebar-header"><i class="fas fa-folder"></i> Файлы</div>
-                    <div id="fileList" class="file-list"></div>
-                    <button class="new-file-btn" onclick="createNewFile()">+ Новый файл</button>
-                </div>
-                
-                <!-- ЦЕНТР: РЕДАКТОР -->
-                <div class="center">
-                    <div id="tabsBar" class="tabs-bar"></div>
-                    <div class="toolbar">
-                        <select id="langSelect" class="lang-select">
-                            <option value="python">Python</option>
-                            <option value="javascript">JavaScript</option>
-                            <option value="html">HTML</option>
-                            <option value="css">CSS</option>
-                        </select>
-                        <button class="run-btn" onclick="runCode()"><i class="fas fa-play"></i> Запустить</button>
-                    </div>
-                    <div id="editor" class="editor"></div>
-                    <div class="terminal">
-                        <div class="terminal-header">
-                            <span><i class="fas fa-terminal"></i> Терминал</span>
-                            <button onclick="toggleTerminal()" style="background:none; border:none; color:#ccc; cursor:pointer;">▲</button>
-                        </div>
-                        <div id="terminalOut" class="terminal-output">$ Добро пожаловать! 👋\n</div>
-                        <div class="terminal-input-line">
-                            <span class="terminal-prompt">$</span>
-                            <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ПРАВАЯ ПАНЕЛЬ: ЧАТ -->
-                <div class="chat-panel">
-                    <div class="chat-header"><i class="fas fa-comments"></i> Чат комнаты</div>
-                    <div id="chatMessages" class="chat-messages"></div>
-                    <div class="chat-input-area">
-                        <input type="text" id="chatInput" class="chat-input" placeholder="Напишите сообщение...">
-                        <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- НИЖНИЕ ИКОНКИ -->
-            <div class="bottom-bar">
-                <div class="bottom-btn" onclick="toggleUsers()"><i class="fas fa-users"></i></div>
-                <div class="bottom-btn" onclick="openExitModal()"><i class="fas fa-sign-out-alt"></i></div>
+        <div class="header">
+            <div class="logo">Code Collab</div>
+            <div class="user-info">
+                <span>@(currentUser?.Name ?? "Гость")</span>
+                <div class="avatar">@(currentUser?.Avatar ?? "👤")</div>
             </div>
         </div>
         
-        <!-- МОДАЛЬНЫЕ ОКНА -->
-        <div id="usersModal" class="floating-users">
-            <div class="users-title"><span>👥 Участники</span><span onclick="closeUsers()" style="cursor:pointer;">✖</span></div>
+        <div class="main-container">
+            <!-- ЛЕВАЯ ПАНЕЛЬ: ФАЙЛЫ -->
+            <div class="files-panel">
+                <div class="panel-header"><i class="fas fa-folder"></i> Файлы</div>
+                <div id="fileTree" class="file-list"></div>
+                <button class="new-file-btn" onclick="promptNewFile()"><i class="fas fa-plus"></i> Новый файл</button>
+            </div>
+            
+            <!-- ЦЕНТР -->
+            <div class="editor-area">
+                @if (userId == room.OwnerId)
+                {
+                    <div class="invite-bar">
+                        <input id="inviteLink" type="text" readonly value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")" class="invite-input">
+                        <button class="copy-btn" onclick="copyInviteLink()"><i class="fas fa-copy"></i> Копировать</button>
+                    </div>
+                }
+                <div id="tabsBar" class="tabs-bar"></div>
+                <div class="toolbar">
+                    <select id="languageSelect" class="lang-select">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="bash">Bash</option>
+                    </select>
+                    <button class="run-btn" onclick="runCode()"><i class="fas fa-play"></i> Запустить</button>
+                </div>
+                <div id="editor" class="editor-container"></div>
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <span><i class="fas fa-terminal"></i> Терминал</span>
+                        <button onclick="toggleTerminal()" style="background:none; border:none; color:#ccc; cursor:pointer;">▼</button>
+                    </div>
+                    <div id="terminalOutput" class="terminal-output">$ Готов к работе\n</div>
+                    <div class="terminal-input-line">
+                        <span class="terminal-prompt">$</span>
+                        <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ПРАВАЯ ПАНЕЛЬ: ЧАТ -->
+            <div class="chat-panel">
+                <div class="chat-header"><i class="fas fa-comments"></i> Чат</div>
+                <div id="chatMessages" class="chat-messages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Сообщение...">
+                    <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- НИЖНИЕ ИКОНКИ -->
+        <div class="bottom-bar">
+            <div class="bottom-btn" onclick="toggleUsersPanel()"><i class="fas fa-users"></i></div>
+            <div class="bottom-btn" onclick="openExitModal()"><i class="fas fa-sign-out-alt"></i></div>
+        </div>
+        
+        <!-- ПАНЕЛЬ УЧАСТНИКОВ -->
+        <div id="usersPanel" class="floating-panel">
+            <div class="panel-title">Участники <span onclick="closeUsersPanel()" style="cursor:pointer;">✖</span></div>
             <div id="usersList"></div>
         </div>
         
-        <div id="exitModal" class="modal-overlay">
-            <div class="modal-window">
-                <h3>Выйти из комнаты?</h3>
+        <div id="exitModal" class="modal">
+            <div class="modal-card">
+                <h3 style="color:white; margin-bottom:15px;">Выйти из комнаты?</h3>
                 <div class="modal-buttons">
                     <button class="modal-btn modal-cancel" onclick="closeExitModal()">Отмена</button>
                     <button class="modal-btn modal-confirm" onclick="exitRoom()">Выйти</button>
@@ -201,7 +211,7 @@ else
             let saveTimer = null;
             let ws = null;
             
-            // Утилиты
+            // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
             function showToast(msg, isError = false) {
                 const toast = document.createElement('div');
                 toast.className = 'toast';
@@ -212,60 +222,34 @@ else
                 setTimeout(() => toast.remove(), 3000);
             }
             
-            function copyInvite() {
-                const input = document.getElementById('inviteLink');
-                if (input) { input.select(); document.execCommand('copy'); showToast('Ссылка скопирована'); }
+            function copyInviteLink() {
+                const inp = document.getElementById('inviteLink');
+                if (inp) { inp.select(); document.execCommand('copy'); showToast('Ссылка скопирована'); }
             }
             
-            // WebSocket подключение
-            function connectWebSocket() {
-                const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-                const wsUrl = `ws://${window.location.hostname}:8000/ws/${roomId}/${userId}`;
-                console.log('🔌 Подключение WebSocket:', wsUrl);
-                
-                ws = new WebSocket(wsUrl);
-                ws.onopen = () => {
-                    console.log('✅ WebSocket подключен');
-                    ws.send(JSON.stringify({ name: userName, avatar: userAvatar, cursor: userCursor }));
-                };
-                ws.onmessage = (e) => {
-                    try {
-                        const data = JSON.parse(e.data);
-                        if (data.type === 'participant_list') updateUsersList(data.users);
-                    } catch(e) {}
-                };
-                ws.onclose = () => setTimeout(connectWebSocket, 3000);
-                ws.onerror = (err) => console.error('WebSocket error:', err);
+            function getFileIcon(name) {
+                const ext = name.split('.').pop().toLowerCase();
+                const icons = { py:'<i class="fab fa-python"></i>', js:'<i class="fab fa-js"></i>', html:'<i class="fab fa-html5"></i>', css:'<i class="fab fa-css3-alt"></i>', md:'<i class="fas fa-markdown"></i>' };
+                return icons[ext] || '<i class="fas fa-file-code"></i>';
             }
             
-            function updateUsersList(users) {
-                const container = document.getElementById('usersList');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const u of users) {
-                    const div = document.createElement('div');
-                    div.className = 'user-item';
-                    div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
-                    div.innerHTML = `
-                        <div class="user-avatar">${u.avatar || '👤'}</div>
-                        <div class="user-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
-                        <div class="user-status" style="background: ${u.online ? '#4caf50' : '#888'}"></div>
-                    `;
-                    container.appendChild(div);
-                }
+            function getLanguageByExt(name) {
+                const ext = name.split('.').pop().toLowerCase();
+                const map = { py:'python', js:'javascript', html:'html', css:'css', md:'markdown', txt:'text', sh:'bash', bash:'bash' };
+                return map[ext] || 'text';
             }
             
-            // Работа с файлами
+            // ==================== ФАЙЛЫ ====================
             async function loadFiles() {
                 try {
                     const res = await fetch(`/api/room/${roomId}/file`);
                     const files = await res.json();
-                    const container = document.getElementById('fileList');
+                    const container = document.getElementById('fileTree');
                     container.innerHTML = '';
                     for (const f of files) {
                         const div = document.createElement('div');
-                        div.className = `file-item ${currentFileId === f.id ? 'active' : ''}`;
-                        div.innerHTML = `<i class="fas fa-file-code"></i> ${escapeHtml(f.name)}`;
+                        div.className = 'file-item' + (currentFileId === f.id ? ' active' : '');
+                        div.innerHTML = `${getFileIcon(f.name)} <span style="flex:1;">${escapeHtml(f.name)}</span>`;
                         div.onclick = () => openFile(f.id, f.name);
                         container.appendChild(div);
                     }
@@ -282,22 +266,30 @@ else
                     loadFiles();
                     if (editor) {
                         editor.setValue(file.content || '');
-                        const ext = name.split('.').pop();
-                        const langMap = { py:'python', js:'javascript', html:'html', css:'css', txt:'text' };
-                        monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'text');
+                        monaco.editor.setModelLanguage(editor.getModel(), getLanguageByExt(name));
                     }
-                    localStorage.setItem(`lastFile_${roomId}`, id);
                 } catch(e) { showToast('Ошибка открытия файла', true); }
+            }
+            
+            async function saveCurrentFile() {
+                if (!currentFileId || !editor) return;
+                try {
+                    const content = editor.getValue();
+                    await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ Content: content })
+                    });
+                } catch(e) { console.error('Save error:', e); }
             }
             
             function renderTabs() {
                 const container = document.getElementById('tabsBar');
-                if (!container) return;
                 container.innerHTML = '';
                 for (const t of openTabs) {
                     const tab = document.createElement('div');
                     tab.className = `tab ${currentFileId === t.id ? 'active' : ''}`;
-                    tab.innerHTML = `<i class="fas fa-file"></i> ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
+                    tab.innerHTML = `${getFileIcon(t.name)} ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
                     tab.onclick = () => openFile(t.id, t.name);
                     container.appendChild(tab);
                 }
@@ -314,21 +306,7 @@ else
                 renderTabs();
             }
             
-            async function saveCurrentFile() {
-                if (!currentFileId || !editor) return;
-                try {
-                    const content = editor.getValue();
-                    await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ Content: content })  // ← Content с большой буквы!
-                    });
-                    console.log('✅ Файл сохранен');
-                } catch(e) { console.error('Save error:', e); }
-            }
-            
-            async function createNewFile() {
-                let name = prompt('Имя файла (например, script.py):');
+            async function createFile(name) {
                 if (!name) return;
                 if (!name.includes('.')) name += '.txt';
                 try {
@@ -346,13 +324,17 @@ else
                 } catch(e) { showToast('Ошибка создания', true); }
             }
             
-            // Чат
+            function promptNewFile() {
+                let name = prompt('Имя файла (например, script.py):');
+                if (name) createFile(name);
+            }
+            
+            // ==================== ЧАТ ====================
             async function loadChat() {
                 try {
                     const res = await fetch(`/api/chat/${roomId}`);
                     const msgs = await res.json();
                     const container = document.getElementById('chatMessages');
-                    if (!container) return;
                     container.innerHTML = '';
                     for (const m of msgs) {
                         const div = document.createElement('div');
@@ -375,19 +357,19 @@ else
                 }).then(() => { input.value = ''; loadChat(); });
             }
             
-            // Запуск кода
+            // ==================== ТЕРМИНАЛ ====================
             function runCode() {
                 if (!editor) return;
                 const code = editor.getValue();
-                const lang = document.getElementById('langSelect').value;
-                const output = document.getElementById('terminalOut');
-                output.innerHTML += `\n$ Запуск ${lang}...\n`;
+                const lang = document.getElementById('languageSelect').value;
+                const output = document.getElementById('terminalOutput');
+                output.innerHTML += `\n$ Запуск (${lang})...\n`;
                 fetch('/api/terminal/run', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
                 }).then(r => r.json()).then(data => {
-                    output.innerHTML += (data.output || data.error || '✅ Выполнено\n');
+                    output.innerHTML += (data.output || data.error || 'Выполнено\n');
                     output.scrollTop = output.scrollHeight;
                 });
             }
@@ -396,15 +378,48 @@ else
                 const term = document.querySelector('.terminal');
                 const btn = term.querySelector('.terminal-header button');
                 if (term.style.height === '35px') {
-                    term.style.height = '130px';
-                    btn.innerHTML = '▲';
+                    term.style.height = '140px';
+                    btn.innerHTML = '▼';
                 } else {
                     term.style.height = '35px';
-                    btn.innerHTML = '▼';
+                    btn.innerHTML = '▲';
                 }
             }
             
-            // Участники
+            // ==================== УЧАСТНИКИ (WebSocket) ====================
+            function connectWebSocket() {
+                const wsUrl = `ws://${window.location.hostname}:8000/ws/${roomId}/${userId}`;
+                ws = new WebSocket(wsUrl);
+                ws.onopen = () => {
+                    console.log('✅ WebSocket connected');
+                    ws.send(JSON.stringify({ name: userName, avatar: userAvatar, cursor: userCursor }));
+                };
+                ws.onmessage = (e) => {
+                    try {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'participant_list') updateUsersList(data.users);
+                    } catch(e) {}
+                };
+                ws.onclose = () => setTimeout(connectWebSocket, 3000);
+            }
+            
+            function updateUsersList(users) {
+                const container = document.getElementById('usersList');
+                if (!container) return;
+                container.innerHTML = '';
+                for (const u of users) {
+                    const div = document.createElement('div');
+                    div.className = 'participant';
+                    div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
+                    div.innerHTML = `
+                        <div class="participant-avatar">${u.avatar || '👤'}</div>
+                        <div class="participant-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
+                        <div class="participant-status" style="background: ${u.online ? '#4caf50' : '#888'}"></div>
+                    `;
+                    container.appendChild(div);
+                }
+            }
+            
             async function loadUsersRest() {
                 try {
                     const res = await fetch(`/api/room/${roomId}/users`);
@@ -413,31 +428,31 @@ else
                 } catch(e) {}
             }
             
-            function toggleUsers() {
-                const panel = document.getElementById('usersModal');
+            function toggleUsersPanel() {
+                const panel = document.getElementById('usersPanel');
                 if (panel.style.display === 'none' || !panel.style.display) {
                     panel.style.display = 'block';
                     if (!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest();
                 } else panel.style.display = 'none';
             }
             
-            function closeUsers() { document.getElementById('usersModal').style.display = 'none'; }
+            function closeUsersPanel() { document.getElementById('usersPanel').style.display = 'none'; }
+            
+            // ==================== ВЫХОД ====================
             function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
             function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
-            
             async function exitRoom() {
                 if (currentFileId && editor) await saveCurrentFile();
                 window.location.href = '/dashboard';
             }
             
-            // Редактор Monaco
+            // ==================== РЕДАКТОР ====================
             function initEditor() {
                 const container = document.getElementById('editor');
-                if (!container) return;
                 require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
                 require(['vs/editor/editor.main'], function() {
                     editor = monaco.editor.create(container, {
-                        value: '// Откройте или создайте файл для редактирования\n',
+                        value: '// Создайте или откройте файл\n',
                         language: 'javascript',
                         theme: 'vs-dark',
                         automaticLayout: true,
@@ -449,32 +464,31 @@ else
                         saveTimer = setTimeout(saveCurrentFile, 1000);
                     });
                     loadFiles();
-                    
-                    const lastFile = localStorage.getItem(`lastFile_${roomId}`);
-                    if (lastFile) {
-                        fetch(`/api/room/${roomId}/file/${lastFile}`)
-                            .then(res => res.json())
-                            .then(file => { if(file && file.name) openFile(lastFile, file.name); });
-                    }
                 });
             }
             
             function escapeHtml(str) {
                 return str.replace(/[&<>]/g, function(m) {
-                    if (m === '&') return '&amp;';
-                    if (m === '<') return '&lt;';
-                    if (m === '>') return '&gt;';
+                    if(m === '&') return '&amp;';
+                    if(m === '<') return '&lt;';
+                    if(m === '>') return '&gt;';
                     return m;
                 });
             }
             
-            // Обработчики событий
-            document.getElementById('chatInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(); });
+            // ==================== ЗАПУСК ====================
+            initEditor();
+            loadChat();
+            connectWebSocket();
+            setInterval(loadChat, 5000);
+            setInterval(() => { if(!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest(); }, 10000);
+            
+            // События терминала
             document.getElementById('terminalInput')?.addEventListener('keypress', e => {
                 if(e.key === 'Enter') {
                     const cmd = e.target.value;
                     e.target.value = '';
-                    const out = document.getElementById('terminalOut');
+                    const out = document.getElementById('terminalOutput');
                     out.innerHTML += `\n$ ${cmd}\n`;
                     fetch('/api/terminal/run', {
                         method: 'POST',
@@ -487,12 +501,7 @@ else
                 }
             });
             
-            // Запуск всего
-            initEditor();
-            loadChat();
-            connectWebSocket();
-            setInterval(loadChat, 5000);
-            setInterval(() => { if(!ws || ws.readyState !== WebSocket.OPEN) loadUsersRest(); }, 10000);
+            document.getElementById('chatInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(); });
         </script>
     </body>
     </html>
