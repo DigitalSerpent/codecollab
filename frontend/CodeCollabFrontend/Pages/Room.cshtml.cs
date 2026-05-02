@@ -2,19 +2,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CodeCollabFrontend.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http;
 
 namespace CodeCollabFrontend.Pages;
 
 public class RoomModel : PageModel
 {
     private readonly AppDbContext _context;
-    private readonly HttpClient _httpClient;
 
-    public RoomModel(AppDbContext context, IHttpClientFactory httpClientFactory)
+    public RoomModel(AppDbContext context)
     {
         _context = context;
-        _httpClient = httpClientFactory.CreateClient();
     }
 
     public Room? Room { get; set; }
@@ -35,11 +32,45 @@ public class RoomModel : PageModel
 
         if (Room == null) return RedirectToPage("/Dashboard");
 
-        // Сообщаем Python-серверу, что пользователь вошёл в комнату
-        await _httpClient.PostAsync("http://localhost:8001/room_join", 
-            new StringContent($"{{ \"roomId\": {id}, \"userId\": {userId}, \"userName\": \"{CurrentUser.Name}\", \"avatar\": \"{CurrentUser.Avatar}\", \"cursor\": \"{CurrentUser.Cursor}\" }}", 
-            System.Text.Encoding.UTF8, "application/json"));
+        // ========== АВТО-ДОБАВЛЕНИЕ УЧАСТНИКА ==========
+        var participant = await _context.RoomParticipants
+            .FirstOrDefaultAsync(rp => rp.RoomId == id && rp.UserId == userId.Value);
+
+        if (participant == null)
+        {
+            participant = new RoomParticipant
+            {
+                RoomId = id,
+                UserId = userId.Value,
+                IsOnline = true,
+                JoinedAt = DateTime.UtcNow
+            };
+            _context.RoomParticipants.Add(participant);
+        }
+        else
+        {
+            participant.IsOnline = true;
+        }
+
+        await _context.SaveChangesAsync();
 
         return Page();
+    }
+
+    public async Task<IActionResult> OnPostLeaveAsync(int roomId)
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (userId == null) return RedirectToPage("/Login");
+
+        var participant = await _context.RoomParticipants
+            .FirstOrDefaultAsync(rp => rp.RoomId == roomId && rp.UserId == userId.Value);
+
+        if (participant != null)
+        {
+            participant.IsOnline = false;
+            await _context.SaveChangesAsync();
+        }
+
+        return RedirectToPage("/Dashboard");
     }
 }

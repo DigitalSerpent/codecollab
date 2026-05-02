@@ -348,10 +348,10 @@ else
                 }
             });
             
-            // УЧАСТНИКИ (HTTP-опрос)
+            // УЧАСТНИКИ (HTTP-опрос) - ИСПРАВЛЕННЫЙ URL
             async function loadUsers() {
                 try {
-                    const res = await fetch(`/api/room/${roomId}/users`);
+                    const res = await fetch(`/api/users/room/${roomId}`);
                     const users = await res.json();
                     const container = document.getElementById('usersList');
                     if (!container) return;
