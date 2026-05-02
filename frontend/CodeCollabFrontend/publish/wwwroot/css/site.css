@@ -1,0 +1,32 @@
+html, body {
+    background-color: #0a0e1c !important;
+    color: white;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #00aaff;
+    border-bottom-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    animation: rotation 1s linear infinite;
+}
+
+@@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Убираем жёлтый фон у автозаполненных полей */
+input:-webkit-autofill,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:hover {
+    transition: background-color 5000s ease-in-out 0s;
+    -webkit-text-fill-color: white !important;
+    caret-color: white;
+    background-color: #0a0e1c !important;
+}
