@@ -191,12 +191,12 @@
             @foreach (var room in rooms)
             {
                 var participants = room.RoomParticipants?.Select(rp => new
-{
-    Name = rp.User?.Name ?? rp.UserName ?? "Unknown",
-    Online = rp.IsOnline,
-    Avatar = rp.User?.Avatar ?? rp.Avatar ?? "👤",
-    Cursor = rp.User?.Cursor ?? rp.Cursor ?? "⬤"
-}).ToList();
+                {
+                    Name = rp.User?.Name ?? rp.UserName ?? "Unknown",
+                    Online = rp.IsOnline,
+                    Avatar = rp.User?.Avatar ?? rp.Avatar ?? "👤",
+                    Cursor = rp.User?.Cursor ?? rp.Cursor ?? "⬤"
+                }).ToList();
 
                 var usersJson = System.Text.Json.JsonSerializer.Serialize(participants);
                 bool isLongName = room.Name.Length > 20;
@@ -307,42 +307,42 @@
     let currentIsOwner = false;
 
     function openRoomModal(name, date, participants, users, roomId, isOwner) {
-    currentRoomId = roomId;
-    currentIsOwner = isOwner;
-    document.getElementById('roomName').innerText = name;
-    document.getElementById('roomDate').innerText = 'Создана: ' + date;
-    document.getElementById('roomParticipants').innerText = 'Участников: ' + participants;
+        currentRoomId = roomId;
+        currentIsOwner = isOwner;
+        document.getElementById('roomName').innerText = name;
+        document.getElementById('roomDate').innerText = 'Создана: ' + date;
+        document.getElementById('roomParticipants').innerText = 'Участников: ' + participants;
 
-    const deleteIcon = document.getElementById('deleteIconBtn');
-    deleteIcon.style.display = isOwner ? 'block' : 'none';
+        const deleteIcon = document.getElementById('deleteIconBtn');
+        deleteIcon.style.display = isOwner ? 'block' : 'none';
 
-    let listHtml = '';
-    if (users && users.length) {
-        users.forEach(user => {
-            let userName = user.name || user.userName || 'Unknown';
-            let userAvatar = user.avatar || '👤';
-            
-            let avatarHtml = '';
-            if (userAvatar && userAvatar.startsWith('/uploads/')) {
-                avatarHtml = `<img src="${userAvatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`;
-            } else {
-                avatarHtml = `<span style="margin-right:8px;">${userAvatar}</span>`;
-            }
+        let listHtml = '';
+        if (users && users.length) {
+            users.forEach(user => {
+                let userName = user.name || user.Name || user.userName || 'Unknown';
+                let userAvatar = user.avatar || user.Avatar || '👤';
+                
+                let avatarHtml = '';
+                if (userAvatar && userAvatar.startsWith('/uploads/')) {
+                    avatarHtml = `<img src="${userAvatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`;
+                } else {
+                    avatarHtml = `<span style="margin-right:8px;">${userAvatar}</span>`;
+                }
 
-            listHtml += `<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                ${avatarHtml}
-                <span>${userName}</span>
-                <span style="margin-left: auto;">${user.cursor || '⬤'}</span>
-                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
-            </div>`;
-        });
-    } else {
-        listHtml = '<div style="color: #a0a0a0;">Нет участников</div>';
+                listHtml += `<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    ${avatarHtml}
+                    <span>${userName}</span>
+                    <span style="margin-left: auto;">${user.cursor || user.Cursor || '⬤'}</span>
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
+                </div>`;
+            });
+        } else {
+            listHtml = '<div style="color: #a0a0a0;">Нет участников</div>';
+        }
+        document.getElementById('participantList').innerHTML = listHtml;
+
+        document.getElementById('roomInfoModal').style.display = 'flex';
     }
-    document.getElementById('participantList').innerHTML = listHtml;
-
-    document.getElementById('roomInfoModal').style.display = 'flex';
-}
 
     function closeRoomModal() {
         document.getElementById('roomInfoModal').style.display = 'none';
