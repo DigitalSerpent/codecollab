@@ -36,12 +36,17 @@ public class RoomFileController : ControllerBase
         return Ok(new { file.Id, file.Name, file.Content, file.IsReadme });
     }
 
-    // POST: создать новый файл
+    // POST: создать новый файл (с проверкой дубликатов)
     [HttpPost]
     public async Task<IActionResult> CreateFile(int roomId, [FromBody] CreateFileRequest request)
     {
         var room = await _context.Rooms.FindAsync(roomId);
         if (room == null) return NotFound("Комната не найдена");
+
+        // Проверка на дубликат
+        var existing = await _context.RoomFiles
+            .AnyAsync(f => f.RoomId == roomId && f.Name == request.Name);
+        if (existing) return Conflict("Файл с таким именем уже существует");
 
         var newFile = new RoomFile
         {
@@ -68,6 +73,24 @@ public class RoomFileController : ControllerBase
         return Ok();
     }
 
+    // PUT: переименовать файл
+    [HttpPut("{fileId}/rename")]
+    public async Task<IActionResult> RenameFile(int roomId, int fileId, [FromBody] RenameFileRequest request)
+    {
+        var file = await _context.RoomFiles
+            .FirstOrDefaultAsync(f => f.Id == fileId && f.RoomId == roomId);
+        if (file == null) return NotFound();
+
+        // Проверка на дубликат при переименовании
+        var existing = await _context.RoomFiles
+            .AnyAsync(f => f.RoomId == roomId && f.Name == request.NewName && f.Id != fileId);
+        if (existing) return Conflict("Файл с таким именем уже существует");
+
+        file.Name = request.NewName;
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
+
     // DELETE: удалить файл
     [HttpDelete("{fileId}")]
     public async Task<IActionResult> DeleteFile(int roomId, int fileId)
@@ -90,4 +113,9 @@ public class CreateFileRequest
 public class UpdateFileRequest
 {
     public string Content { get; set; } = "";
+}
+
+public class RenameFileRequest
+{
+    public string NewName { get; set; } = "";
 }

@@ -189,6 +189,27 @@ else
             .custom-modal { background: #121628; border-radius: 16px; padding: 25px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; }
             .custom-modal input { width: 100%; padding: 10px; margin: 15px 0; background: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px; }
             .custom-modal button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; }
+
+        .context-menu {
+    position: fixed;
+    background: #1e1e2e;
+    border: 1px solid #00aaff;
+    border-radius: 6px;
+    padding: 5px 0;
+    z-index: 10000;
+    display: none;
+}
+.context-item {
+    padding: 6px 20px;
+    cursor: pointer;
+    color: white;
+    font-size: 13px;
+}
+.context-item:hover {
+    background: #00aaff;
+    color: #0a0e1c;
+}
+
         </style>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
     </head>
@@ -388,52 +409,109 @@ else
             function closeUsers() { document.getElementById('usersModal').style.display = 'none'; }
             
             // ФАЙЛЫ
-            async function loadFiles() {
-                try {
-                    const res = await fetch(`/api/room/${roomId}/file`);
-                    const files = await res.json();
-                    const container = document.getElementById('fileList');
-                    container.innerHTML = '';
-                    for (const f of files) {
-                        const div = document.createElement('div');
-                        div.className = `file-item ${currentFileId === f.id ? 'active' : ''}`;
-                        div.innerHTML = `<i class="fas fa-file-code"></i> ${escapeHtml(f.name)}`;
-                        div.onclick = () => openFile(f.id, f.name);
-                        container.appendChild(div);
-                    }
-                } catch(e) {}
+           
+// ========== ФАЙЛЫ С КОНТЕКСТНЫМ МЕНЮ ==========
+let currentContextFileId = null;
+let currentContextFileName = null;
+
+async function loadFiles() {
+    try {
+        const res = await fetch(`/api/room/${roomId}/file`);
+        const files = await res.json();
+        const container = document.getElementById('fileList');
+        container.innerHTML = '';
+        for (const f of files) {
+            const div = document.createElement('div');
+            div.className = `file-item ${currentFileId === f.id ? 'active' : ''}`;
+            div.innerHTML = `<i class="fas fa-file-code"></i> ${escapeHtml(f.name)}`;
+            div.onclick = () => openFile(f.id, f.name);
+            div.oncontextmenu = (e) => {
+                e.preventDefault();
+                currentContextFileId = f.id;
+                currentContextFileName = f.name;
+                showFileContextMenu(e.clientX, e.clientY);
+            };
+            container.appendChild(div);
+        }
+    } catch(e) {}
+}
+
+function showFileContextMenu(x, y) {
+    let menu = document.getElementById('fileContextMenu');
+    if (!menu) {
+        menu = document.createElement('div');
+        menu.id = 'fileContextMenu';
+        menu.className = 'context-menu';
+        menu.innerHTML = `
+            <div class="context-item" id="rename-file">✏️ Переименовать</div>
+            <div class="context-item" id="delete-file">🗑️ Удалить</div>
+        `;
+        document.body.appendChild(menu);
+        document.getElementById('rename-file').onclick = () => renameFile();
+        document.getElementById('delete-file').onclick = () => deleteFile();
+        window.addEventListener('click', () => {
+            if (menu) menu.style.display = 'none';
+        });
+    }
+    menu.style.display = 'block';
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+}
+
+async function renameFile() {
+    const newName = prompt('Новое имя файла:', currentContextFileName);
+    if (!newName || newName === currentContextFileName) return;
+    try {
+        const res = await fetch(`/api/room/${roomId}/file/${currentContextFileId}/rename`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newName })
+        });
+        if (res.ok) {
+            showToast('Файл переименован');
+            // обновляем вкладки
+            const tab = openTabs.find(t => t.id === currentContextFileId);
+            if (tab) tab.name = newName;
+            if (currentFileId === currentContextFileId) {
+                currentFileId = null;
             }
-            
-            async function openFile(id, name) {
-                try {
-                    const res = await fetch(`/api/room/${roomId}/file/${id}`);
-                    const file = await res.json();
-                    if (!openTabs.some(t => t.id === id)) openTabs.push({ id, name });
-                    currentFileId = id;
-                    renderTabs();
-                    loadFiles();
-                    if (editor) {
-                        editor.setValue(file.content || '');
-                        const ext = name.split('.').pop();
-                        const langMap = { py:'python', js:'javascript', html:'html', css:'css', txt:'text' };
-                        monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'text');
-                    }
-                    localStorage.setItem(`lastFile_${roomId}`, id);
-                } catch(e) { showToast('Ошибка открытия файла', true); }
+            await loadFiles();
+            renderTabs();
+            if (currentFileId === null && openTabs.length) {
+                await openFile(openTabs[0].id, openTabs[0].name);
             }
-            
-            function renderTabs() {
-                const container = document.getElementById('tabsBar');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const t of openTabs) {
-                    const tab = document.createElement('div');
-                    tab.className = `tab ${currentFileId === t.id ? 'active' : ''}`;
-                    tab.innerHTML = `<i class="fas fa-file"></i> ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
-                    tab.onclick = () => openFile(t.id, t.name);
-                    container.appendChild(tab);
-                }
+        } else if (res.status === 409) {
+            showToast('Файл с таким именем уже существует', true);
+        } else {
+            showToast('Ошибка переименования', true);
+        }
+    } catch(e) { showToast('Ошибка', true); }
+    document.getElementById('fileContextMenu').style.display = 'none';
+}
+
+async function deleteFile() {
+    if (!confirm(`Удалить файл "${currentContextFileName}"?`)) return;
+    try {
+        const res = await fetch(`/api/room/${roomId}/file/${currentContextFileId}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Файл удалён');
+            const idx = openTabs.findIndex(t => t.id === currentContextFileId);
+            if (idx !== -1) openTabs.splice(idx, 1);
+            if (currentFileId === currentContextFileId) {
+                currentFileId = null;
+                if (editor) editor.setValue('');
             }
+            await loadFiles();
+            renderTabs();
+        } else {
+            showToast('Ошибка удаления', true);
+        }
+    } catch(e) { showToast('Ошибка', true); }
+    document.getElementById('fileContextMenu').style.display = 'none';
+}
+
+
+           
             
             async function closeTab(id) {
                 const idx = openTabs.findIndex(t => t.id === id);
@@ -629,6 +707,11 @@ else
             loadUsers();
             setInterval(loadChat, 5000);
             setInterval(loadUsers, 7000);
+
+            
+            // ========== КУРСОРЫ (пока только заготовка) ==========
+// Здесь будет код для WebSocket и отрисовки чужих курсоров.
+// Пока просто сохраняем структуру — реализуем после чата.
         </script>
     </body>
     </html>
