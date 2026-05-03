@@ -1,17 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using CodeCollabFrontend.Models;
 using Microsoft.EntityFrameworkCore;
+using CodeCollabFrontend.Models;
+using System.Net.Http;
 
 namespace CodeCollabFrontend.Pages;
 
 public class RoomModel : PageModel
 {
     private readonly AppDbContext _context;
+    private readonly HttpClient _httpClient;
 
-    public RoomModel(AppDbContext context)
+    public RoomModel(AppDbContext context, IHttpClientFactory httpClientFactory)
     {
         _context = context;
+        _httpClient = httpClientFactory.CreateClient();
     }
 
     public Room? Room { get; set; }
@@ -32,7 +35,7 @@ public class RoomModel : PageModel
 
         if (Room == null) return RedirectToPage("/Dashboard");
 
-        // ========== АВТО-ДОБАВЛЕНИЕ УЧАСТНИКА ==========
+        // ========== ДОБАВЛЕНИЕ УЧАСТНИКА ==========
         var participant = await _context.RoomParticipants
             .FirstOrDefaultAsync(rp => rp.RoomId == id && rp.UserId == userId.Value);
 
@@ -43,34 +46,22 @@ public class RoomModel : PageModel
                 RoomId = id,
                 UserId = userId.Value,
                 IsOnline = true,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = DateTime.UtcNow,
+                LastSeen = DateTime.UtcNow,
+                UserName = CurrentUser.Name,
+                Avatar = CurrentUser.Avatar,
+                Cursor = CurrentUser.Cursor
             };
             _context.RoomParticipants.Add(participant);
         }
         else
         {
             participant.IsOnline = true;
+            participant.LastSeen = DateTime.UtcNow;
         }
 
         await _context.SaveChangesAsync();
 
         return Page();
-    }
-
-    public async Task<IActionResult> OnPostLeaveAsync(int roomId)
-    {
-        var userId = HttpContext.Session.GetInt32("UserId");
-        if (userId == null) return RedirectToPage("/Login");
-
-        var participant = await _context.RoomParticipants
-            .FirstOrDefaultAsync(rp => rp.RoomId == roomId && rp.UserId == userId.Value);
-
-        if (participant != null)
-        {
-            participant.IsOnline = false;
-            await _context.SaveChangesAsync();
-        }
-
-        return RedirectToPage("/Dashboard");
     }
 }

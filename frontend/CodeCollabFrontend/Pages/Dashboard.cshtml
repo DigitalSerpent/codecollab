@@ -191,12 +191,12 @@
             @foreach (var room in rooms)
             {
                 var participants = room.RoomParticipants?.Select(rp => new
-                {
-                    Name = rp.User?.Name ?? "Unknown",
-                    Online = rp.IsOnline,
-                    Avatar = rp.User?.Avatar ?? "👤",
-                    Cursor = rp.User?.Cursor ?? "⬤"
-                }).ToList();
+{
+    Name = rp.User?.Name ?? rp.UserName ?? "Unknown",
+    Online = rp.IsOnline,
+    Avatar = rp.User?.Avatar ?? rp.Avatar ?? "👤",
+    Cursor = rp.User?.Cursor ?? rp.Cursor ?? "⬤"
+}).ToList();
 
                 var usersJson = System.Text.Json.JsonSerializer.Serialize(participants);
                 bool isLongName = room.Name.Length > 20;
