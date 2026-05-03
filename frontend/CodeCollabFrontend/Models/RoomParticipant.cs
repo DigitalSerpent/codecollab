@@ -20,10 +20,6 @@ public class RoomParticipant
     public string? Cursor { get; set; }
     public DateTime LastSeen { get; set; }
 
-    // Навигационные свойства
-    [ForeignKey("RoomId")]
-    public Room? Room { get; set; }
-    
-    [ForeignKey("UserId")]
-    public User? User { get; set; }
+    public virtual Room? Room { get; set; }
+    public virtual User? User { get; set; }
 }

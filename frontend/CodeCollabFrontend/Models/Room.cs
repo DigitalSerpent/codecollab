@@ -10,10 +10,8 @@ public class Room
     public int MaxParticipants { get; set; }
     public string? PreviewCode { get; set; }
     public string? InviteToken { get; set; }
-    
-    // Кто создал комнату
     public int? OwnerId { get; set; }
 
-    // Связь с участниками
-    public ICollection<RoomParticipant>? RoomParticipants { get; set; }
+    // Навигационное свойство — ОБЯЗАТЕЛЬНО
+    public virtual ICollection<RoomParticipant> RoomParticipants { get; set; } = new List<RoomParticipant>();
 }
