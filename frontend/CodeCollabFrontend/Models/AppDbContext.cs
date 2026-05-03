@@ -17,16 +17,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RoomParticipant>(entity =>
         {
             entity.ToTable("RoomParticipants");
-            
             entity.HasKey(e => e.Id);
-            
-            entity.Property(e => e.RoomId)
-                .HasColumnName("RoomId")
-                .IsRequired();
-            
-            entity.Property(e => e.UserId)
-                .HasColumnName("UserId")
-                .IsRequired();
+            entity.Property(e => e.RoomId).HasColumnName("RoomId").IsRequired();
+            entity.Property(e => e.UserId).HasColumnName("UserId").IsRequired();
             
             entity.HasOne(e => e.Room)
                 .WithMany(e => e.RoomParticipants)
@@ -43,22 +36,36 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.UserId);
         });
         
-        modelBuilder.Entity<ChatMessage>()
-            .HasOne(cm => cm.Room)
-            .WithMany()
-            .HasForeignKey(cm => cm.RoomId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.ToTable("ChatMessages");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RoomId).IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.Text).IsRequired();
+            
+            entity.HasOne(e => e.Room)
+                .WithMany()
+                .HasForeignKey(e => e.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
         
-        modelBuilder.Entity<ChatMessage>()
-            .HasOne(cm => cm.User)
-            .WithMany()
-            .HasForeignKey(cm => cm.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
-        modelBuilder.Entity<RoomFile>()
-            .HasOne(rf => rf.Room)
-            .WithMany()
-            .HasForeignKey(rf => rf.RoomId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<RoomFile>(entity =>
+        {
+            entity.ToTable("RoomFiles");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RoomId).IsRequired();
+            entity.Property(e => e.Name).IsRequired();
+            
+            entity.HasOne(e => e.Room)
+                .WithMany()
+                .HasForeignKey(e => e.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

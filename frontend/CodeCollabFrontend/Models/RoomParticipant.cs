@@ -19,6 +19,7 @@ public class RoomParticipant
     public string? Avatar { get; set; }
     public string? Cursor { get; set; }
     public DateTime LastSeen { get; set; }
+    public DateTime JoinedAt { get; set; }
 
     public virtual Room? Room { get; set; }
     public virtual User? User { get; set; }

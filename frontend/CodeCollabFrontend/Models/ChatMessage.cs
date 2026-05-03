@@ -8,4 +8,7 @@ public class ChatMessage
     public string UserName { get; set; } = "";
     public string Text { get; set; } = "";
     public DateTime Timestamp { get; set; }
+
+    public virtual Room? Room { get; set; }
+    public virtual User? User { get; set; }
 }
