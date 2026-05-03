@@ -67,11 +67,13 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // 👈 ЭТО ДОБАВЛЕНО — для отдачи аватарок и статики
 app.UseRouting();
 app.UseAuthorization();
+app.UseSession();
 app.MapStaticAssets();
 app.MapRazorPages().WithStaticAssets();
 app.MapControllers();
-app.UseSession();
 app.UseStatusCodePagesWithReExecute("/Error404");
+
 app.Run();

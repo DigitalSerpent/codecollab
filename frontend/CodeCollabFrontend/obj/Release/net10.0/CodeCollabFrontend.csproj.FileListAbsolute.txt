@@ -245,3 +245,15 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publi
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\CodeCollabFrontend.deps.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\CodeCollabFrontend.runtimeconfig.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\CodeCollabFrontend.staticwebassets.endpoints.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\web.config
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\appsettings.Development.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\appsettings.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\CodeCollabFrontend.deps.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\CodeCollabFrontend.runtimeconfig.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\CodeCollabFrontend.staticwebassets.endpoints.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\publish\web.config
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\publish\appsettings.Development.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\publish\appsettings.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\publish\CodeCollabFrontend.deps.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\publish\CodeCollabFrontend.runtimeconfig.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\publish\publish\CodeCollabFrontend.staticwebassets.endpoints.json

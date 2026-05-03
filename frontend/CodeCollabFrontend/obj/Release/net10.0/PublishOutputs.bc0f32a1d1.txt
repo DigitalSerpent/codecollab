@@ -1,4 +1,6 @@
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\CodeCollabFrontend.exe
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\publish\web.config
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\web.config
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\web.config
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\appsettings.Development.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\appsettings.json
@@ -7,6 +9,16 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\appsettin
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\CodeCollabFrontend.deps.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\CodeCollabFrontend.runtimeconfig.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\CodeCollabFrontend.staticwebassets.endpoints.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\appsettings.Development.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\appsettings.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\CodeCollabFrontend.deps.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\CodeCollabFrontend.runtimeconfig.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\CodeCollabFrontend.staticwebassets.endpoints.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\publish\appsettings.Development.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\publish\appsettings.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\publish\CodeCollabFrontend.deps.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\publish\CodeCollabFrontend.runtimeconfig.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\publish\publish\publish\CodeCollabFrontend.staticwebassets.endpoints.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\CodeCollabFrontend.dll
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\CodeCollabFrontend.runtimeconfig.json
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\publish\CodeCollabFrontend.pdb

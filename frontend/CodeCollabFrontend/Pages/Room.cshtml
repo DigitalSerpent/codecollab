@@ -511,7 +511,23 @@ async function deleteFile() {
 }
 
 
-           
+           async function openFile(id, name) {
+    try {
+        const res = await fetch(`/api/room/${roomId}/file/${id}`);
+        const file = await res.json();
+        if (!openTabs.some(t => t.id === id)) openTabs.push({ id, name });
+        currentFileId = id;
+        renderTabs();
+        loadFiles();
+        if (editor) {
+            editor.setValue(file.content || '');
+            const ext = name.split('.').pop();
+            const langMap = { py:'python', js:'javascript', html:'html', css:'css', txt:'text' };
+            monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'text');
+        }
+        localStorage.setItem(`lastFile_${roomId}`, id);
+    } catch(e) { showToast('Ошибка открытия файла', true); }
+}
             
             async function closeTab(id) {
                 const idx = openTabs.findIndex(t => t.id === id);
