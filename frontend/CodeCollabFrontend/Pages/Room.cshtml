@@ -350,25 +350,33 @@ else
             
             // УЧАСТНИКИ (HTTP-опрос) - ИСПРАВЛЕННЫЙ URL
             async function loadUsers() {
-                try {
-                    const res = await fetch(`/api/users/room/${roomId}`);
-                    const users = await res.json();
-                    const container = document.getElementById('usersList');
-                    if (!container) return;
-                    container.innerHTML = '';
-                    for (const u of users) {
-                        const div = document.createElement('div');
-                        div.className = 'user-item';
-                        div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
-                        div.innerHTML = `
-                            <div class="user-avatar-small">${u.avatar || '👤'}</div>
-                            <div class="user-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
-                            <div class="user-status" style="background: ${u.online ? '#4caf50' : '#888'}"></div>
-                        `;
-                        container.appendChild(div);
-                    }
-                } catch(e) { console.error(e); }
+    try {
+        const res = await fetch(`/api/users/room/${roomId}`);
+        const users = await res.json();
+        const container = document.getElementById('usersList');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const u of users) {
+            const div = document.createElement('div');
+            div.className = 'user-item';
+            div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
+            
+            let avatarHtml = '';
+            if (u.avatar && u.avatar.startsWith('/uploads/')) {
+                avatarHtml = `<img src="${u.avatar}" class="user-avatar-small" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">`;
+            } else {
+                avatarHtml = `<div class="user-avatar-small">${u.avatar || '👤'}</div>`;
             }
+            
+            div.innerHTML = `
+                ${avatarHtml}
+                <div class="user-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
+                <div class="user-status" style="background: ${u.online ? '#4caf50' : '#888'}"></div>
+            `;
+            container.appendChild(div);
+        }
+    } catch(e) { console.error(e); }
+}
             
             function toggleUsers() {
                 const panel = document.getElementById('usersModal');
