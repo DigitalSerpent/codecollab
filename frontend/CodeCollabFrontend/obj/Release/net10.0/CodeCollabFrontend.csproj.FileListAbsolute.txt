@@ -239,3 +239,9 @@ C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Release\net10.0\refin
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Release\net10.0\CodeCollabFrontend.pdb
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Release\net10.0\CodeCollabFrontend.genruntimeconfig.cache
 C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\obj\Release\net10.0\ref\CodeCollabFrontend.dll
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\web.config
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\appsettings.Development.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\appsettings.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\CodeCollabFrontend.deps.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\CodeCollabFrontend.runtimeconfig.json
+C:\Users\maria\Desktop\uwu\frontend\CodeCollabFrontend\bin\Release\net10.0\publish\CodeCollabFrontend.staticwebassets.endpoints.json

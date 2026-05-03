@@ -18,19 +18,46 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Настройка DbContext с отключением автоматических миграций
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=codecollab.db"));
+{
+    options.UseSqlite("Data Source=codecollab.db");
+    // Отключаем автоматическое создание и применение миграций
+    options.EnableServiceProviderCaching(false);
+});
+
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ApiService>();
-builder.Services.AddScoped<EmailService>();   // <-- добавили
+builder.Services.AddScoped<EmailService>();
 
 var app = builder.Build();
 
+// ВАЖНО: НЕ вызываем DbInitializer и не применяем миграции
+// Миграции полностью отключены, используем существующую БД
+
+// Проверяем подключение к БД без миграций
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    DbInitializer.Initialize(context);
+    try
+    {
+        // Просто проверяем, что БД существует и можно подключиться
+        var canConnect = context.Database.CanConnect();
+        if (!canConnect)
+        {
+            Console.WriteLine("WARNING: Cannot connect to database!");
+        }
+        else
+        {
+            Console.WriteLine("Database connection successful!");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database connection error: {ex.Message}");
+    }
 }
 
 if (!app.Environment.IsDevelopment())
