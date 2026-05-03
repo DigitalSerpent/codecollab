@@ -498,21 +498,32 @@ else
             
             // ЧАТ
             async function loadChat() {
-                try {
-                    const res = await fetch(`/api/chat/${roomId}`);
-                    const msgs = await res.json();
-                    const container = document.getElementById('chatMessages');
-                    if (!container) return;
-                    container.innerHTML = '';
-                    for (const m of msgs) {
-                        const div = document.createElement('div');
-                        div.className = `message ${m.userId === userId ? 'message-mine' : 'message-other'}`;
-                        div.innerHTML = m.userId === userId ? escapeHtml(m.text) : `<b>${escapeHtml(m.userName)}:</b> ${escapeHtml(m.text)}`;
-                        container.appendChild(div);
-                    }
-                    container.scrollTop = container.scrollHeight;
-                } catch(e) {}
+    try {
+        const res = await fetch(`/api/chat/${roomId}`);
+        const msgs = await res.json();
+        const container = document.getElementById('chatMessages');
+        if (!container) return;
+        container.innerHTML = '';
+        for (const m of msgs) {
+            // Декодируем имя пользователя из HTML-сущностей
+            let decodedName = m.userName;
+            if (decodedName) {
+                const textarea = document.createElement('textarea');
+                textarea.innerHTML = decodedName;
+                decodedName = textarea.value;
             }
+            const div = document.createElement('div');
+            div.className = `message ${m.userId === userId ? 'message-mine' : 'message-other'}`;
+            if (m.userId === userId) {
+                div.innerHTML = escapeHtml(m.text);
+            } else {
+                div.innerHTML = `<b>${escapeHtml(decodedName)}:</b> ${escapeHtml(m.text)}`;
+            }
+            container.appendChild(div);
+        }
+        container.scrollTop = container.scrollHeight;
+    } catch(e) {}
+}
             
             function sendMessage() {
                 const input = document.getElementById('chatInput');
