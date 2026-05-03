@@ -319,10 +319,17 @@
         let listHtml = '';
         if (users && users.length) {
             users.forEach(user => {
+                let avatarHtml = '';
+                if (user.avatar && user.avatar.startsWith('/uploads/')) {
+                    avatarHtml = `<img src="${user.avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`;
+                } else {
+                    avatarHtml = `<span style="margin-right:8px;">${user.avatar || '👤'}</span>`;
+                }
+
                 listHtml += `<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span>${user.avatar}</span>
-                    <span>${user.name}</span>
-                    <span>${user.cursor}</span>
+                    ${avatarHtml}
+                    <span>${user.name || 'Unknown'}</span>
+                    <span style="margin-left: auto;">${user.cursor || '⬤'}</span>
                     <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${user.online ? '#00ff00' : '#888'};"></span>
                 </div>`;
             });
