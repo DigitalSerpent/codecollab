@@ -1,0 +1,831 @@
+@page "/room/{id}"
+@using Microsoft.EntityFrameworkCore
+@using CodeCollabFrontend.Models
+@inject AppDbContext _context
+@using Microsoft.AspNetCore.Http
+
+@{
+    #nullable disable
+    if (!int.TryParse((string)RouteData.Values["id"], out int roomId))
+    {
+        <h2 style="color: white;">Неверный ID комнаты</h2>
+        return;
+    }
+
+    var room = _context.Rooms
+        .Include(r => r.RoomParticipants)
+            .ThenInclude(rp => rp.User)
+        .FirstOrDefault(r => r.Id == roomId);
+    
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var currentUser = userId != null ? _context.Users.Find(userId) : null;
+}
+
+@if (room == null)
+{
+    <h2 style="color: white;">Комната не найдена</h2>
+}
+else
+{
+    Layout = null;
+    
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+        <title>@room.Name - Code Collab</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body, html { width: 100%; height: 100%; overflow: hidden; background: #0a0e1c; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+            
+            .dashboard-header {
+                background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+                padding: 12px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 1px solid rgba(0, 170, 255, 0.3);
+                flex-shrink: 0;
+            }
+            .logo {
+                font-size: 1.8rem;
+                font-weight: bold;
+                background: linear-gradient(135deg, #00aaff, #00ffcc);
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                cursor: pointer;
+            }
+            .header-right {
+                display: flex;
+                align-items: center;
+                gap: 20px;
+            }
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: #00aaff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                cursor: pointer;
+                transition: 0.2s;
+                border: 2px solid transparent;
+            }
+            .user-avatar img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+            .user-avatar:hover {
+                border-color: #00ffcc;
+                transform: scale(1.05);
+            }
+            
+            .dropdown-menu {
+                display: none;
+                position: absolute;
+                top: 70px;
+                right: 20px;
+                background: #121628;
+                border: 1px solid #00aaff;
+                border-radius: 12px;
+                padding: 8px 0;
+                min-width: 180px;
+                z-index: 1000;
+                box-shadow: 0 0 20px rgba(0, 170, 255, 0.3);
+            }
+            .dropdown-menu a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 20px;
+                color: white;
+                text-decoration: none;
+                font-size: 14px;
+                transition: 0.2s;
+            }
+            .dropdown-menu a:hover {
+                background: #1e1e3a;
+                color: #00aaff;
+            }
+            .dropdown-menu hr {
+                margin: 5px 0;
+                border-color: #1e1e3a;
+            }
+            
+            .app { height: 100vh; display: flex; flex-direction: column; background: #0a0e1c; }
+            .main-row { flex: 1; display: flex; gap: 8px; padding: 8px; min-height: 0; }
+            
+            .sidebar { width: 200px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+            .sidebar-header { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; color: white; font-weight: bold; }
+            .file-list { flex: 1; overflow-y: auto; padding: 8px; }
+            .file-item { 
+                padding: 6px 10px; 
+                cursor: pointer; 
+                border-radius: 6px; 
+                margin-bottom: 4px; 
+                color: #ccc; 
+                font-size: 12px; 
+                display: flex; 
+                align-items: center; 
+                gap: 8px;
+                justify-content: space-between;
+            }
+            .file-item:hover { background: #1e1e3a; color: white; }
+            .file-item.active { background: #0d3d5c; color: white; }
+            .file-name { flex: 1; }
+            .file-actions { display: none; gap: 8px; }
+            .file-item:hover .file-actions { display: flex; }
+            .file-actions i { cursor: pointer; font-size: 12px; }
+            .file-actions i:hover { color: #00aaff; }
+            .new-file-btn { margin: 8px; padding: 8px; background: #00aaff; border: none; border-radius: 6px; color: #0a0e1c; cursor: pointer; font-weight: bold; }
+            
+            .center { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 10px; overflow: hidden; }
+            .tabs-bar { display: flex; background: #121628; border-bottom: 1px solid #00aaff; overflow-x: auto; padding: 0 8px; gap: 4px; }
+            .tab { padding: 6px 14px; background: #0d0d1a; color: #ccc; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+            .tab.active { background: #1e1e3a; color: white; border-bottom: 2px solid #00aaff; }
+            .tab-close { margin-left: 8px; cursor: pointer; opacity: 0.6; font-size: 10px; }
+            .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; background: #121628; border-bottom: 1px solid #00aaff; gap: 8px; }
+            .lang-select { background: #0d0d1a; color: white; border: 1px solid #00aaff; border-radius: 6px; padding: 4px 10px; font-size: 12px; }
+            .run-btn { background: #00aaff; color: #0a0e1c; border: none; border-radius: 6px; padding: 4px 16px; cursor: pointer; font-weight: bold; }
+            .editor { flex: 1; min-height: 0; }
+            .terminal { height: 130px; background: #1e1e1e; border-top: 1px solid #00aaff; display: flex; flex-direction: column; }
+            .terminal-header { padding: 4px 12px; background: #2d2d2d; color: white; font-size: 11px; display: flex; justify-content: space-between; }
+            .terminal-output { flex: 1; overflow-y: auto; padding: 6px; color: #ccc; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
+            .terminal-input-line { display: flex; padding: 4px 10px; background: #1e1e1e; border-top: 1px solid #3c3c3c; }
+            .terminal-prompt { color: #00aaff; margin-right: 6px; font-weight: bold; }
+            .terminal-input { flex: 1; background: none; border: none; color: #ccc; outline: none; font-family: monospace; font-size: 11px; }
+            
+            .chat-panel { width: 260px; background: #0d0d1a; border: 1px solid #00aaff; border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+            .chat-header { padding: 10px 12px; background: #121628; border-bottom: 1px solid #00aaff; color: white; font-weight: bold; }
+            .chat-messages { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+            .message { max-width: 85%; padding: 6px 12px; border-radius: 12px; font-size: 12px; word-wrap: break-word; }
+            .message-mine { background: #b198b3; color: #0a0e1c; align-self: flex-end; }
+            .message-other { background: #86a1b5; color: white; align-self: flex-start; }
+            .chat-input-area { display: flex; padding: 10px; gap: 8px; border-top: 1px solid #00aaff; }
+            .chat-input { flex: 1; padding: 8px; background: #0a0e1c; border: 1px solid #1e1e3a; color: white; border-radius: 8px; }
+            .send-btn { padding: 8px 14px; background: #00aaff; border: none; border-radius: 8px; cursor: pointer; color: #0a0e1c; }
+            
+            .bottom-bar { display: flex; justify-content: flex-end; gap: 10px; padding: 0 8px 8px 8px; flex-shrink: 0; }
+            .bottom-btn { width: 44px; height: 44px; background: #121628; border: 1px solid #00aaff; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #a0a0a0; font-size: 20px; }
+            .bottom-btn:hover { background: #1e1e3a; color: #00aaff; }
+            
+            .floating-users { display: none; position: fixed; bottom: 70px; left: 20px; width: 280px; background: #121628; border: 1px solid #00aaff; border-radius: 12px; padding: 12px; z-index: 1000; max-height: 380px; overflow-y: auto; }
+            .users-title { color: white; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: bold; }
+            .user-item { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; }
+            .user-item:hover { background: #1e1e3a; }
+            .user-avatar-small { width: 32px; height: 32px; border-radius: 50%; background: #1e1e3a; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+            .user-avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+            .user-name { flex: 1; color: white; font-size: 13px; }
+            .user-status { width: 8px; height: 8px; border-radius: 50%; }
+            
+            .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center; }
+            .modal-window { background: #121628; border-radius: 16px; padding: 25px; width: 320px; border: 1px solid #00aaff; text-align: center; }
+            .modal-window h3 { color: white; margin-bottom: 15px; }
+            .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+            .modal-btn { flex:1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
+            .modal-cancel { background: #1e1e3a; color: white; }
+            .modal-confirm { background: #00aaff; color: #0a0e1c; }
+            
+            .custom-modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 4000; align-items: center; justify-content: center; }
+            .custom-modal { background: #121628; border-radius: 16px; padding: 25px; width: 400px; border: 1px solid #00aaff; box-shadow: 0 0 30px #00aaff; }
+            .custom-modal input { width: 100%; padding: 10px; margin: 15px 0; background: #0a0e1c; border: 1px solid #00aaff; color: white; border-radius: 8px; }
+            .custom-modal button { padding: 10px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; }
+            
+            .toast { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 8px; z-index: 3000; font-size: 13px; background: #2e7d32; color: white; }
+            .invite-bar { margin: 0 8px; background: #0a0e1c; padding: 6px 10px; border-radius: 8px; }
+            .invite-input { flex:1; background:#121628; border:1px solid #1e1e3a; color:white; border-radius:6px; padding:6px; font-size:11px; }
+            .invite-btn { background:#00aaff; border:none; border-radius:6px; padding:6px 12px; cursor:pointer; }
+            
+            .context-menu { position: fixed; background: #1e1e3a; border: 1px solid #00aaff; border-radius: 6px; z-index: 5000; min-width: 150px; }
+            .context-menu-item { padding: 8px 12px; cursor: pointer; color: white; font-size: 13px; }
+            .context-menu-item:hover { background: #0d3d5c; }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.js"></script>
+    </head>
+    <body>
+        <div class="app">
+            <div class="dashboard-header">
+                <div class="logo" onclick="window.location.href='/Dashboard'">Code Collab</div>
+                <div class="header-right">
+                    <span style="color: white;">@(currentUser?.Name ?? "Гость")</span>
+                    <div class="user-avatar" onclick="toggleDropdown()">
+                        @if (!string.IsNullOrEmpty(currentUser?.Avatar) && !currentUser.Avatar.StartsWith("👤") && currentUser.Avatar.Contains("/uploads/"))
+                        {
+                            <img src="@currentUser.Avatar" alt="avatar">
+                        }
+                        else
+                        {
+                            <span>@(currentUser?.Avatar ?? "👤")</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dropdownMenu" class="dropdown-menu">
+                <a href="/Profile"><i class="fas fa-user"></i> Мой профиль</a>
+                <a href="/Settings"><i class="fas fa-cog"></i> Настройки</a>
+                <hr>
+                <a href="/Logout"><i class="fas fa-sign-out-alt"></i> Выйти из аккаунта</a>
+            </div>
+            
+            @if (userId == room.OwnerId)
+            {
+                <div class="invite-bar">
+                    <div style="display: flex; gap: 8px;">
+                        <input id="inviteLink" type="text" readonly class="invite-input" value="@($"{Request.Scheme}://{Request.Host}/room/join/{room.InviteToken}")">
+                        <button class="invite-btn" onclick="copyInvite()">Копировать</button>
+                    </div>
+                </div>
+            }
+            
+            <div class="main-row">
+                <div class="sidebar">
+                    <div class="sidebar-header"><i class="fas fa-folder"></i> Файлы</div>
+                    <div id="fileList" class="file-list"></div>
+                    <button class="new-file-btn" onclick="showCreateFileModal()">+ Новый файл</button>
+                </div>
+                
+                <div class="center">
+                    <div id="tabsBar" class="tabs-bar"></div>
+                    <div class="toolbar">
+                        <select id="langSelect" class="lang-select">
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                        </select>
+                        <button class="run-btn" onclick="runCode()"><i class="fas fa-play"></i> Запустить</button>
+                    </div>
+                    <div id="editor" class="editor"></div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <span><i class="fas fa-terminal"></i> Терминал</span>
+                            <button onclick="toggleTerminal()" style="background:none; border:none; color:#ccc; cursor:pointer;">▲</button>
+                        </div>
+                        <div id="terminalOut" class="terminal-output">$ Готов к работе 👋\n</div>
+                        <div class="terminal-input-line">
+                            <span class="terminal-prompt">$</span>
+                            <input type="text" id="terminalInput" class="terminal-input" placeholder="Введите команду...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-panel">
+                    <div class="chat-header"><i class="fas fa-comments"></i> Чат комнаты</div>
+                    <div id="chatMessages" class="chat-messages"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Напишите сообщение...">
+                        <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bottom-bar">
+                <div class="bottom-btn" onclick="toggleUsers()"><i class="fas fa-users"></i></div>
+                <div class="bottom-btn" onclick="openExitModal()"><i class="fas fa-sign-out-alt"></i></div>
+            </div>
+        </div>
+        
+        <div id="usersModal" class="floating-users">
+            <div class="users-title"><span>👥 Участники</span><span onclick="closeUsers()" style="cursor:pointer;">✖</span></div>
+            <div id="usersList"></div>
+        </div>
+        
+        <div id="exitModal" class="modal-overlay">
+            <div class="modal-window">
+                <h3>Выйти из комнаты?</h3>
+                <div class="modal-buttons">
+                    <button class="modal-btn modal-cancel" onclick="closeExitModal()">Отмена</button>
+                    <button class="modal-btn modal-confirm" onclick="exitRoom()">Выйти</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="fileModal" class="custom-modal-overlay">
+            <div class="custom-modal">
+                <h3 style="color: white;">Новый файл</h3>
+                <input type="text" id="newFileName" placeholder="Имя файла (например, script.py)" autocomplete="off">
+                <div style="display: flex; justify-content: flex-end;">
+                    <button class="modal-cancel" onclick="closeFileModal()">Отмена</button>
+                    <button class="modal-confirm" onclick="createNewFile()">Создать</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="renameModal" class="custom-modal-overlay">
+            <div class="custom-modal">
+                <h3 style="color: white;">Переименовать файл</h3>
+                <input type="text" id="renameFileName" placeholder="Новое имя файла" autocomplete="off">
+                <div style="display: flex; justify-content: flex-end;">
+                    <button class="modal-cancel" onclick="closeRenameModal()">Отмена</button>
+                    <button class="modal-confirm" onclick="renameFile()">Переименовать</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const roomId = @roomId;
+            const userId = @(userId ?? 0);
+            const userName = "@(currentUser?.Name ?? "Гость")";
+            const userAvatar = "@(currentUser?.Avatar ?? "👤")";
+            const userCursor = "@(currentUser?.Cursor ?? "⬤")";
+            
+            let editor = null;
+            let currentFileId = null;
+            let openTabs = [];
+            let saveTimer = null;
+            let contextMenuFileId = null;
+            let ws = null;
+            let cursors = new Map();
+            
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+            
+            function showToast(msg, isError = false) {
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.style.background = isError ? '#c62828' : '#2e7d32';
+                toast.innerText = msg;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+            
+            function copyInvite() {
+                const inp = document.getElementById('inviteLink');
+                if (inp) { inp.select(); document.execCommand('copy'); showToast('Ссылка скопирована'); }
+            }
+            
+            function toggleDropdown() {
+                const menu = document.getElementById('dropdownMenu');
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            }
+            
+            document.addEventListener('click', function(e) {
+                const menu = document.getElementById('dropdownMenu');
+                const avatar = document.querySelector('.user-avatar');
+                if (menu && avatar && !avatar.contains(e.target) && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            });
+            
+            async function loadUsers() {
+                try {
+                    const res = await fetch(`/api/users/room/${roomId}`);
+                    const users = await res.json();
+                    const container = document.getElementById('usersList');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    for (const u of users) {
+                        const div = document.createElement('div');
+                        div.className = 'user-item';
+                        div.onclick = () => window.location.href = `/Profile?id=${u.user_id}`;
+                        const avatarHtml = u.avatar && !u.avatar.startsWith('👤') && u.avatar.includes('/uploads/') 
+                            ? `<img src="${u.avatar}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">` 
+                            : `<span>${u.avatar || '👤'}</span>`;
+                        div.innerHTML = `
+                            <div class="user-avatar-small">${avatarHtml}</div>
+                            <div class="user-name">${escapeHtml(u.name)} ${u.user_id === userId ? '(Вы)' : ''}</div>
+                            <div class="user-status" style="background: ${u.online ? '#4caf50' : '#888'}"></div>
+                        `;
+                        container.appendChild(div);
+                    }
+                } catch(e) { console.error(e); }
+            }
+            
+            function toggleUsers() {
+                const panel = document.getElementById('usersModal');
+                if (panel.style.display === 'none' || !panel.style.display) {
+                    panel.style.display = 'block';
+                    loadUsers();
+                } else panel.style.display = 'none';
+            }
+            
+            function closeUsers() { document.getElementById('usersModal').style.display = 'none'; }
+            
+            async function loadFiles() {
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file`);
+                    const files = await res.json();
+                    const container = document.getElementById('fileList');
+                    container.innerHTML = '';
+                    for (const f of files) {
+                        const div = document.createElement('div');
+                        div.className = `file-item ${currentFileId === f.id ? 'active' : ''}`;
+                        const safeName = f.name.replace(/'/g, "\\'");
+                        div.innerHTML = `
+                            <i class="fas fa-file-code"></i>
+                            <span class="file-name">${escapeHtml(f.name)}</span>
+                            <div class="file-actions">
+                                <i class="fas fa-edit" onclick="event.stopPropagation(); showRenameModal(${f.id}, '${safeName}')"></i>
+                                <i class="fas fa-trash" onclick="event.stopPropagation(); deleteFile(${f.id})"></i>
+                            </div>
+                        `;
+                        div.onclick = (function(fileId, fileName) { 
+                            return function() { openFile(fileId, fileName); };
+                        })(f.id, f.name);
+                        div.oncontextmenu = (function(fileId, fileName) {
+                            return function(event) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                showContextMenu(event, fileId, fileName);
+                            };
+                        })(f.id, f.name);
+                        container.appendChild(div);
+                    }
+                } catch(e) { console.error(e); }
+            }
+            
+            function showContextMenu(event, fileId, fileName) {
+                contextMenuFileId = fileId;
+                contextMenuFileName = fileName;
+                const existingMenu = document.querySelector('.context-menu');
+                if (existingMenu) existingMenu.remove();
+                
+                const menu = document.createElement('div');
+                menu.className = 'context-menu';
+                menu.style.left = event.pageX + 'px';
+                menu.style.top = event.pageY + 'px';
+                menu.innerHTML = `
+                    <div class="context-menu-item" onclick="renameFromContext()">✏️ Переименовать</div>
+                    <div class="context-menu-item" onclick="deleteFromContext()">🗑️ Удалить</div>
+                `;
+                document.body.appendChild(menu);
+                
+                setTimeout(() => {
+                    document.addEventListener('click', function removeMenu() {
+                        if (menu) menu.remove();
+                        document.removeEventListener('click', removeMenu);
+                    });
+                }, 0);
+            }
+            
+            let contextMenuFileName = null;
+            
+            function renameFromContext() {
+                if (contextMenuFileId && contextMenuFileName) {
+                    showRenameModal(contextMenuFileId, contextMenuFileName);
+                }
+                const m = document.querySelector('.context-menu');
+                if (m) m.remove();
+            }
+            
+            function deleteFromContext() {
+                if (contextMenuFileId) {
+                    deleteFile(contextMenuFileId);
+                }
+                const m = document.querySelector('.context-menu');
+                if (m) m.remove();
+            }
+            
+            async function openFile(id, name) {
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file/${id}`);
+                    if (!res.ok) throw new Error('File not found');
+                    const file = await res.json();
+                    if (!openTabs.some(t => t.id === id)) openTabs.push({ id, name });
+                    currentFileId = id;
+                    renderTabs();
+                    loadFiles();
+                    if (editor) {
+                        editor.setValue(file.content || '');
+                        const ext = name.split('.').pop();
+                        const langMap = { py:'python', js:'javascript', html:'html', css:'css', txt:'text', cs:'csharp', json:'json' };
+                        monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'text');
+                    }
+                    localStorage.setItem(`lastFile_${roomId}`, id);
+                } catch(e) { showToast('Ошибка открытия файла', true); console.error(e); }
+            }
+            
+            function renderTabs() {
+                const container = document.getElementById('tabsBar');
+                if (!container) return;
+                container.innerHTML = '';
+                for (const t of openTabs) {
+                    const tab = document.createElement('div');
+                    tab.className = `tab ${currentFileId === t.id ? 'active' : ''}`;
+                    tab.innerHTML = `<i class="fas fa-file"></i> ${escapeHtml(t.name)} <span class="tab-close" onclick="event.stopPropagation(); closeTab(${t.id})">✖</span>`;
+                    tab.onclick = () => openFile(t.id, t.name);
+                    container.appendChild(tab);
+                }
+            }
+            
+            async function closeTab(id) {
+                const idx = openTabs.findIndex(t => t.id === id);
+                if (idx === -1) return;
+                openTabs.splice(idx, 1);
+                if (currentFileId === id) {
+                    if (openTabs.length) await openFile(openTabs[0].id, openTabs[0].name);
+                    else { currentFileId = null; if(editor) editor.setValue(''); loadFiles(); }
+                }
+                renderTabs();
+            }
+            
+            async function saveCurrentFile() {
+                if (!currentFileId || !editor) return;
+                try {
+                    const content = editor.getValue();
+                    await fetch(`/api/room/${roomId}/file/${currentFileId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content })
+                    });
+                } catch(e) { console.error(e); }
+            }
+            
+            function showCreateFileModal() {
+                document.getElementById('fileModal').style.display = 'flex';
+                document.getElementById('newFileName').value = '';
+                document.getElementById('newFileName').focus();
+            }
+            
+            function closeFileModal() {
+                document.getElementById('fileModal').style.display = 'none';
+            }
+            
+            async function createNewFile() {
+                let name = document.getElementById('newFileName').value.trim();
+                if (!name) {
+                    showToast('Введите имя файла', true);
+                    return;
+                }
+                if (!name.includes('.')) name += '.txt';
+                
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name })
+                    });
+                    if (res.ok) {
+                        const file = await res.json();
+                        await loadFiles();
+                        await openFile(file.id, file.name);
+                        closeFileModal();
+                        showToast(`Файл ${name} создан`);
+                    } else if (res.status === 409) {
+                        showToast('Файл с таким именем уже существует', true);
+                    } else {
+                        showToast('Ошибка создания файла', true);
+                    }
+                } catch(e) { showToast('Ошибка создания', true); }
+            }
+            
+            function showRenameModal(fileId, currentName) {
+                contextMenuFileId = fileId;
+                document.getElementById('renameFileName').value = currentName;
+                document.getElementById('renameModal').style.display = 'flex';
+            }
+            
+            function closeRenameModal() {
+                document.getElementById('renameModal').style.display = 'none';
+            }
+            
+            async function renameFile() {
+                const newName = document.getElementById('renameFileName').value.trim();
+                if (!newName) {
+                    showToast('Введите новое имя', true);
+                    return;
+                }
+                
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file/${contextMenuFileId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newName })
+                    });
+                    if (res.ok) {
+                        await loadFiles();
+                        const tab = openTabs.find(t => t.id === contextMenuFileId);
+                        if (tab) {
+                            tab.name = newName;
+                            renderTabs();
+                        }
+                        closeRenameModal();
+                        showToast('Файл переименован');
+                    } else {
+                        showToast('Ошибка переименования', true);
+                    }
+                } catch(e) { showToast('Ошибка', true); }
+            }
+            
+            async function deleteFile(fileId) {
+                if (!confirm('Удалить файл?')) return;
+                try {
+                    const res = await fetch(`/api/room/${roomId}/file/${fileId}`, {
+                        method: 'DELETE'
+                    });
+                    if (res.ok) {
+                        if (currentFileId === fileId) {
+                            const idx = openTabs.findIndex(t => t.id === fileId);
+                            if (idx !== -1) openTabs.splice(idx, 1);
+                            if (openTabs.length) await openFile(openTabs[0].id, openTabs[0].name);
+                            else { currentFileId = null; if(editor) editor.setValue(''); }
+                            renderTabs();
+                        }
+                        await loadFiles();
+                        showToast('Файл удалён');
+                    } else {
+                        showToast('Ошибка удаления', true);
+                    }
+                } catch(e) { showToast('Ошибка', true); }
+            }
+            
+            async function loadChat() {
+                try {
+                    const res = await fetch(`/api/chat/${roomId}`);
+                    const msgs = await res.json();
+                    const container = document.getElementById('chatMessages');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    for (const m of msgs) {
+                        let decodedName = m.userName || '';
+                        if (decodedName) {
+                            const textarea = document.createElement('textarea');
+                            textarea.innerHTML = decodedName;
+                            decodedName = textarea.value;
+                        }
+                        const div = document.createElement('div');
+                        div.className = `message ${m.userId === userId ? 'message-mine' : 'message-other'}`;
+                        if (m.userId === userId) {
+                            div.innerHTML = escapeHtml(m.text);
+                        } else {
+                            div.innerHTML = `<b>${escapeHtml(decodedName)}:</b> ${escapeHtml(m.text)}`;
+                        }
+                        container.appendChild(div);
+                    }
+                    container.scrollTop = container.scrollHeight;
+                } catch(e) {}
+            }
+            
+            function sendMessage() {
+                const input = document.getElementById('chatInput');
+                const text = input.value.trim();
+                if (!text) return;
+                fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roomId, userId, userName, text })
+                }).then(() => { input.value = ''; loadChat(); });
+            }
+            
+            function runCode() {
+                if (!editor) return;
+                const code = editor.getValue();
+                const lang = document.getElementById('langSelect').value;
+                const out = document.getElementById('terminalOut');
+                out.innerHTML += `\n$ Запуск ${lang}...\n`;
+                fetch('/api/terminal/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: JSON.stringify({ language: lang, code }) })
+                }).then(r => r.json()).then(data => {
+                    out.innerHTML += (data.output || data.error || '✅ Готово\n');
+                    out.scrollTop = out.scrollHeight;
+                });
+            }
+            
+            function toggleTerminal() {
+                const term = document.querySelector('.terminal');
+                const btn = term.querySelector('.terminal-header button');
+                if (term.style.height === '35px') {
+                    term.style.height = '130px';
+                    btn.innerHTML = '▲';
+                } else {
+                    term.style.height = '35px';
+                    btn.innerHTML = '▼';
+                }
+            }
+            
+            function openExitModal() { document.getElementById('exitModal').style.display = 'flex'; }
+            function closeExitModal() { document.getElementById('exitModal').style.display = 'none'; }
+            
+            async function exitRoom() {
+                if (currentFileId && editor) await saveCurrentFile();
+                window.location.href = '/dashboard';
+            }
+            
+            function initWebSocket() {
+                if (ws && ws.readyState === WebSocket.OPEN) return;
+                const wsUrl = `ws://localhost:8000/ws/${roomId}/${userId}`;
+                ws = new WebSocket(wsUrl);
+                ws.onopen = () => { ws.send(JSON.stringify({ name: userName, avatar: userAvatar, cursor: userCursor })); };
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'cursor' && data.userId !== userId) {
+                            updateCursorPosition(data.userId, data.userName, data.position);
+                        }
+                    } catch(e) { console.error(e); }
+                };
+                ws.onclose = () => setTimeout(initWebSocket, 3000);
+            }
+            
+            function sendCursorPosition(position) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'cursor', roomId, userId, userName, position }));
+                }
+            }
+            
+            function updateCursorPosition(userId, userName, position) {
+                if (!editor) return;
+                let widget = cursors.get(userId);
+                if (!widget) {
+                    const cursorElement = document.createElement('div');
+                    cursorElement.className = 'remote-cursor';
+                    cursorElement.style.cssText = 'position:absolute;width:2px;height:18px;background-color:#00aaff;pointer-events:none;z-index:1000;';
+                    const label = document.createElement('div');
+                    label.className = 'remote-cursor-label';
+                    label.textContent = userName;
+                    label.style.cssText = 'position:absolute;top:-20px;left:0px;background-color:#00aaff;color:white;padding:2px 6px;border-radius:4px;font-size:11px;white-space:nowrap;';
+                    cursorElement.appendChild(label);
+                    document.getElementById('editor').appendChild(cursorElement);
+                    widget = { element: cursorElement, userId, userName, timeout: null };
+                    cursors.set(userId, widget);
+                }
+                const coords = editor.getScrolledVisiblePosition(new monaco.Position(position.lineNumber, position.column));
+                if (coords) {
+                    widget.element.style.left = coords.left + 'px';
+                    widget.element.style.top = coords.top + 'px';
+                    widget.element.style.display = 'block';
+                }
+                if (widget.timeout) clearTimeout(widget.timeout);
+                widget.timeout = setTimeout(() => {
+                    if (widget.element) widget.element.remove();
+                    cursors.delete(userId);
+                }, 5000);
+            }
+            
+            function initEditor() {
+                const container = document.getElementById('editor');
+                if (!container) return;
+                require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+                require(['vs/editor/editor.main'], function() {
+                    editor = monaco.editor.create(container, {
+                        value: '// Откройте или создайте файл\n',
+                        language: 'javascript',
+                        theme: 'vs-dark',
+                        automaticLayout: true,
+                        fontSize: 13,
+                        minimap: { enabled: false }
+                    });
+                    editor.onDidChangeModelContent(() => {
+                        if (saveTimer) clearTimeout(saveTimer);
+                        saveTimer = setTimeout(saveCurrentFile, 1000);
+                    });
+                    editor.onDidChangeCursorPosition((e) => sendCursorPosition(e.position));
+                    loadFiles();
+                    initWebSocket();
+                });
+            }
+            
+            document.addEventListener('click', function() {
+                const menu = document.querySelector('.context-menu');
+                if (menu) menu.remove();
+            });
+            
+            document.getElementById('chatInput')?.addEventListener('keypress', e => { if(e.key === 'Enter') sendMessage(); });
+            document.getElementById('terminalInput')?.addEventListener('keypress', e => {
+                if(e.key === 'Enter') {
+                    const cmd = e.target.value;
+                    e.target.value = '';
+                    const out = document.getElementById('terminalOut');
+                    out.innerHTML += `\n$ ${cmd}\n`;
+                    fetch('/api/terminal/run', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ command: JSON.stringify({ language: 'bash', code: cmd }) })
+                    }).then(r => r.json()).then(data => {
+                        out.innerHTML += (data.output || data.error || '');
+                        out.scrollTop = out.scrollHeight;
+                    });
+                }
+            });
+            
+            initEditor();
+            loadChat();
+            loadUsers();
+            setInterval(loadChat, 5000);
+            setInterval(loadUsers, 7000);
+        </script>
+        <style>
+            .remote-cursor { position: absolute; width: 2px; height: 18px; background-color: #00aaff; pointer-events: none; z-index: 1000; animation: blink 1s infinite; }
+            .remote-cursor-label { position: absolute; top: -20px; left: 0px; background-color: #00aaff; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap; font-family: monospace; }
+            @@keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0.5; } }
+        </style>
+    </body>
+    </html>
+}

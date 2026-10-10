@@ -1,0 +1,25 @@
+@page
+@using CodeCollabFrontend.Models
+@using Microsoft.EntityFrameworkCore
+@{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (userId == null)
+    {
+        Response.Redirect("/Login");
+        return;
+    }
+
+    var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+    optionsBuilder.UseSqlite("Data Source=codecollab.db");
+    using var context = new AppDbContext(optionsBuilder.Options);
+    
+    var user = context.Users.Find(userId);
+    if (user != null)
+    {
+        context.Users.Remove(user);
+        context.SaveChanges();
+    }
+    
+    HttpContext.Session.Clear();
+    Response.Redirect("/Login");
+}

@@ -1,0 +1,17 @@
+@page
+@using CodeCollabFrontend.Services
+@inject ApiService Api
+
+<h3>Тест связи с бэкендом</h3>
+
+<button onclick="getHello()">Поздороваться</button>
+
+<p>Ответ: <span id="message"></span></p>
+
+<script>
+    async function getHello() {
+        const response = await fetch('/api/hello');
+        const text = await response.text();
+        document.getElementById('message').innerText = text;
+    }
+</script>

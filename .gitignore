@@ -1,0 +1,26 @@
+# Артефакты компиляции .NET
+[Bb]in/
+[Oo]bj/
+*.exe
+*.dll
+*.pdb
+
+# Кэш среды разработки и IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+
+# Базы данных и их логи
+*.db
+*.db-wal
+*.db-shm
+
+# Локальные файлы конфигурации с паролями
+appsettings.Development.json
+
+# Кэш Python
+__pycache__/
+*.pyc
+venv/

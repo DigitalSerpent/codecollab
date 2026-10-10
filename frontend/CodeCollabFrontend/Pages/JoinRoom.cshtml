@@ -1,0 +1,22 @@
+@page "/room/join/{token}"
+@using CodeCollabFrontend.Models
+@inject AppDbContext _context
+
+@{
+    string? token = RouteData.Values["token"]?.ToString();
+    if (string.IsNullOrEmpty(token))
+    {
+        <h2 style="color: white;">Ссылка недействительна</h2>
+        return;
+    }
+
+    var room = _context.Rooms.FirstOrDefault(r => r.InviteToken == token);
+    if (room == null)
+    {
+        <h2 style="color: white;">Комната не найдена или ссылка устарела</h2>
+        return;
+    }
+
+    // Перенаправляем в комнату
+    Response.Redirect($"/room/{room.Id}");
+}

@@ -1,0 +1,221 @@
+@page
+@model ConfirmAccountModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Подтверждение аккаунта";
+}
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #0a0e1c 0%, #121628 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+    }
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .card {
+        position: relative;
+        z-index: 2;
+        background: rgba(18, 22, 40, 0.85);
+        backdrop-filter: blur(12px);
+        border-radius: 32px;
+        padding: 40px;
+        width: 100%;
+        max-width: 480px;
+        text-align: center;
+        border: 1px solid rgba(0, 170, 255, 0.4);
+        box-shadow: 0 0 40px rgba(0, 170, 255, 0.2);
+    }
+    h2 {
+        color: white;
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    .sub {
+        color: #a0a0a0;
+        margin-bottom: 30px;
+        font-size: 14px;
+    }
+    .code-container {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+    .code-input {
+        width: 60px;
+        height: 70px;
+        font-size: 32px;
+        text-align: center;
+        background: rgba(10, 14, 28, 0.9);
+        border: 2px solid #2a2a4a;
+        border-radius: 16px;
+        color: #00aaff;
+        font-weight: bold;
+        transition: 0.2s;
+    }
+    .code-input:focus {
+        outline: none;
+        border-color: #00aaff;
+        box-shadow: 0 0 15px #00aaff;
+    }
+    button {
+        width: 100%;
+        padding: 14px;
+        background: #00aaff;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #0a0e1c;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    button:hover {
+        background: white;
+        box-shadow: 0 0 20px #00aaff;
+    }
+    .error {
+        background: rgba(255, 68, 68, 0.9);
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        color: white;
+    }
+    .link {
+        margin-top: 20px;
+    }
+    .link a {
+        color: #00aaff;
+        text-decoration: none;
+    }
+</style>
+
+<canvas id="codeCanvas"></canvas>
+
+<div class="card">
+    <h2>Подтверждение аккаунта</h2>
+    <div class="sub">Введите 6-значный код из письма</div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="error">@Model.ErrorMessage</div>
+    }
+
+    <form id="codeForm" method="post">
+        <div class="code-container">
+            <input type="text" class="code-input" maxlength="1" pattern="\d" inputmode="numeric" required>
+            <input type="text" class="code-input" maxlength="1" pattern="\d" inputmode="numeric" required>
+            <input type="text" class="code-input" maxlength="1" pattern="\d" inputmode="numeric" required>
+            <input type="text" class="code-input" maxlength="1" pattern="\d" inputmode="numeric" required>
+            <input type="text" class="code-input" maxlength="1" pattern="\d" inputmode="numeric" required>
+            <input type="text" class="code-input" maxlength="1" pattern="\d" inputmode="numeric" required>
+        </div>
+        <input type="hidden" name="code" id="fullCode">
+        <button type="submit">Подтвердить</button>
+    </form>
+
+    <div class="link">
+        <a href="/Login">← Вернуться ко входу</a>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('codeCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initParticles();
+    }
+
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < 50; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 3 + 1,
+                speedX: (Math.random() - 0.5) * 0.5,
+                speedY: Math.random() * 0.8 + 0.3,
+                opacity: Math.random() * 0.3 + 0.1
+            });
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        for (let p of particles) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 170, 255, ${p.opacity})`;
+            ctx.fill();
+            
+            p.x += p.speedX;
+            p.y += p.speedY;
+            
+            if (p.y > canvas.height + 20) {
+                p.y = -20;
+                p.x = Math.random() * canvas.width;
+            }
+            if (p.x > canvas.width + 20) p.x = -20;
+            if (p.x < -20) p.x = canvas.width + 20;
+        }
+        
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+    });
+
+    resizeCanvas();
+    draw();
+
+    // Автопереключение между полями ввода
+    const inputs = document.querySelectorAll('.code-input');
+    const form = document.getElementById('codeForm');
+    const hiddenCode = document.getElementById('fullCode');
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            if (e.target.value.length === 1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+            updateHiddenCode();
+        });
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && index > 0 && e.target.value === '') {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+
+    function updateHiddenCode() {
+        let code = '';
+        inputs.forEach(input => code += input.value);
+        hiddenCode.value = code;
+    }
+
+    form.addEventListener('submit', (e) => {
+        updateHiddenCode();
+    });
+</script>
